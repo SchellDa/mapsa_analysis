@@ -101,6 +101,25 @@ TEST(cfg_parser, whitespace_values)
 	}
 }
 
+TEST(cfg_parser, whitespace_subst)
+{	
+	try {
+		CfgParse p;
+		p.parse(" a bc = hallo welt! # Test\nb = noch mehr @a bc@\nendlich = @b@");
+		EXPECT_EQ(p.getVariable("a bc"), "hallo welt!");
+		EXPECT_EQ(p.getVariable("b"), "noch mehr hallo welt!");
+		EXPECT_EQ(p.getVariable("endlich"), "noch mehr hallo welt!");
+	} catch(std::runtime_error p) {
+		EXPECT_TRUE(false) << "Some exception occured during parsing." << p.what();
+	}
+	try {
+		CfgParse p;
+		p.parse("  a b c  = hallo welt! # test comment");
+		EXPECT_EQ(p.getVariable("a b c"), "hallo welt!");
+	} catch(std::runtime_error p) {
+		EXPECT_TRUE(false) << "Some exception occured during parsing." << p.what();
+	}
+}
 int main(int argc, char **argv) {
 	::testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();
