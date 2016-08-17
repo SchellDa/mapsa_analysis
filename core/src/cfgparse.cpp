@@ -1,6 +1,8 @@
 
 #include "cfgparse.h"
 #include <fstream>
+#include <cctype>
+#include "trim.h"
 
 CfgParse::CfgParse()
 {
@@ -92,15 +94,14 @@ std::vector<std::string> CfgParse::tokenize(const std::string& line) const
 		}
 		if(add_token) {
 			if(current_token.length() > 0) {
-				tokens.push_back(current_token);
+				tokens.push_back(trim(current_token));
 			}
 			current_token = "";
 		}
-		if(c != '\t' &&
-		   c != ' ' &&
-		   c != '\n' &&
-		   c != '\r' &&
-		   c != '#') {
+		bool is_comment = c == '#';
+		if(!is_comment && (
+		   current_token.length() > 0 ||
+		   (!std::isspace(c) && current_token.length() == 0))) {
 			current_token += c;
 		}
 		if(c == '#') {
@@ -108,7 +109,7 @@ std::vector<std::string> CfgParse::tokenize(const std::string& line) const
 		}
 	}
 	if(current_token.length() > 0) {
-		tokens.push_back(current_token);
+		tokens.push_back(trim(current_token));
 	}
 	return tokens;
 }
