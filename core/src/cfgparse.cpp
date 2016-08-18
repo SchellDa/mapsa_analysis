@@ -4,6 +4,8 @@
 #include <cctype>
 #include "trim.h"
 
+using namespace core;
+
 CfgParse::CfgParse()
 {
 	int ret = regcomp(&regexSubstitution, "@([^@]+)@", REG_EXTENDED);

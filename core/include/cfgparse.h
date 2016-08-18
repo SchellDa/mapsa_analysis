@@ -11,6 +11,19 @@
 #endif
 #include <regex.h>
 
+namespace core {
+
+/**
+ * \brief Parser for very simple configuration files
+ *
+ * The configuration syntax allows for simple assignments, comments and variable substitutions.
+ * Effectively, it is the typical ini-syntax without sections.
+ *
+ * \section Syntax
+ * - A comment is started with a #-symbol, the rest of the line is ignored
+ * - A variable name can be anything not containing =, # or whitespace
+ * - Anything not 
+ */
 class CfgParse
 {
 public:
@@ -100,5 +113,7 @@ private:
 	std::map<std::string, std::string> _variables;
 	regex_t regexSubstitution;
 };
+
+} // namespace core
 
 #endif

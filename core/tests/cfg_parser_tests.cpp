@@ -2,6 +2,8 @@
 #include "cfgparse.h"
 #include "gtest/gtest.h"
 
+using namespace core;
+
 TEST(cfg_parser, parse_valid)
 {
 	CfgParse p;
