@@ -26,9 +26,7 @@ include_directories(${CMAKE_BINARY_DIR})
 add_library(core STATIC ${SOURCE})
 if(BUILD_TESTING)
  include_directories(${GOOGLETEST_INCLUDE_DIR})
- add_executable(coreTests
-  ${CMAKE_CURRENT_SOURCE_DIR}/tests/cfg_parser_tests.cpp
- )
- target_link_libraries(coreTests gtest core)
-add_test(coreTests coreTests)
+ link_libraries(gtest core)
+ add_executable(cfgparser_test ${CMAKE_CURRENT_SOURCE_DIR}/tests/cfg_parser_tests.cpp)
+ add_test(cfgparser cfgparser_test)
 endif()
