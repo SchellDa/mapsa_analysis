@@ -4,6 +4,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/cfgparse.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/mpastreamreader.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/trackstreamreader.cpp
 )
 
 add_definitions("-Wall")
@@ -35,6 +36,8 @@ if(BUILD_TESTING)
  link_libraries(gtest core)
  add_executable(cfgparser_test ${CMAKE_CURRENT_SOURCE_DIR}/tests/cfg_parser_tests.cpp)
  add_executable(mpareader_test ${CMAKE_CURRENT_SOURCE_DIR}/tests/mpa_stream_reader_tests.cpp)
+ add_executable(trackreader_test ${CMAKE_CURRENT_SOURCE_DIR}/tests/track_stream_reader_tests.cpp)
  add_test(cfgparser cfgparser_test)
  add_test(mpareader mpareader_test)
+ add_test(trackreader trackreader_test)
 endif()
