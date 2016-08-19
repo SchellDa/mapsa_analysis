@@ -22,29 +22,58 @@ namespace core {
  * \section Syntax
  * - A comment is started with a #-symbol, the rest of the line is ignored
  * - A variable name can be anything not containing =, # or whitespace
- * - Anything not 
+ * - Values can be partialy substituted by other values using the \@var\@ statement
+ *
+ * \section Example
+ * \code{.cfg}
+data_path = /path/to/some/directory
+run_db = @data_path@/run.database
+run_data_file = @data_path@/run@RunNumber@.data # RunNumber is set by software via setVariable()
+\endcode
  */
 class CfgParse
 {
 public:
 	CfgParse();
 
-	/// Load configuration file
+	/** \brief Load configuration file
+	 *
+	 * \param filename Name of the file to load
+	 * \sa parse(const std::istream& config, const std::string& filename)
+	 * \throw std::ios_base::failure if file could not be opened
+	 * \throw parse_error An error occured during parsing
+	 */
 	void load(const std::string& filename);
 
-	/// Parse configuration string
+	/** \brief Parse configuration from a string
+	 *
+	 * \param config String containing the configuration
+	 * \param filename Filename that is used for error and warning messages
+	 * \sa parse(const std::istream& config, const std::string& filename)
+	 * \throw parse_error An error occured during parsing
+	 */
 	void parse(const std::string& config, const std::string& filename="string");
 
-	/// Parse configuration string
+	/** \brief Parse configuration from a general std::istream
+	 *
+	 * Used internaly by the CfgParse.
+	 *
+	 * \param config Stream to read config from
+	 * \param filename Filename that is used for error and warning messages
+	 * \throw parse_error An error occured during parsing
+	 */
 	void parse(std::istream& config, const std::string& filename="string");
 
 	/// Set a variable to a specific value
 	void setVariable(const std::string& var, const std::string& value);
 
-	/// Query a variable and perform replacements as required
-	/// Exceptions: NotFound
+	/** Query a variable and perform replacements as required
+	 * \throw no_variable_error The requested variable name was not found or a substitution variable was not found
+	 * \throw recursion_error Substituting parts of the variable lead to infinite recursion
+	 */
 	std::string getVariable(const std::string& var) { return getVariable(var, 0, var); }
-	
+
+	/// \brief Infinite variable substitution recursion exception
 	class recursion_error : public std::runtime_error {
 	public:
 		recursion_error(const std::string& variable)
@@ -63,6 +92,7 @@ public:
 		std::string msg;
 	};
 
+	/// \brief Undefined ariable access exception
 	class no_variable_error : public std::runtime_error {
 	public:
 		no_variable_error(const std::string& variable, int depth, const std::string& original)
@@ -84,6 +114,7 @@ public:
 		std::string msg;
 	};
 
+	/// \brief Parsing error exception
 	class parse_error : public std::runtime_error {
 	public:
 		parse_error(const std::string& message, const int& row, const int& col, const std::string& file)

@@ -21,17 +21,39 @@ namespace core {
  *  - sensor plane ID (int)
  *  - event number (int)
  *  - run ID (int)
- *  A line can start or contain a comment. A comment-only line is not considered empty!
  *
- *  The sensor plane ID can be used to exclude certain points from the track (e.g. a reference plane). The
- *  event number is used to group tracks into events. It is expected that all tracks of an event are
- *  consecutive in the data file and that the event number is not decreasing. The run ID is read and stored,
- *  but not used by the TrackStreamReader.
- *
- * The TrackStreamReader is compatible with range-based for loops, as it implements an C++11 iterator interface
- * via TrackStreamReader::EventIterator.
- *
- * \code{.cpp}
+ *  A line can start or contain a comment using the # symbol. A comment-only line is not considered empty!
+ *  Additional columns may be inserted and are ignored by the parser. An example track file could look like
+ *  this
+ *  \code{.csv}
+# X	Y	Z	SensorID	Evt	Run
+0.00306126	-1.07667	0	0	7	1
+0.026713	-1.07356	151	1	7	1
+0.0508347	-1.0704d	305	2	7	1
+0.0801253	-1.06656	492	8	7	1
+
+
+-2.50308	-0.657463	0	0	11	1
+-2.57001	-0.743347	151	1	11	1
+-2.63826	-0.830937	305	2	11	1
+-2.72114	-0.937297	492	8	11	1
+
+
+3.180044	1.49489	0	0	20	1
+3.151063	1.23167	151	1	20	1
+3.121516	0.96321	305	2	20	1
+3.085633	0.63724	492	8	20	1
+\endcode
+
+The sensor plane ID can be used to exclude certain points from the track (e.g. a reference plane). The
+event number is used to group tracks into events. It is expected that all tracks of an event are
+consecutive in the data file and that the event number is not decreasing. The run ID is read and stored,
+but not used by the TrackStreamReader.
+
+The TrackStreamReader is compatible with range-based for loops, as it implements an C++11 iterator interface
+via TrackStreamReader::EventIterator.
+
+\code{.cpp}
 TrackStreamReader read("run0028_counter.txt_0");
 for(auto event: read) {
 	// >>> have fun here <<<
@@ -132,10 +154,10 @@ public:
 		bool operator!=(const EventIterator& other) const;
 
 		/// Prefix-increment to the next event.
-		/* This will load the next event from file. When the EOF was reached, the iterator is
+		/** This will load the next event from file. When the EOF was reached, the iterator is
 		 * converted to an beyond-last-element iterator.
-		 * \exception parse_error Malformed lines and non-parsable data values
-		 * \exception consistency_error Prevents changing of runID and eventID in a track block.
+		 * \throw parse_error Malformed lines and non-parsable data values
+		 * \throw consistency_error Prevents changing of runID and eventID in a track block.
 		 */
 		EventIterator& operator++();
 		/// \sa operator++()
