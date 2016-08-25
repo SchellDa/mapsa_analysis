@@ -67,11 +67,16 @@ public:
 	/// Set a variable to a specific value
 	void setVariable(const std::string& var, const std::string& value);
 
-	/** Query a variable and perform replacements as required
+	/**\brief Query a variable and perform replacements as required
+	 *
 	 * \throw no_variable_error The requested variable name was not found or a substitution variable was not found
 	 * \throw recursion_error Substituting parts of the variable lead to infinite recursion
 	 */
 	std::string getVariable(const std::string& var) { return getVariable(var, 0, var); }
+
+	/** \brief Return a vector with the names of all defined variables
+	 */
+	std::vector<std::string> getDefinedVariables() const;
 
 	/// \brief Infinite variable substitution recursion exception
 	class recursion_error : public std::runtime_error {

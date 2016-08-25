@@ -85,6 +85,14 @@ std::string CfgParse::getVariable(const std::string& var, size_t depth, const st
 	return value;
 }
 
+std::vector<std::string> CfgParse::getDefinedVariables() const
+{
+	std::vector<std::string> vars;
+	for(const auto& items: _variables)
+		vars.push_back(items.first);
+	return vars;
+}
+
 std::vector<std::string> CfgParse::tokenize(const std::string& line) const
 {
 	std::vector<std::string> tokens;
