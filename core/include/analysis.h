@@ -3,6 +3,7 @@
 #define ANALYSIS_H
 
 #include <boost/program_options.hpp>
+#include "cfgparse.h"
 #include "abstractfactory.h"
 
 namespace po = boost::program_options;
@@ -14,6 +15,7 @@ class Analysis
 public:
 	Analysis();
 	virtual ~Analysis() {}
+	virtual void loadConfig(const po::variables_map& vm);
 	virtual void run(const po::variables_map& vm) = 0;
 
 	po::options_description& getOptionsDescriptionRef() { return _options; }
@@ -21,6 +23,9 @@ public:
 
 	virtual std::string getUsage(const std::string& argv0) const;
 	virtual std::string getHelp(const std::string& argv0) const;
+
+protected:
+	CfgParse _config;
 
 private:
 	po::options_description _options;

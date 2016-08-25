@@ -66,6 +66,12 @@ int main(int argc, char* argv[])
 		std::cout << analysis->getOptionsDescription() << std::endl;
 		return 0;
 	}
+	try {
+		analysis->loadConfig(vm);
+	} catch(core::CfgParse::parse_error& e) {
+		std::cerr << argv[0] << ": Error while parsing configuration:\n" << e.what() << std::endl;
+		return 1;
+	}
 	analysis->run(vm);
 	return 0;
 }

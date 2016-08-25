@@ -9,7 +9,21 @@ Analysis::Analysis() :
 {
 	_options.add_options()
 		("help,h", "Show help message")
+		("define,D", po::value<std::vector<std::string>>(),
+		 "Add definition to configuration namespace. Uses the CfgParse file syntax")
+		("config,c", po::value<std::string>()->default_value("config.cfg"),
+		 "Configuration file to load variables from")
 	;
+}
+
+void Analysis::loadConfig(const po::variables_map& vm)
+{
+	_config.load(vm["config"].as<std::string>());
+	if(vm.count("define")) {
+		for(const auto& def: vm["define"].as<std::vector<std::string>>()) {
+			_config.parse(def, std::string("Option ")+def);
+		}
+	}
 }
 
 std::string Analysis::getUsage(const std::string& argv0) const
