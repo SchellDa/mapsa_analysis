@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(mapsa)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 include(CTest)
 set(GOOGLETEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/external/googletest/googletest/include")
 add_subdirectory(external)
