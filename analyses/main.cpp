@@ -68,10 +68,19 @@ int main(int argc, char* argv[])
 	}
 	try {
 		analysis->loadConfig(vm);
+		analysis->run(vm);
 	} catch(core::CfgParse::parse_error& e) {
 		std::cerr << argv[0] << ": Error while parsing configuration:\n" << e.what() << std::endl;
 		return 1;
+	} catch(core::CfgParse::no_variable_error& e) {
+		std::cerr << argv[0] << ": Configuration Error: " << e.what() << std::endl;
+		return 1;
+	} catch(core::CfgParse::bad_cast& e) {
+		std::cerr << argv[0] << ": Configuration Error: " << e.what() << std::endl;
+		return 1;
+	} catch(std::exception& e) {
+		std::cerr << argv[0] << ": Exception occured, Aborting! " << e.what() << std::endl;
+		return 1;
 	}
-	analysis->run(vm);
 	return 0;
 }
