@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <boost/lexical_cast.hpp>
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE
 #endif
@@ -74,9 +75,48 @@ public:
 	 */
 	std::string getVariable(const std::string& var) { return getVariable(var, 0, var); }
 
+	/**\brief Queries config variable and casts the value into requested type.
+	 *
+	 * The function queries the variable using getVariable()
+	 *
+	 * \throw no_variable_error The requested variable name was not found or a substitution variable was not found
+	 * \throw recursion_error Substituting parts of the variable lead to infinite recursion
+	 * \throw bad_cast Variable cannot be casted into requested type.
+	 */
+	template<typename T>
+	T get(const std::string& var)
+	{
+		auto value = getVariable(var);
+		try {
+			return boost::lexical_cast<T>(value);
+		} catch(boost::bad_lexical_cast& e) {
+			throw bad_cast(var, typeid(T).name(), value);
+		}
+	}
+
 	/** \brief Return a vector with the names of all defined variables
 	 */
 	std::vector<std::string> getDefinedVariables() const;
+
+	/// \brief Value casting error
+	class bad_cast : public std::invalid_argument {
+	public:
+		bad_cast(const std::string& variable, const std::string& target_type, const std::string& value)
+		 : std::invalid_argument(""), msg()
+		{
+			std::ostringstream sstr;
+			sstr << "Cannot cast variable '" << variable << "' with value '" << value
+			     << "' to type " << target_type;
+			msg = sstr.str();
+		}
+		virtual const char* what() const noexcept
+		{
+			return msg.c_str();
+		}
+
+	private:
+		std::string msg;
+	};
 
 	/// \brief Infinite variable substitution recursion exception
 	class recursion_error : public std::runtime_error {
