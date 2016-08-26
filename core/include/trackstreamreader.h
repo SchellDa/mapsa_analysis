@@ -163,13 +163,19 @@ public:
 		/// \sa operator++()
 		EventIterator operator++(int);
 
-		/** Get current event the iterator is pointing to. */
-		event_t operator*() const noexcept { return _currentEvent; }
+		/** \brief Get current event the iterator is pointing to. */
+		const event_t& operator*() const noexcept { return _currentEvent; }
 
-		/** Get the current event number. */
+		/** \brief Get address of current event the iterator is pointing to.
+		 *
+		 * Used for it->eventNumber style access.
+		 */
+		const event_t* operator->() const noexcept { return &_currentEvent; }
+
+		/** \brief Get the current event number. */
 		int getEventNumber() const noexcept { return _currentEvent.eventNumber; }
 
-		/** Get the number of read events */
+		/** \brief Get the number of read events */
 		size_t getNumReadEvents() const noexcept { return _eventsRead; }
 
 	private:

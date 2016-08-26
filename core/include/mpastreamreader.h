@@ -71,10 +71,16 @@ public:
 		EventIterator& operator++();
 		EventIterator operator++(int);
 
-		/** Get current event the iterator is pointing to. */
-		event_t operator*() const { return _currentEvent; }
+		/** \brief Get current event the iterator is pointing to. */
+		const event_t& operator*() const { return _currentEvent; }
 
-		/** Get the current event number. Same as \code *it.eventNumber \endcode */
+		/** \brief Get address of the current event the iterator is pointing to.
+		 *
+		 * Used for it-> style event_t access.
+		 */
+		const event_t* operator->() const { return &_currentEvent; }
+
+		/** \brief Get the current event number. Same as \code *it.eventNumber \endcode */
 		size_t getEventNumber() const noexcept { return _currentEvent.eventNumber; }
 	private:
 		void open();
