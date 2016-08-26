@@ -33,6 +33,7 @@ include_directories(${CMAKE_BINARY_DIR})
 
 add_library(core STATIC ${SOURCE})
 if(BUILD_TESTING)
+ add_definitions("-Wno-unused-variable")
  include_directories(${GOOGLETEST_INCLUDE_DIR})
  link_libraries(gtest core)
  add_executable(cfgparser_test ${CMAKE_CURRENT_SOURCE_DIR}/tests/cfg_parser_tests.cpp)
