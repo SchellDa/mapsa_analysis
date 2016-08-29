@@ -1,38 +1,39 @@
 
 #include "test.h"
 #include <iostream>
-#include <algorithm>
 
-REGISTER_ANALYSIS_TYPE(Test, "A dummy analysis for testing the framework.")
+REGISTER_ANALYSIS_TYPE(Test, "Textual analysis description here.")
 
 Test::Test() :
  Analysis()
 {
-	std::cout << "Constructing analysis" << std::endl;
+	std::cout << "Constructor" << std::endl;
+	addAnalysisCallback(std::bind(&Test::analyze, this, std::placeholders::_1, std::placeholders::_2),
+	                    CS_ALWAYS);
 }
 
 Test::~Test()
 {
-	std::cout << "Desctructing analysis" << std::endl;
+	std::cout << "Destructor" << std::endl;
 }
 
-void Test::run(const po::variables_map& vm)
+void Test::init(const po::variables_map& vm)
 {
-	std::cout << "The following configuration variables where defined at runtime:\n";
-	auto variables = _config.getDefinedVariables();
-	std::sort(variables.begin(), variables.end());
-	for(const auto& var: variables) {
-		try {
-			auto val = _config.getVariable(var);
-			std::cout << " " << var << " = " << val << "\n";
-		} catch(std::exception& e) {
-			std::cout << "ERROR! " << var << " : " << e.what() << "\n";
-		}
-	}
-	std::cout << std::flush;
+	std::cout << "Init" << std::endl;
+}
+
+std::string Test::getUsage(const std::string& argv0) const
+{
+	return Analysis::getUsage(argv0);
 }
 
 std::string Test::getHelp(const std::string& argv0) const
 {
-	return "A dummy analysis for testing the framework.";
+        return Analysis::getHelp(argv0);
+}
+
+void Test::analyze(const core::TrackStreamReader::event_t& track_event,
+                   const core::MPAStreamReader::event_t& mpa_event)
+{
+	std::cout << "analyze: " << track_event.eventNumber << " " << mpa_event.eventNumber << std::endl;
 }

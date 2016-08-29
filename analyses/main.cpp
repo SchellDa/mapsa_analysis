@@ -70,8 +70,8 @@ int main(int argc, char* argv[])
 		std::cout << analysis->getOptionsDescription() << std::endl;
 		return 0;
 	}
+	po::notify(vm);
 	try {
-		analysis->loadConfig(vm);
 		analysis->run(vm);
 	} catch(core::CfgParse::parse_error& e) {
 		std::cerr << argv[0] << ": Error while parsing configuration:\n" << e.what() << std::endl;

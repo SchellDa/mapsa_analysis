@@ -16,9 +16,13 @@ public:
         {class}();
 	virtual ~{class}();
 
-	virtual void run(const po::variables_map& vm);
+	virtual void init(const po::variables_map& vm);
 	virtual std::string getUsage(const std::string& argv0) const;
 	virtual std::string getHelp(const std::string& argv0) const;
+
+private:
+        void analyze(const core::TrackStreamReader::event_t& track_event,
+	             const core::MPAStreamReader::event_t& mpa_event);
 }};
 
 #endif//{guard}
@@ -29,15 +33,18 @@ source_template = """
 
 REGISTER_ANALYSIS_TYPE({class}, "Textual analysis description here.")
 
-{class}::{class}()
+{class}::{class}() :
+ Analysis()
 {{
+\taddAnalysisCallback(std::bind({class}::analyze, this, std::placeholder::_1, std::placeholder::_2),
+\t                    CS_ALWAYS /* CS_TRACK */);
 }}
 
 {class}::~{class}()
 {{
 }}
 
-void {class}::run(const po::variables_map& vm)
+void {class}::init(const po::variables_map& vm)
 {{
 }}
 
@@ -49,6 +56,11 @@ std::string {class}::getUsage(const std::string& argv0) const
 std::string {class}::getHelp(const std::string& argv0) const
 {{
         return Analysis::getHelp(argv0);
+}}
+
+void {class}::analyze(const core::TrackStreamReader::event_t& track_event,
+                      const core::MPAStreamReader::event_t& mpa_event)
+{{
 }}
 """
 

@@ -5,6 +5,9 @@
 #include <boost/program_options.hpp>
 #include "cfgparse.h"
 #include "abstractfactory.h"
+#include "trackstreamreader.h"
+#include "mpastreamreader.h"
+#include "quickrunlistreader.h"
 
 namespace po = boost::program_options;
 
@@ -32,6 +35,15 @@ class Analysis
 public:
 	Analysis();
 	virtual ~Analysis() {}
+
+	enum callback_stop_t
+	{
+		CS_ALWAYS,
+		CS_TRACK
+	};
+	typedef std::function<void(const TrackStreamReader::event_t&,
+	                           const MPAStreamReader::event_t&)> run_callback_t;
+
 	/** \brief Load configuration from file and from command line
 	 *
 	 * Loads configuration file specified by -c option and executes any string given by -D as additional
@@ -39,12 +51,15 @@ public:
 	 * \throw std::ios_base::failure Configuration file cannot be found
 	 * \throw core::CfgParse::parse_error Configuration by file or command line cannot be parsed
 	 */
-	virtual void loadConfig(const po::variables_map& vm);
+	virtual bool loadConfig(const po::variables_map& vm);
+
+	virtual void init(const po::variables_map& vm) {};
+
 	/** \brief Perform analysis. Must be reimplemented.
 	 *
 	 * This is the work-horse to perform any actual analysis.
 	 */
-	virtual void run(const po::variables_map& vm) = 0;
+	virtual void run(const po::variables_map& vm);
 
 	/** \brief Get boost::program_options::options_description object to add further command line
 	 * arguments
@@ -88,11 +103,19 @@ public:
 	virtual std::string getRunIdPadded(int id);
 
 protected:
+	void addAnalysisCallback(const run_callback_t& clb, const callback_stop_t& stop);
+	void setDataOffset(int dataOffset);
+
 	CfgParse _config;
+	QuickRunlistReader _runlist;
 
 private:
 	po::options_description _options;
 	po::positional_options_description _positionals;
+	std::vector<run_callback_t> _callbacks;
+	std::vector<callback_stop_t> _callbackStop;
+	int _dataOffset;
+	bool _analysisRunning;
 };
 
 /** \brief short-hand type for the factory class for core::Analysis. */
