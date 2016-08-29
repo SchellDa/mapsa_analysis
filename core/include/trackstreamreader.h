@@ -171,6 +171,9 @@ public:
 		/** \brief Get the number of read events */
 		size_t getNumReadEvents() const noexcept { return _eventsRead; }
 
+		/** \brief Check wether iterator is beyond-last-element iterator */
+		bool isEnd() const noexcept { return _end; }
+
 	private:
 		void open();
 		void compileRegex();

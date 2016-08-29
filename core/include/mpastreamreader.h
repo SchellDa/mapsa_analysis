@@ -82,6 +82,10 @@ public:
 
 		/** \brief Get the current event number. Same as \code *it.eventNumber \endcode */
 		size_t getEventNumber() const noexcept { return _currentEvent.eventNumber; }
+
+		/** \brief Check wether iterator is beyond-last-element iterator */
+		bool isEnd() const noexcept { return _end; }
+
 	private:
 		void open();
 		mutable std::ifstream _fin;
