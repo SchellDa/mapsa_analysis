@@ -255,7 +255,7 @@ void TrackStreamReader::EventIterator::compileRegex()
 		          << error << std::endl;
 	}
 	assert(ret == 0);
-	ret = regcomp(&_regexLine, "^\\s*(-?[0-9]+.?[0-9]*)\\s+(-?[0-9]+.?[0-9]*)\\s+(-?[0-9]+.?[0-9]*)\\s+"
+	ret = regcomp(&_regexLine, "^\\s*([-0-9\\.eE+]+)\\s+([-0-9\\.eE+]+)\\s+([-0-9\\.eE+]+)\\s+"
 	                           "(-?[0-9]+)\\s+(-?[0-9]+)\\s+(-?[0-9]+)", REG_EXTENDED);
 	if(ret != 0) {
 		regerror(ret, &_regexLine, error, sizeof(error));

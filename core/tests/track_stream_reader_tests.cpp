@@ -13,6 +13,21 @@ public:
 	{
 		char s[4096];
 		std::ofstream fout;
+		scientific_numbers = std::tmpnam(s);
+		fout.open(s);
+		fout << "# X     Y       Z       SensorID        Evt     Run\n"
+		     << "1.6e-19\t0.0000\t0\t0\t11\t4\n"
+		     << "-1.6e-19\t1.0000\t0\t1\t11\t4\n"
+		     << "0.0000\t2.7e03\t3\t2\t11\t4\n"
+		     << "6.0000\t-2.7e04\t4\t3\t11\t4\n\n\n"
+		     << "1.0000\t0.0000\t0\t0\t15\t4\n"
+		     << "0.0000\t2.0000\t0\t1\t15\t4\n"
+		     << "0.0000\t0.0000\t3\t2\t15\t4\n"
+		     << "6.0000\t5.0000\t4\t3\t15\t4\n\n\n";
+		fout.flush();
+		fout.close();
+
+
 		float_wo_decimal = std::tmpnam(s);
 		fout.open(s);
 		fout << "# X     Y       Z       SensorID        Evt     Run\n"
@@ -205,6 +220,7 @@ public:
 	std::string valid1;
 	std::string valid2;
 	std::string valid3;
+	std::string scientific_numbers;
 };
 
 DataFileEnv* env;
@@ -288,6 +304,15 @@ TEST(trackstreamreader, read3)
 }
 
 TEST(trackstreamreader, negative_numbers)
+{
+	EXPECT_NO_THROW({
+		TrackStreamReader reader(env->negatives);
+		for(const auto& evt: reader) {
+		}
+	});
+}
+
+TEST(trackstreamreader, scientific_numbers)
 {
 	EXPECT_NO_THROW({
 		TrackStreamReader reader(env->negatives);
