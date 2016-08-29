@@ -66,7 +66,16 @@ public:
 	void parse(std::istream& config, const std::string& filename="string");
 
 	/// Set a variable to a specific value
-	void setVariable(const std::string& var, const std::string& value);
+	template<typename T>
+	void setVariable(const std::string& var, const T& value)
+	{
+		_variables[var] = std::to_string(value);
+	}
+
+	void setVariable(const std::string& var, const std::string& value)
+	{
+		_variables[var] = value;
+	}
 
 	/**\brief Query a variable and perform replacements as required
 	 *

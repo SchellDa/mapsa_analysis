@@ -47,7 +47,7 @@ void CfgParse::parse(std::istream& config, const std::string& filename)
 			throw parse_error("Excepted '=' token after identifier", row, -1, filename);
 		}
 		if(tokens.size() < 3) {
-			setVariable(tokens[0], "");
+			setVariable(tokens[0], std::string(""));
 		} else {
 			if(tokens[2] == "=") {
 				throw parse_error("Excepted value not '=' token", row, -1, filename);
@@ -58,11 +58,6 @@ void CfgParse::parse(std::istream& config, const std::string& filename)
 			setVariable(tokens[0], tokens[2]);
 		}
 	}
-}
-
-void CfgParse::setVariable(const std::string& var, const std::string& value)
-{
-	_variables[var] = value;
 }
 
 std::string CfgParse::getVariable(const std::string& var, size_t depth, const std::string& original)
