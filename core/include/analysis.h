@@ -76,6 +76,11 @@ public:
 	 */
 	virtual std::string getHelp(const std::string& argv0) const;
 
+	static std::string getPaddedIdString(int id, unsigned int width);
+
+	virtual std::string getMpaIdPadded(int id);
+	virtual std::string getRunIdPadded(int id);
+
 protected:
 	CfgParse _config;
 

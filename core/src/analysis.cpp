@@ -1,6 +1,7 @@
 
 #include "analysis.h"
 #include <sstream>
+#include <iomanip>
 
 using namespace core;
 
@@ -39,3 +40,19 @@ std::string Analysis::getHelp(const std::string& argv0) const
 	return "";
 }
 
+std::string Analysis::getPaddedIdString(int id, unsigned int width)
+{
+	std::ostringstream sstr;
+	sstr << std::setfill('0') << std::setw(width) << id;
+	return sstr.str();
+}
+
+std::string Analysis::getMpaIdPadded(int id)
+{
+	return getPaddedIdString(id, _config.get<unsigned int>("mpa_id_padding"));
+}
+
+std::string Analysis::getRunIdPadded(int id)
+{
+	return getPaddedIdString(id, _config.get<unsigned int>("run_id_padding"));
+}
