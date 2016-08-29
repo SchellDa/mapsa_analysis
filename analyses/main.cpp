@@ -52,7 +52,11 @@ int main(int argc, char* argv[])
 	assert(analysis.get());
 	po::variables_map vm;
 	try {
-		po::store(po::parse_command_line(argc, argv, analysis->getOptionsDescription()), vm);
+		po::store(po::command_line_parser(argc, argv)
+		          .options(analysis->getOptionsDescription())
+			  .positional(analysis->getPositionalsDescription())
+			  .run(),
+		          vm);
 	} catch(std::exception& e) {
 		std::cerr << argv[0] << ": " << e.what();
 		std::cerr << "\n\n" << analysis->getUsage(argv[0]) << std::endl;

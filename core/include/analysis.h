@@ -52,6 +52,12 @@ public:
 	const po::options_description& getOptionsDescription() const { return _options; }
 	po::options_description& getOptionsDescription() { return _options; }
 
+	/** \brief Get boost::program_options::positional_options_description object to add further
+	 * positional command line arguments
+	 */
+	const po::positional_options_description& getPositionalsDescription() const { return _positionals; }
+	po::positional_options_description& getPositionalsDescription() { return _positionals; }
+
 	/** \brief Get string describing the tool usage from the command line
 	 *
 	 * Sub-classes should reimplement this to return useful information. The default implementation merely
@@ -86,6 +92,7 @@ protected:
 
 private:
 	po::options_description _options;
+	po::positional_options_description _positionals;
 };
 
 /** \brief short-hand type for the factory class for core::Analysis. */
