@@ -116,7 +116,7 @@ TrackStreamReader::EventIterator& TrackStreamReader::EventIterator::operator++()
 	// "future" data.
 	_currentEvent.eventNumber = _nextEvent.eventNumber;
 	_currentEvent.runID = _nextEvent.runID;
-	track_t cur_track;
+	Track cur_track;
 	if(_nextEvent.tracks.size()) {
 		cur_track = _nextEvent.tracks[0];
 	}
@@ -210,7 +210,7 @@ TrackStreamReader::EventIterator& TrackStreamReader::EventIterator::operator++()
 			// Add current point to new track in next event
 			_nextEvent.eventNumber = eventNumber;
 			_nextEvent.runID = runID;
-			track_t tr;
+			Track tr;
 			tr.sensorIDs.push_back(sensorID);
 			tr.points.push_back(pos);
 			_nextEvent.tracks.push_back(tr);

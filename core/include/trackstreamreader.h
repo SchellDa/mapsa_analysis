@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <Eigen/Dense>
 #include <regex.h>
+#include "track.h"
 
 namespace core {
 
@@ -63,13 +63,6 @@ for(auto event: read) {
 class TrackStreamReader
 {
 public:
-	/// Track description structure
-	struct track_t {
-		/// A list of the sensor IDs for consecutive points in the track
-		std::vector<int> sensorIDs;
-		/// 3D-positions of consecutive points in the track
-		std::vector<Eigen::Vector3d> points;
-	};
 	/// Description of a single event
 	struct event_t {
 		/// Number of the event as stored in the data file
@@ -77,7 +70,7 @@ public:
 		/// Run ID for the event as in the data file.
 		int runID;
 		/// A vector of all tracks.
-		std::vector<track_t> tracks;
+		std::vector<Track> tracks;
 	};
 
 	/** Exception class indicating a consistency error in the data file.
