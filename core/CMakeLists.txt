@@ -6,6 +6,7 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/mpastreamreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/trackstreamreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/analysis.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/quickrunlistreader.cpp
 )
 
 add_definitions("-Wall")
