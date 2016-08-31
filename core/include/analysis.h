@@ -108,7 +108,9 @@ public:
 	virtual std::string getMpaIdPadded(int id);
 	virtual std::string getRunIdPadded(int id);
 
-	virtual std::string getRootFilename() const;
+	virtual std::string getName() const;
+	virtual std::string getRootFilename(const std::string& suffix="") const;
+	virtual std::string getFilename(const std::string& suffix="") const;
 
 protected:
 	void addProcess(const process_t& proc);

@@ -139,14 +139,25 @@ std::string Analysis::getRunIdPadded(int id)
 	return getPaddedIdString(id, _config.get<unsigned int>("run_id_padding"));
 }
 
-std::string Analysis::getRootFilename() const
+std::string Analysis::getName() const
 {
-	std::ostringstream sstr;
 	int status;
         char* demangled = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
-	sstr << demangled << "_" << _config.getVariable("MpaRun") << ".root";
+	std::string name(demangled);
 	free(demangled);
+       return name;
+}
+
+std::string Analysis::getFilename(const std::string& suffix) const
+{
+	std::ostringstream sstr;
+	sstr << getName() << "_" << _config.getVariable("MpaRun") << suffix;
        return sstr.str();
+}
+
+std::string Analysis::getRootFilename(const std::string& suffix) const
+{
+	return getFilename(suffix)+".root";	
 }
 
 void Analysis::addProcess(const process_t& proc)
