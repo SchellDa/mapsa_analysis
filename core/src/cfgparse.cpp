@@ -60,7 +60,7 @@ void CfgParse::parse(std::istream& config, const std::string& filename)
 	}
 }
 
-std::string CfgParse::getVariable(const std::string& var, size_t depth, const std::string& original)
+std::string CfgParse::getVariable(const std::string& var, size_t depth, const std::string& original) const
 {
 	if(_variables.find(var) == _variables.end()) {
 		throw no_variable_error(var, depth, original);
@@ -69,7 +69,7 @@ std::string CfgParse::getVariable(const std::string& var, size_t depth, const st
 	{
 		throw recursion_error(original);
 	}
-	std::string value = _variables[var];
+	std::string value(_variables.at(var));
 	int ret;
 	regmatch_t m[2];
 	while((ret = regexec(&regexSubstitution, value.c_str(), 2, m, 0)) != REG_NOMATCH) {

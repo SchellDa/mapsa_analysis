@@ -82,7 +82,7 @@ public:
 	 * \throw no_variable_error The requested variable name was not found or a substitution variable was not found
 	 * \throw recursion_error Substituting parts of the variable lead to infinite recursion
 	 */
-	std::string getVariable(const std::string& var) { return getVariable(var, 0, var); }
+	std::string getVariable(const std::string& var) const { return getVariable(var, 0, var); }
 
 	/**\brief Queries config variable and casts the value into requested type.
 	 *
@@ -93,7 +93,7 @@ public:
 	 * \throw bad_cast Variable cannot be casted into requested type.
 	 */
 	template<typename T>
-	T get(const std::string& var)
+	T get(const std::string& var) const
 	{
 		auto value = getVariable(var);
 		try {
@@ -194,7 +194,7 @@ public:
 
 private:
 	std::vector<std::string> tokenize(const std::string& line) const;
-	std::string getVariable(const std::string& var, size_t depth, const std::string& original);
+	std::string getVariable(const std::string& var, size_t depth, const std::string& original) const;
 	std::map<std::string, std::string> _variables;
 	regex_t regexSubstitution;
 };
