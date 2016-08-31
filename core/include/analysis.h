@@ -108,6 +108,8 @@ public:
 	virtual std::string getMpaIdPadded(int id);
 	virtual std::string getRunIdPadded(int id);
 
+	virtual std::string getRootFilename() const;
+
 protected:
 	void addProcess(const process_t& proc);
 	void addProcess(const callback_stop_t& mode,

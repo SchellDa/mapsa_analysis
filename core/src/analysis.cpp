@@ -2,6 +2,7 @@
 #include "analysis.h"
 #include <sstream>
 #include <iomanip>
+#include <cxxabi.h>
 
 using namespace core;
 
@@ -138,7 +139,15 @@ std::string Analysis::getRunIdPadded(int id)
 	return getPaddedIdString(id, _config.get<unsigned int>("run_id_padding"));
 }
 
+std::string Analysis::getRootFilename() const
 {
+	std::ostringstream sstr;
+	int status;
+        char* demangled = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
+	sstr << demangled << "_" << _config.getVariable("MpaRun") << ".root";
+	free(demangled);
+       return sstr.str();
+}
 
 void Analysis::addProcess(const process_t& proc)
 {
