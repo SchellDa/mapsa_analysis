@@ -8,6 +8,7 @@
 #include "trackstreamreader.h"
 #include "mpastreamreader.h"
 #include "quickrunlistreader.h"
+#include "mpatransform.h"
 
 namespace po = boost::program_options;
 
@@ -119,6 +120,7 @@ protected:
 
 	CfgParse _config;
 	QuickRunlistReader _runlist;
+	MpaTransform _mpaTransform;
 
 private:
 	po::options_description _options;
@@ -126,6 +128,7 @@ private:
 	std::vector<process_t> _processes;
 	int _dataOffset;
 	bool _analysisRunning;
+
 };
 
 /** \brief short-hand type for the factory class for core::Analysis. */
