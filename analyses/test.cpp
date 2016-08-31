@@ -8,8 +8,7 @@ Test::Test() :
  Analysis()
 {
 	std::cout << "Constructor" << std::endl;
-	addAnalysisCallback(std::bind(&Test::analyze, this, std::placeholders::_1, std::placeholders::_2),
-	                    CS_ALWAYS);
+	addProcess(CS_ALWAYS, std::bind(&Test::analyze, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 Test::~Test()
@@ -32,8 +31,9 @@ std::string Test::getHelp(const std::string& argv0) const
         return Analysis::getHelp(argv0);
 }
 
-void Test::analyze(const core::TrackStreamReader::event_t& track_event,
+bool Test::analyze(const core::TrackStreamReader::event_t& track_event,
                    const core::MPAStreamReader::event_t& mpa_event)
 {
 	std::cout << "analyze: " << track_event.eventNumber << " " << mpa_event.eventNumber << std::endl;
+	return false;
 }

@@ -65,26 +65,38 @@ void Analysis::run(const po::variables_map& vm)
 		std::cerr << "Cannot open track data file '" << _config.getVariable("track_data") << "'." << std::endl;
 		return;
 	}
-	for(size_t i = 0; i < _callbacks.size(); i++) {
-		auto cb = _callbacks[i];
-		auto stop = _callbackStop[i];
-		if(stop == CS_ALWAYS) {
+	for(const auto& process: _processes) {
+		size_t evtCount = 0;
+		if(process.mode == CS_ALWAYS && process.run) {
 			auto track_it = trackreader.begin();
 			for(const auto& mpa: mpareader) {
 				if(track_it->eventNumber < mpa.eventNumber + _dataOffset)
 					++track_it;
-				cb(*track_it, mpa);
+				if(evtCount % 1000 == 0) {
+					std::cout << "Processing event " << evtCount << std::endl;
+				}
+				++evtCount;
+				if(!process.run(*track_it, mpa))
+					break;
 			}
-		} else {
+		} else if (process.run) {
 			auto mpa_it = mpareader.begin();
 			for(const auto& track: trackreader) {
 				while(mpa_it->eventNumber + _dataOffset != track.eventNumber &&
 				      mpa_it != mpareader.end())
 					++mpa_it;
+				if(evtCount % 1000 == 0) {
+					std::cout << "Processing event " << evtCount << std::endl;
+				}
+				++evtCount;
 				if(mpa_it == mpareader.end())
 					break;
-				cb(track, *mpa_it);
+				if(!process.run(track, *mpa_it))
+					break;
 			}
+		}
+		if(process.post) {
+			process.post();
 		}
 	}
 	_analysisRunning = false;
@@ -120,10 +132,11 @@ std::string Analysis::getRunIdPadded(int id)
 	return getPaddedIdString(id, _config.get<unsigned int>("run_id_padding"));
 }
 
-void Analysis::addAnalysisCallback(const run_callback_t& clb, const callback_stop_t& stop)
 {
-	_callbacks.push_back(clb);
-	_callbackStop.push_back(stop);
+
+void Analysis::addProcess(const process_t& proc)
+{
+	_processes.push_back(proc);
 }
 
 void Analysis::setDataOffset(int dataOffset)

@@ -15,7 +15,7 @@ public:
 	virtual std::string getHelp(const std::string& argv0) const;
 
 private:
-        void analyze(const core::TrackStreamReader::event_t& track_event,
+        bool analyze(const core::TrackStreamReader::event_t& track_event,
 	             const core::MPAStreamReader::event_t& mpa_event);
 };
 

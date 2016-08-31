@@ -36,13 +36,18 @@ public:
 	Analysis();
 	virtual ~Analysis() {}
 
-	enum callback_stop_t
-	{
+	enum callback_stop_t {
 		CS_ALWAYS,
 		CS_TRACK
 	};
-	typedef std::function<void(const TrackStreamReader::event_t&,
+	typedef std::function<bool(const TrackStreamReader::event_t&,
 	                           const MPAStreamReader::event_t&)> run_callback_t;
+	typedef std::function<void()> post_callback_t;
+	struct process_t {
+		callback_stop_t mode;
+		run_callback_t run;
+		post_callback_t post;
+	};
 
 	/** \brief Load configuration from file and from command line
 	 *
@@ -103,7 +108,13 @@ public:
 	virtual std::string getRunIdPadded(int id);
 
 protected:
-	void addAnalysisCallback(const run_callback_t& clb, const callback_stop_t& stop);
+	void addProcess(const process_t& proc);
+	void addProcess(const callback_stop_t& mode,
+	                const run_callback_t& run,
+			const post_callback_t& stop=std::function<void()>())
+	{
+		addProcess({mode, run, stop});
+	}
 	void setDataOffset(int dataOffset);
 
 	CfgParse _config;
@@ -112,8 +123,7 @@ protected:
 private:
 	po::options_description _options;
 	po::positional_options_description _positionals;
-	std::vector<run_callback_t> _callbacks;
-	std::vector<callback_stop_t> _callbackStop;
+	std::vector<process_t> _processes;
 	int _dataOffset;
 	bool _analysisRunning;
 };
