@@ -17,6 +17,7 @@ Analysis::Analysis() :
 		 "Configuration file to load variables from")
 		("runlist,l", po::value<std::string>()->default_value("../runlist.csv"), "Per-run information table")
 		("run,r", po::value<int>()->required(), "MPA Run ID")
+		("telescope,t", "The number specified by --run is a telescope run ID")
 	;
 }
 
@@ -31,10 +32,17 @@ bool Analysis::loadConfig(const po::variables_map& vm)
 	try {
 		if(vm.count("runlist")) {
 			_runlist.read(vm["runlist"].as<std::string>());
-			auto run_id = vm["run"].as<int>();
-			auto tel_run = _runlist.getTelRunByMpaRun(run_id);
+			int run_id = vm["run"].as<int>();
+			int tel_run;
+			if(vm.count("telescope")) {
+				tel_run = run_id;
+				run_id = _runlist.getMpaRunByTelRun(tel_run);
+			} else {
+				tel_run = _runlist.getTelRunByMpaRun(run_id);
+			}
 			_config.setVariable("MpaRun", getMpaIdPadded(run_id));
 			_config.setVariable("TelRun", getRunIdPadded(tel_run));
+			setDataOffset(_runlist.getByMpaRun(run_id).data_offset);
 		}
 	} catch(std::ios_base::failure& e) {
 		std::cerr << "Runlist file not found!" << std::endl;
