@@ -232,8 +232,9 @@ bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t
 			auto a = _mpaTransform.transform(idx);
 			auto pc = _mpaTransform.translatePixelIndex(idx);
 			auto b = track.extrapolateOnPlane(4, 5, 840, 2);
-			auto center_b = b - _mpaTransform.getOffset();
-			if(abs(a(0)-b(0)) < _alignSigma(0)*_nSigmaCut) {
+			auto center_b(b);
+			center_b -= _mpaTransform.getOffset();
+			if(std::abs(a(0)-b(0)) < _alignSigma(0)*_nSigmaCut) {
 				_correlatedHits->Fill(center_b(0), center_b(1));
 				_correlatedHitsX->Fill(center_b(0));
 				_correlatedHitsY->Fill(center_b(1));
@@ -262,7 +263,8 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
 			auto a = _mpaTransform.transform(idx);
 			auto b = track.extrapolateOnPlane(4, 5, 840, 2);
-			auto cb = b - _mpaTransform.getOffset();
+			auto cb(b);
+			cb -= _mpaTransform.getOffset();
 			auto pc = _mpaTransform.translatePixelIndex(idx);
 //			std::cout << std::abs(a(0)-cb(0)) << " " << _alignSigma(0)*2 << " "
 //				<< std::abs(a(1)-cb(1)) << " " << _alignSigma(1)*2 << std::endl;
