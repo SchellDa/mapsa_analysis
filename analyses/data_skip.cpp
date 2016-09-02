@@ -1,6 +1,9 @@
 
 #include "data_skip.h"
+#include "util.h"
 #include <TImage.h>
+#include <TText.h>
+#include <cmath>
 
 REGISTER_ANALYSIS_TYPE(DataSkip, "Textual analysis description here.")
 
@@ -39,8 +42,19 @@ void DataSkip::init(const po::variables_map& vm)
 	std::ostringstream title;
 	title << "data skip = " << getDataOffset();
 	_currentHist = new TH1D(name.str().c_str(), title.str().c_str(), _numBins, -10, -10);
-	_canvas = new TCanvas("canvas", "", 400*3*2, 300*3*(_range+1));
-	_canvas->Divide(2, _range+1);
+	int nx = core::max(1, static_cast<int>(std::sqrt(_range*2+2)));
+	int ny = core::max(1, (_range*2 + 2) / nx) + 1;
+	assert(nx*ny >= _range*2+2);
+
+	_canvas = new TCanvas("canvas", "", 400*nx, 300*ny);
+	_canvas->Divide(nx, ny);
+	_canvas->cd(1);
+	std::ostringstream runStr;
+	runStr << "MPA run " << _config.get<int>("MpaRun");
+	auto txt = new TText(.5, .5, runStr.str().c_str());
+	txt->SetTextAlign(22);
+	txt->SetTextSize(0.2);
+	txt->Draw();
 }
 
 std::string DataSkip::getUsage(const std::string& argv0) const
@@ -69,7 +83,16 @@ bool DataSkip::analyze(const core::TrackStreamReader::event_t& track_event,
 
 void DataSkip::finish()
 {
-	_canvas->cd(getDataOffset()+_range+1);
+	const double binratio = 0.1;
+	if(_currentHist->GetEntries() * binratio * 2 < _currentHist->GetNbinsX()) {
+		/*std::cout << "REBIN!\n"
+		          << "Num entries: " << _currentHist->GetEntries() << "\n"
+		          << "Entry threshold: " << _currentHist->GetEntries() * binratio * 2 << "\n"
+			  << "Num X bins: " << _currentHist->GetNbinsX() << "\n";*/
+		_currentHist->Rebin(_currentHist->GetNbinsX() / (_currentHist->GetEntries() * binratio));
+//		std::cout << "New reduced bin number: " << _currentHist->GetNbinsX() << std::endl;
+	}
+	_canvas->cd(getDataOffset()+_range+2);
 	_currentHist->Draw();
 	if(getDataOffset()+1 <= _range) {
 		setDataOffset(getDataOffset()+1);
