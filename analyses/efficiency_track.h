@@ -43,12 +43,14 @@ private:
 	TH1D* _correlatedHitsX;
 	TH1D* _correlatedHitsY;
 	TH2D* _efficiency;
-	TGraph2D* _neighbourActivation;
-	size_t _trackHits;
-	size_t _corHits;
+	TH2D* _trackHits;
+	TH2D* _directHits;
+	TH2D* _neighbourHits;
+	double _nSigmaCut;
 	std::vector<size_t> _totalPixelHits;
 	std::vector<size_t> _activatedPixelHits;
-	std::ofstream fout;
+	std::ofstream _alignFile;
+	std::ofstream _analysisHitFile;
 	Eigen::Vector3d _alignSigma;
 };
 
