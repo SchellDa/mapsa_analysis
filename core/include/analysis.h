@@ -121,18 +121,24 @@ protected:
 		addProcess({mode, run, stop});
 	}
 	void setDataOffset(int dataOffset);
+	int getDataOffset() const { return _dataOffset; }
+	void rerun();
 
 	CfgParse _config;
 	QuickRunlistReader _runlist;
 	MpaTransform _mpaTransform;
 
 private:
+	void executeProcess(core::MPAStreamReader& mpareader,
+	                    core::TrackStreamReader& trackreader,
+                            const process_t& proc);
+
 	po::options_description _options;
 	po::positional_options_description _positionals;
 	std::vector<process_t> _processes;
 	int _dataOffset;
 	bool _analysisRunning;
-
+	bool _rerunProcess;
 };
 
 /** \brief short-hand type for the factory class for core::Analysis. */

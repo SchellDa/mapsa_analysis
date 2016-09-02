@@ -73,38 +73,7 @@ void Analysis::run(const po::variables_map& vm)
 		return;
 	}
 	for(const auto& process: _processes) {
-		size_t evtCount = 0;
-		if(process.mode == CS_ALWAYS && process.run) {
-			auto track_it = trackreader.begin();
-			for(const auto& mpa: mpareader) {
-				if(track_it->eventNumber < mpa.eventNumber + _dataOffset)
-					++track_it;
-				if(evtCount % 1000 == 0) {
-					std::cout << "Processing event " << evtCount << std::endl;
-				}
-				++evtCount;
-				if(!process.run(*track_it, mpa))
-					break;
-			}
-		} else if (process.run) {
-			auto mpa_it = mpareader.begin();
-			for(const auto& track: trackreader) {
-				while(mpa_it->eventNumber + _dataOffset != track.eventNumber &&
-				      mpa_it != mpareader.end())
-					++mpa_it;
-				if(evtCount % 1000 == 0) {
-					std::cout << "Processing event " << evtCount << std::endl;
-				}
-				++evtCount;
-				if(mpa_it == mpareader.end())
-					break;
-				if(!process.run(track, *mpa_it))
-					break;
-			}
-		}
-		if(process.post) {
-			process.post();
-		}
+		executeProcess(mpareader, trackreader, process);
 	}
 	_analysisRunning = false;
 }
@@ -171,3 +140,57 @@ void Analysis::setDataOffset(int dataOffset)
 	_dataOffset = dataOffset;
 }
 
+void Analysis::rerun()
+{
+	_rerunProcess = true;
+}
+
+void Analysis::executeProcess(core::MPAStreamReader& mpareader,
+		core::TrackStreamReader& trackreader, const process_t& process)
+{
+	int run = 0;
+	do {
+		_rerunProcess = false;
+		size_t evtCount = 0;
+		if(process.mode == CS_ALWAYS && process.run) {
+			auto track_it = trackreader.begin();
+			for(const auto& mpa: mpareader) {
+				if(track_it->eventNumber < (int)mpa.eventNumber + _dataOffset)
+					++track_it;
+				if(evtCount % 1000 == 0) {
+					std::cout << "Processing step " << evtCount;
+					if(run)
+						std::cout << " rerun " << run;
+					std::cout << std::endl;
+				}
+				++evtCount;
+				if(!process.run(*track_it, mpa))
+					break;
+			}
+		} else if (process.run) {
+			auto mpa_it = mpareader.begin();
+			for(const auto& track: trackreader) {
+				while((int)mpa_it->eventNumber + _dataOffset < track.eventNumber &&
+				      mpa_it != mpareader.end())
+					++mpa_it;
+				if(evtCount % 1000 == 0) {
+					std::cout << "Processing step " << evtCount;
+					if(run)
+						std::cout << " rerun " << run;
+					std::cout << " event no. " << track.eventNumber << "/" << mpa_it->eventNumber;
+					std::cout << std::endl;
+				}
+				++evtCount;
+				if(mpa_it == mpareader.end())
+					break;
+				assert(mpa_it->eventNumber + _dataOffset == track.eventNumber);
+				if(!process.run(track, *mpa_it))
+					break;
+			}
+		}
+		if(process.post) {
+			process.post();
+		}
+		++run;
+	} while(_rerunProcess);
+}
