@@ -24,12 +24,15 @@ void QuickRunlistReader::read(const std::string& filename)
 		int colno = 0;
 		std::istringstream sstr(line);
 		std::string col;
-		run_t run;
+		run_t run { 0, 0, 0, 0.0, 0.0, 0.0 };
 		while(getline(sstr, col, '\t')) {
 			try {
 				if(colno == 0) run.mpa_run = std::stoi(col);
 				else if(colno == 1) run.telescope_run = std::stoi(col);
 				else if(colno == 2) run.angle = std::stod(col);
+				else if(colno == 3) run.bias_voltage = std::stod(col);
+				else if(colno == 4) run.bias_current = std::stod(col);
+				else if(colno == 5) run.threshold = std::stod(col);
 				else if(colno == 10) run.data_offset = std::stoi(col);
 			} catch(std::invalid_argument& e) {
 			}
@@ -37,6 +40,28 @@ void QuickRunlistReader::read(const std::string& filename)
 		}
 		_runs.push_back(run);
 	}
+}
+
+const QuickRunlistReader::run_t& QuickRunlistReader::getByTelRun(int telRun) const
+{
+	for(const auto& run: *this)
+	{
+		if(run.telescope_run == telRun) {
+			return run;
+		}
+	}
+	throw std::invalid_argument("MPA Run ID not found");
+}
+
+const QuickRunlistReader::run_t& QuickRunlistReader::getByMpaRun(int mpaRun) const
+{
+	for(const auto& run: *this)
+	{
+		if(run.mpa_run == mpaRun) {
+			return run;
+		}
+	}
+	throw std::invalid_argument("MPA Run ID not found");
 }
 
 int QuickRunlistReader::getMpaRunByTelRun(int telRun) const

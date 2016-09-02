@@ -16,6 +16,9 @@ public:
 		int telescope_run;
 		int data_offset;
 		double angle;
+		double bias_voltage;
+		double bias_current;
+		double threshold;
 	};
 	typedef std::vector<run_t> run_vec_t;
 
@@ -23,6 +26,9 @@ public:
 
 	int getMpaRunByTelRun(int telRun) const;
 	int getTelRunByMpaRun(int mpaRun) const;
+
+	const run_t& getByMpaRun(int mpaRun) const;
+	const run_t& getByTelRun(int telRun) const;
 
 	void clear() { _runs.clear(); }
 	size_t size() { return _runs.size(); }
