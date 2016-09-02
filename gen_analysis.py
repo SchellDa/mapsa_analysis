@@ -21,8 +21,9 @@ public:
 	virtual std::string getHelp(const std::string& argv0) const;
 
 private:
-        void analyze(const core::TrackStreamReader::event_t& track_event,
+        bool analyze(const core::TrackStreamReader::event_t& track_event,
 	             const core::MPAStreamReader::event_t& mpa_event);
+\tvoid finish();
 }};
 
 #endif//{guard}
@@ -36,8 +37,10 @@ REGISTER_ANALYSIS_TYPE({class}, "Textual analysis description here.")
 {class}::{class}() :
  Analysis()
 {{
-\taddAnalysisCallback(std::bind({class}::analyze, this, std::placeholder::_1, std::placeholder::_2),
-\t                    CS_ALWAYS /* CS_TRACK */);
+\taddProcess(CS_ALWAYS /* CS_TRACK */,
+\t           std::bind(&{class}::analyze, this, std::placeholders::_1, std::placeholders::_2),
+\t           std::bind(&{class}::finish, this)
+\t           );
 }}
 
 {class}::~{class}()
@@ -58,8 +61,13 @@ std::string {class}::getHelp(const std::string& argv0) const
         return Analysis::getHelp(argv0);
 }}
 
-void {class}::analyze(const core::TrackStreamReader::event_t& track_event,
+bool {class}::analyze(const core::TrackStreamReader::event_t& track_event,
                       const core::MPAStreamReader::event_t& mpa_event)
+{{
+\treturn true;
+}}
+
+void {class}::finish()
 {{
 }}
 """
