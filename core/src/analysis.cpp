@@ -68,7 +68,6 @@ void Analysis::run(const po::variables_map& vm)
 	init(vm);
 	core::MPAStreamReader mpareader(_config.getVariable("mapsa_data"));
 	core::TrackStreamReader trackreader(_config.getVariable("track_data"));
-	_analysisRunning = true;
 	try {
 		mpareader.begin();
 	} catch(std::ios_base::failure& e) {
@@ -84,7 +83,6 @@ void Analysis::run(const po::variables_map& vm)
 	for(const auto& process: _processes) {
 		executeProcess(mpareader, trackreader, process);
 	}
-	_analysisRunning = false;
 }
 
 std::string Analysis::getUsage(const std::string& argv0) const
@@ -159,6 +157,7 @@ void Analysis::executeProcess(core::MPAStreamReader& mpareader,
 {
 	int run = 0;
 	do {
+		_analysisRunning = true;
 		_rerunProcess = false;
 		size_t evtCount = 0;
 		if(process.mode == CS_ALWAYS && process.run) {
@@ -200,6 +199,7 @@ void Analysis::executeProcess(core::MPAStreamReader& mpareader,
 					break;
 			}
 		}
+		_analysisRunning = false;
 		if(process.post) {
 			process.post();
 		}
