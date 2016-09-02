@@ -129,13 +129,13 @@ std::string Analysis::getName() const
 std::string Analysis::getFilename(const std::string& suffix) const
 {
 	std::ostringstream sstr;
-	sstr << getName() << "_" << _config.getVariable("MpaRun") << suffix;
+	sstr << _config.getVariable("output_dir") << "/" << getName() << "_" << _config.getVariable("MpaRun") << suffix;
        return sstr.str();
 }
 
 std::string Analysis::getRootFilename(const std::string& suffix) const
 {
-	return getFilename(suffix)+".root";	
+	return getFilename(suffix)+".root";
 }
 
 void Analysis::addProcess(const process_t& proc)
