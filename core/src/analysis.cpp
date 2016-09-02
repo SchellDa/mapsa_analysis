@@ -2,6 +2,7 @@
 #include "analysis.h"
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 #include <cxxabi.h>
 
 using namespace core;
