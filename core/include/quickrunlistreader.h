@@ -69,7 +69,7 @@ public:
 	 */
 	int getTelRunByMpaRun(int mpaRun) const;
 
-	/** \return Get all interpreted information for specified MPA run
+	/** \brief Get all interpreted information for specified MPA run
 	 *
 	 * \param mpaRun MPA run ID
 	 * \return Run-specific information
@@ -77,7 +77,7 @@ public:
 	 */
 	const run_t& getByMpaRun(int mpaRun) const;
 	
-	/** \return Get all interpreted information for specified telescope run
+	/** \brief Get all interpreted information for specified telescope run
 	 *
 	 * \param telRun Telescope run ID
 	 * \return Run-specific information
