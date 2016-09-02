@@ -190,8 +190,8 @@ bool EfficiencyTrack::align(const core::TrackStreamReader::event_t& track_event,
 void EfficiencyTrack::alignFinish()
 {
 	auto offset = _mpaTransform.getOffset();
-	auto fitX = getAlignOffset(_alignCorX, 0.5);
-	auto fitY = getAlignOffset(_alignCorY, 1);
+	auto fitX = getAlignOffset(_alignCorX, 0.5, 0.1);
+	auto fitY = getAlignOffset(_alignCorY, 1, 0.05);
 	offset += Eigen::Vector3d(
 		fitX(0),
 		fitY(0),
@@ -379,10 +379,21 @@ void EfficiencyTrack::analyzeFinish()
 	delete img;
 }
 
-Eigen::Vector4d EfficiencyTrack::getAlignOffset(TH1D* cor, const double& nrms=0.5)
+Eigen::Vector4d EfficiencyTrack::getAlignOffset(TH1D* cor, const double& nrms, const double& binratio)
 {
+	auto maxBin = cor->GetMaximumBin();
+	auto mean = cor->GetBinLowEdge(maxBin);
 	auto rms = cor->GetRMS();
-	auto mean = cor->GetMean();
+	if(cor->GetEntries() * binratio * 2 < cor->GetNbinsX()) {
+		std::cout << "REBIN!\n"
+		          << "Num entries: " << cor->GetEntries() << "\n"
+		          << "Entry threshold: " << cor->GetEntries() * binratio * 2 << "\n"
+			  << "Num X bins: " << cor->GetNbinsX() << "\n";
+		cor->Rebin(cor->GetNbinsX() / (cor->GetEntries() * binratio));
+		std::cout << "New reduced bin number: " << cor->GetNbinsX() << std::endl;
+		mean += cor->GetMean();
+		mean /= 2;
+	}
 //	cor->SetParameter(1, mean);
 //	cor->SetParameter(2, rms);
 	auto result = cor->Fit("gaus", "RMS+", "", mean-rms*nrms, mean+rms*nrms);

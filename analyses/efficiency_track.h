@@ -32,7 +32,7 @@ private:
 	             const core::MPAStreamReader::event_t& mpa_event);
 	void analyzeFinish();
 
-	Eigen::Vector4d getAlignOffset(TH1D* cor, const double& nrms);
+	Eigen::Vector4d getAlignOffset(TH1D* cor, const double& nrms=0.5, const double& binratio=0.1);
 
 	std::vector<Eigen::Vector3d> _prealignPoints;
 	size_t _numPrealigmentPoints;
