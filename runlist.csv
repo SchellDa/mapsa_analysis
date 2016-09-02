@@ -1,174 +1,174 @@
-# MPA Run	Telescope Run	Angle (°)	Bias Volt (V)	Bias Cur (μA)	Threshold	MPA Trigger	Telescope  Trigger	Comments	Converted	Data Offset	Correlation	Comments
-28	133	0	110		110	750812	750809	Distance to REF = 35mm	Yes	0	Yes	
-29	146	0	110		110	750812	100504		Yes	-1	Yes	
-30	147	0	110		110	100720	100718		Yes	-1	Yes	
-31	148	0	110		110	100452	100453		Yes	-1	Yes	
-33	233	0	110 / 130		110	600704	600701		Yes	-1	Yes	
-40	235	0	130		110	600549	600553	Autopilot start, removed 'finally' from daq_continuous	Yes	0	Yes	
-41	236	0	130		110	600544	600548		Yes	0	Yes	
-42	237	0	130		110	600519	600523		Yes	0	Yes	
-43	238	0	130		110	600557	600561		Yes	0	Yes	
-44	239	0	130		110	600555	600559		Yes	0	Yes	
-45	240	0	130		110	600590	600594		Yes	0	Yes	
-53	296	0	110	2.0	110	100446	100447	We moved the sample by 2mm (upwards)	Yes	-1	Yes	
-54	324	0	150	5.0	110	100831	100832	And back again since our sample is approx. 1mm longer than the REF	No		N/A	
-55	325	0	150	5.0	110	103140	103156	Can't decode tracks from telescope for this and previous run	No		N/A	
-57	326	0	150	5.0	110	50821	50822	Aligned	Yes	-1	Yes	
-61	356	0	110	10.0	110	500547	500552		Yes	-1	Yes	
-62	357	0	110	9.0	110	500540	500554		Yes	0	Yes	
-63	358	0	110	9	110	500555	500559		Yes	0	Yes	
-64	359	0	110	8	110	500587	500591		Yes	0	Yes	
-65	361	0	110	7	110	499946	499944		Yes	0	Yes	
-66	362	0	90	5	110	484898	484870		Yes	0	Yes	
-69	364	0	90	5	110	500558	502781		Yes	0	Yes	
-71	365	0	90	4	110	318476	750548		Yes	0	Yes	
-73	367	0	90	4	110	750517	750521		Yes	0	Yes	
-74	370	0	90	3	110	500752	500753	Tested offset from -10 to 10	Yes		No	
-75	372	0	90	4	110	500806	500807		Yes	0	Yes	
-76	374	0	90	4	110	500921	500922		Yes	0	Yes	
-77	375	0	90	4	110	545437	500136	Run includes telescope run 376. Forgot to stop run after 500 kTriggers. 	Yes	1	Yes	
-78	377	0	90	4	110	500754	500755		Yes	0	Yes	
-79	379	0	110	7	70	500727	500729		Yes	-1	Yes	
-80	383	0	0	7	70	68658	518483	See bias -.- + RunControl crash. File corrupted	No		No	
-81	384	0	110	5	70	500754	500756		Yes	-1	Yes	
-82	385	0	110	7	70	500639	500614		Yes	-1	Yes	
-83	386	0	110	7	70	500740	500742		Yes	-1	Yes	
-84	388	0	110	7	70	500568	500572		Yes	-4	Better check	Noisy af
-85	389	0	110	7	70	500489	500493		Yes	0	Better check	
-86	390	0	110	7	70	500523	500527		Yes	0	Yes	
-87	391	0	110	7	70	500472	500476		Yes	0	Yes	
-88	392	0	130	10	70	500402	500406		Yes	-5	Yes	
-91	394	0	130	10	70	500590	500595		Yes	-1	Yes	
-92	395	0	130	11	70	500626	500630		Yes	0	Yes	
-93	396	0	130	10	70	500577	500581		Yes	0	Yes	
-94	397	0	130	10	70	500555	500559		Yes	0	Yes	
-95	398	0	130	10	70	228730	228731		Yes	0	Yes	
-96	399	0	130	10	70	500457	500459	At least 2 events mismatch (2 shutter at the beginning)	Yes	2	Yes	
-97	400	0	130	10	70	499553	499553		Yes	-10	Yes	
-102	441	0	110	5.4	90	500556	500561		Yes	-1	Yes	
-103	442	0	110	5.4	90	500020	500021		Yes	0	Yes	
-105	461	0	110	5.4	90	500511			Yes			
-106	462	0	110	5.4	90	500555		Event building stopped at roughly 400 kTriggers	Yes			
-109	464	0	110	5.4	90	500622			Yes			
-110	465	0	110	5	90			Event building stopped at roughly 67 kTriggers	Yes			
-111	466	0	110	5	90							
-112	467	0	110	5	90							
-113	468	0	110	5	90							
-114	470	0	130	9.3	90							
-117	473	0	130	10.5	90							
-119	475	0	130	8.7	90							
-120	476	0	130	8.2	90							
-121	477	0	130	8.2	90		85000					
-122	478	0	130	8.7	90							
-125	481	0	130	8.7	90							
-128	483	0	130	8.7	90			event building crashed after 104466 triggers				
-130	485	0	130	8.1	90							
-131	486	0	130	8.1	90							
-132	487	0	130	8.1	90							
-133	489	0	90	2.1	90							
-134	490	0	90	2.6	90			220000 triggers				
-135	491	0	90	2.6	90							
-136	492	0	90	2.6	90							
-137	493	0	90	2.6	90							
-138	494	0	90	2.6	90							
-139	495	0	90	2.6	90							
-140	496	0	90	2.6	90							
-141	497	0	90	2.6	90							
-142	498	0	90	2.6	90							
-143	499	0	90	2.6	90							
-144	500	0	90	2.6	90			100 -> 85				
-145	501	0	90	2.6	90							
-149	503	0	90	2.6	90							
-154	524	25	130	5	90		500613	Distance to REF: approx 60mm; no correlation yet	Yes			
-155	562	25	130	7.3	90			Assembly way out of beam (only chip 5 detects particle in first row)	Yes	-1	Yes	
-156	593	25	130	7.2	90			MPA2 missing first row ; MPA5 in beam -> move by 2mm	Yes	-1	Yes	
-157	595	25	130	6.8	90			also includes run 596				
-158	604	25	130	6.3	90			Only half of 2. row of MPA5 in Beam but Im happy with that	Yes	-1	Yes	
-#...	...	...	...	...	...			Overnight runs				
-173	619	25	130	7.7	90							
-174	621	25	130	7.5	110							
-175	622	25	130	8.5	110							
-176	623	25	130	9.5	110							
-180	626	45	130	8.5	90		~100000	Out of beam. Only first row of MPA5 got hits; MPA<->REF = 80mm	Yes	0		
-181	627	45	130	6.9	90			Still out of beam 				
-182	629	45	130	6.9	90			Moved setup by approx. 9mm -> MPA2 fully in beam, MPA5 3. and half of 2. row	Yes	-1		
-183	630	45	130	9.5	90							
-184	631	45	130	9.6	90							
-185	632	45	130	9.3	90							
-187	635	45	130	9.7	90							
-188	636	45	130	8.9	90			Maybe move assembly by 2mm to get at least 2 rows on MPA5				
-189	638	45	130	10.0	110		70000	Assembly moved by 2mm (downwards) but Benedikt also moved Ref by 0.3 (downwards) -.-				
-190	639	45	130	9.5	110							
-191	640	45	130	9.6	110							
-192	641	45	130	9.6	110							
-195	644	45	130	9.6	90							
-196	645	45	130	9.7	90							
-197	647	60	130	9.5	90		50000	Alignement run, MPA5 fully in Beam, no Hits on MPA2 -> ~5mm upwards	Yes	-1		
-198	648	60	130	9.1	90							
-199	650	60	130	9.2	90		50000	Moved Assembly approx. 4mm upwards; Alignment run; Looks perfect	Yes	0	Yes	
-200	651	60	130	8.9	90							
-201	652	60	130	9.1	90							
-202	653	60	130	11.9	90			No beam after trigger 149342 Triggers				
-203	654	60	130	11.0	90							
-204	655	60	130	12.0	90							
-205	657	60	130	12	110							
-206	660	60	130	11	110							
-207	661	60	130	11	110							
-208	662	60	130	11	110							
-209	663	60	130	11	110							
-210	664	60	130	11	110							
-211	665	60	130	11	110							
-212	666	60	130	11	110							
-213	667	60	130	11	110							
-214	668	60	130	11	110							
-215	669	60	130	11	110							
-216	670	60	130	11	110			run stopped due to machine dev. (160 kTriggers)				
-217	701	90	130	12.8	110			empty				
-218	702	90	130	14.5	90			empty				
-219	703	90	130	14.9	90			empty				
-220	704	90	130	13.1	90			empty				
-221	706	0	130	13.3	90			empty				
-224	709	0	130	13.3	60			Better Check				
-225	712	0	130		60			Better Check				
-226	713	0	130		60			Better Check				
-227	714	0	130		60			Better Check				
-228	716	0	130		60			Better Check				
-229	717	0	130		100		100000	Alignment run -> Way out of beam				
-230	718	0	130		100			Alignment run				
-231	719	0	130		100		50000	Alignment run	Yes	0	Yes	
-232	720	0	130		100		50000	Alignment run (misalignment in x)	Yes	0	Yes	
-235	725	0	130		100			Alignment run ohne DUT -> good to go				
-236	726	0	130		100		300000	Run without DUT				
-237	747	0	130		100							
-238	748	0	130		100							
-239	749	0	130		100							
-240	750	0	130		100							
-241	751	0	130		100							
-242	752	0	130		100							
-243	753	0	130		100							
-244	754	0	130		100							
-245	755	0	130		100							
-246	756	0	130		100							
-247	757	0	130		100							
-248	758	0	130		100							
-249	759	0	130		100							
-250	760	0	130	15.7	100							
-251	761	0	130		130							
-252	762	0	130		130							
-253	763	0	130		130							
-254	764	0	130	14.4	130							
-255	765	0	130	13.7	130							
-256	766	0	130	13.8	130			RunControl crashed				
-258	768	0	130		130							
-259	769	0	130		130							
-												
-262	788	0	130		150			Run without DUT				
-264	805	0	130		150				Yes	-1		
-265	806	0	130		150							
-266	807	0	130		150							
-267	808	0	130		150							
-268	809	0	130		150							
-	826				180			RunControl crashed				
-												
-												
-280								no Triggers				
+# MPA Run	Telescope Run	Angle (°)	Bias Volt (V)	Bias Cur (μA)	Threshold	MPA Trigger	Telescope  Trigger	Comments	Converted	Data Offset	Correlation	Comments	
+28	133	0	110		110	750812	750809	Distance to REF = 35mm	Yes	0	Yes		
+29	146	0	110		110	750812	100504		Yes	-1	Yes		
+30	147	0	110		110	100720	100718		Yes	-1	Yes		
+31	148	0	110		110	100452	100453		Yes	-1	Yes		
+33	233	0	110 / 130		110	600704	600701		Yes	-1	Yes		
+40	235	0	130		110	600549	600553	Autopilot start	 removed 'finally' from daq_continuous	0	0	Yes	
+41	236	0	130		110	600544	600548		Yes	0	Yes		
+42	237	0	130		110	600519	600523		Yes	0	Yes		
+43	238	0	130		110	600557	600561		Yes	0	Yes		
+44	239	0	130		110	600555	600559		Yes	0	Yes		
+45	240	0	130		110	600590	600594		Yes	0	Yes		
+53	296	0	110	2	110	100446	100447	We moved the sample by 2mm (upwards)	Yes	-1	Yes		
+54	324	0	150	5	110	100831	100832	And back again since our sample is approx. 1mm longer than the REF	No		N/A		
+55	325	0	150	5	110	103140	103156	Can't decode tracks from telescope for this and previous run	No		N/A		
+57	326	0	150	5	110	50821	50822	Aligned	Yes	-1	Yes		
+61	356	0	110	10	110	500547	500552		Yes	-1	Yes		
+62	357	0	110	9	110	500540	500554		Yes	0	Yes		
+63	358	0	110	9	110	500555	500559		Yes	0	Yes		
+64	359	0	110	8	110	500587	500591		Yes	0	Yes		
+65	361	0	110	7	110	499946	499944		Yes	0	Yes		
+66	362	0	90	5	110	484898	484870		Yes	0	Yes		
+69	364	0	90	5	110	500558	502781		Yes	0	Yes		
+71	365	0	90	4	110	318476	750548		Yes	0	Yes		
+73	367	0	90	4	110	750517	750521		Yes	0	Yes		
+74	370	0	90	3	110	500752	500753	Tested offset from -10 to 10	Yes	1	No		
+75	372	0	90	4	110	500806	500807		Yes	0	Yes		
+76	374	0	90	4	110	500921	500922		Yes	0	Yes		
+77	375	0	90	4	110	545437	500136	Run includes telescope run 376. Forgot to stop run after 500 kTriggers. 	Yes	1	Yes		
+78	377	0	90	4	110	500754	500755		Yes	0	Yes		
+79	379	0	110	7	70	500727	500729		Yes	1	Yes		
+80	383	0	0	7	70	68658	518483	See bias -.- + RunControl crash. File corrupted	No		No		
+81	384	0	110	5	70	500754	500756		Yes	1	Yes		
+82	385	0	110	7	70	500639	500614		Yes	1	Yes		
+83	386	0	110	7	70	500740	500742		Yes	1	Yes		
+84	388	0	110	7	70	500568	500572		Yes	-4	Better check	Noisy af	
+85	389	0	110	7	70	500489	500493		Yes	0	Better check		
+86	390	0	110	7	70	500523	500527		Yes	0	Yes		
+87	391	0	110	7	70	500472	500476		Yes	0	Yes		
+88	392	0	130	10	70	500402	500406		Yes	-5	Yes		
+91	394	0	130	10	70	500590	500595		Yes	1	Yes		
+92	395	0	130	11	70	500626	500630		Yes	0	Yes		
+93	396	0	130	10	70	500577	500581		Yes	0	Yes		
+94	397	0	130	10	70	500555	500559		Yes	0	Yes		
+95	398	0	130	10	70	228730	228731		Yes	0	Yes		
+96	399	0	130	10	70	500457	500459	At least 2 events mismatch (2 shutter at the beginning)	Yes	2	Yes		
+97	400	0	130	10	70	499553	499553		Yes	-10	Yes		
+102	441	0	110	5.4	90	500556	500561		Yes	-1	Yes		
+103	442	0	110	5.4	90	500020	500021		Yes	0	Yes		
+105	461	0	110	5.4	90	500511			Yes				
+106	462	0	110	5.4	90	500555		Event building stopped at roughly 400 kTriggers	Yes				
+109	464	0	110	5.4	90	500622			Yes				
+110	465	0	110	5	90			Event building stopped at roughly 67 kTriggers	Yes				
+111	466	0	110	5	90					1		112	467
+0	110	5	90						1	1			
+113	468	0	110	5	90								
+114	470	0	130	9.3	90					1			
+117	473	0	130	10.5	90					1			
+119	475	0	130	8.7	90					-1			
+120	476	0	130	8.2	90								
+121	477	0	130	8.2	90		85000						
+122	478	0	130	8.7	90					1			
+125	481	0	130	8.7	90					1			
+128	483	0	130	8.7	90			event building crashed after 104466 triggers		1			
+130	485	0	130	8.1	90								
+131	486	0	130	8.1	90								
+132	487	0	130	8.1	90								
+133	489	0	90	2.1	90					1			
+134	490	0	90	2.6	90			220000 triggers					
+135	491	0	90	2.6	90					1			
+136	492	0	90	2.6	90								
+137	493	0	90	2.6	90								
+138	494	0	90	2.6	90								
+139	495	0	90	2.6	90								
+140	496	0	90	2.6	90								
+141	497	0	90	2.6	90								
+142	498	0	90	2.6	90								
+143	499	0	90	2.6	90								
+144	500	0	90	2.6	90			100 -> 85					
+145	501	0	90	2.6	90								
+149	503	0	90	2.6	90								
+154	524	25	130	5	90		500613	Distance to REF: approx 60mm,  no correlation yet	Yes				
+155	562	25	130	7.3	90			Assembly way out of beam (only chip 5 detects particle in first row)	Yes	-1	Yes		
+156	593	25	130	7.2	90			MPA2 missing first row 	 MPA5 in beam -> move by 2mm	2	-1	Yes	
+157	595	25	130	6.8	90			also includes run 596		2			
+158	604	25	130	6.3	90			Only half of 2. row of MPA5 in Beam but Im happy with that	Yes	1	Yes		
+#...	...	...	...	...	...			Overnight runs					
+173	619	25	130	7.7	90								
+174	621	25	130	7.5	110								
+175	622	25	130	8.5	110								
+176	623	25	130	9.5	110								
+180	626	45	130	8.5	90		~100000	Out of beam. Only first row of MPA5 got hits,  MPA<->REF = 80mm	Yes	0			
+181	627	45	130	6.9	90			Still out of beam 					
+182	629	45	130	6.9	90			Moved setup by approx. 9mm -> MPA2 fully in beam	 MPA5 3. and half of 2. row	1	-1		
+183	630	45	130	9.5	90								
+184	631	45	130	9.6	90								
+185	632	45	130	9.3	90								
+187	635	45	130	9.7	90								
+188	636	45	130	8.9	90			Maybe move assembly by 2mm to get at least 2 rows on MPA5					
+189	638	45	130	10	110		70000	Assembly moved by 2mm (downwards) but Benedikt also moved Ref by 0.3 (downwards) -.-					
+190	639	45	130	9.5	110								
+191	640	45	130	9.6	110								
+192	641	45	130	9.6	110								
+195	644	45	130	9.6	90								
+196	645	45	130	9.7	90								
+197	647	60	130	9.5	90		50000	Alignement run,  MPA5 fully in Beam,  no Hits on MPA2 -> ~5mm upwards	Yes	-1			
+198	648	60	130	9.1	90				Yes	-1			
+199	650	60	130	9.2	90		50000	Moved Assembly approx. 4mm upwards	 Alignment run	0	Yes	0	Yes
+200	651	60	130	8.9	90								
+201	652	60	130	9.1	90								
+202	653	60	130	11.9	90			No beam after trigger 149342 Triggers					
+203	654	60	130	11	90								
+204	655	60	130	12	90								
+205	657	60	130	12	110								
+206	660	60	130	11	110								
+207	661	60	130	11	110								
+208	662	60	130	11	110								
+209	663	60	130	11	110								
+210	664	60	130	11	110								
+211	665	60	130	11	110								
+212	666	60	130	11	110								
+213	667	60	130	11	110								
+214	668	60	130	11	110								
+215	669	60	130	11	110								
+216	670	60	130	11	110			run stopped due to machine dev. (160 kTriggers)					
+217	701	90	130	12.8	110			empty					
+218	702	90	130	14.5	90			empty					
+219	703	90	130	14.9	90			empty					
+220	704	90	130	13.1	90			empty					
+221	706	0	130	13.3	90			empty					
+224	709	0	130	13.3	60			Better Check					
+225	712	0	130		60			Better Check					
+226	713	0	130		60			Better Check					
+227	714	0	130		60			Better Check					
+228	716	0	130		60			Better Check					
+229	717	0	130		100		100000	Alignment run -> Way out of beam					
+230	718	0	130		100			Alignment run		1			
+231	719	0	130		100		50000	Alignment run	Yes	0	Yes		
+232	720	0	130		100		50000	Alignment run (misalignment in x)	Yes	0	Yes		
+235	725	0	130		100			Alignment run ohne DUT -> good to go					
+236	726	0	130		100		300000	Run without DUT					
+237	747	0	130		100								
+238	748	0	130		100								
+239	749	0	130		100								
+240	750	0	130		100								
+241	751	0	130		100								
+242	752	0	130		100								
+243	753	0	130		100								
+244	754	0	130		100								
+245	755	0	130		100								
+246	756	0	130		100								
+247	757	0	130		100								
+248	758	0	130		100								
+249	759	0	130		100								
+250	760	0	130	15.7	100								
+251	761	0	130		130								
+252	762	0	130		130								
+253	763	0	130		130								
+254	764	0	130	14.4	130								
+255	765	0	130	13.7	130								
+256	766	0	130	13.8	130			RunControl crashed					
+258	768	0	130		130								
+259	769	0	130		130								
+													
+262	788	0	130		150			Run without DUT					
+264	805	0	130		150				Yes	1			
+265	806	0	130		150								
+266	807	0	130		150								
+267	808	0	130		150								
+268	809	0	130		150								
+	826				180			RunControl crashed					
+													
+													
+280								no Triggers					
