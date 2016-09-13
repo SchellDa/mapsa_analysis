@@ -11,10 +11,10 @@
 44	239	0	130		110	600555	600559		Yes	0	Yes		
 45	240	0	130		110	600590	600594		Yes	0	Yes		
 53	296	0	110	2	110	100446	100447	We moved the sample by 2mm (upwards)	Yes	-1	Yes		
-54	324	0	150	5	110	100831	100832	And back again since our sample is approx. 1mm longer than the REF	No		N/A		
-55	325	0	150	5	110	103140	103156	Can't decode tracks from telescope for this and previous run	No		N/A		
-57	326	0	150	5	110	50821	50822	Aligned	Yes	-1	Yes		
-61	356	0	110	10	110	500547	500552		Yes	-1	Yes		
+54	324	0	150	5	110	100831	100832	And back again since our sample is approx. 1mm longer than the REF	No	1	N/A		
+55	325	0	150	5	110	103140	103156	Can't decode tracks from telescope for this and previous run	No	1	N/A		
+57	326	0	150	5	110	50821	50822	Aligned	Yes	1	Yes		
+61	356	0	110	10	110	500547	500552		Yes	1	Yes		
 62	357	0	110	9	110	500540	500554		Yes	0	Yes		
 63	358	0	110	9	110	500555	500559		Yes	0	Yes		
 64	359	0	110	8	110	500587	500591		Yes	0	Yes		
