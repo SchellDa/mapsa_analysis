@@ -174,11 +174,11 @@ bool EfficiencyTrack::align(const core::TrackStreamReader::event_t& track_event,
 	}
 	bool empty = true;
 	for(const auto& track: track_event.tracks) {
+		auto b = track.extrapolateOnPlane(4, 5, 840, 2);
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
 			if(mpa_event.data[idx] == 0) continue;
 			auto a = _mpaTransform.transform(idx);
 			auto pc = _mpaTransform.translatePixelIndex(idx);
-			auto b = track.extrapolateOnPlane(4, 5, 840, 2);
 			_aligner.Fill(b(0) - a(0), b(1) - a(1));
 			_alignFile << idx << " "
 			     << a(0) << " "
@@ -248,11 +248,13 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 			// track missed MPA
 		}*/
 		bool hitMpa = false;
+		bool hitActivatedPixel = false;
+		auto b = track.extrapolateOnPlane(4, 5, 840, 2);
+		auto cb(b);
+		cb -= _mpaTransform.getOffset();
+		_trackHits->Fill(cb(0), cb(1));
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
 			auto a = _mpaTransform.transform(idx);
-			auto b = track.extrapolateOnPlane(4, 5, 840, 2);
-			auto cb(b);
-			cb -= _mpaTransform.getOffset();
 			auto pc = _mpaTransform.translatePixelIndex(idx);
 			if(_aligner.pointsCorrelated(a, b)) {
 				try {
@@ -265,9 +267,8 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 					// track missed MPA...
 					_neighbourHits->Fill(cb(0), cb(1));
 				}
-				hitMpa = true;
 				_totalPixelHits[idx] += 1;
-				_trackHits->Fill(cb(0), cb(1));
+				hitMpa = true;
 				_analysisHitFile << track_event.eventNumber << "\t" << cb(0) << "\t" << cb(1)
 					<< "\t" << a(0) << "\t" << a(1);
 				if(mpa_event.data[idx] == 0) {
@@ -276,7 +277,10 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 					_analysisHitFile << "\t"
 						<< a(0) << "\t" << a(1)
 						<<"\t1\n";
-					_efficiency->Fill(cb(0), cb(1));
+					if(!hitActivatedPixel) {
+						_efficiency->Fill(cb(0), cb(1));
+						hitActivatedPixel = true;
+					}
 				}
 			}
 		}
