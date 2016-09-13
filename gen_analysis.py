@@ -37,7 +37,7 @@ REGISTER_ANALYSIS_TYPE({class}, "Textual analysis description here.")
 {class}::{class}() :
  Analysis()
 {{
-\taddProcess(CS_ALWAYS /* CS_TRACK */,
+\taddProcess(CS_ALWAYS /* CS_TRACK */, "analyze",
 \t           std::bind(&{class}::analyze, this, std::placeholders::_1, std::placeholders::_2),
 \t           std::bind(&{class}::finish, this)
 \t           );
