@@ -10,7 +10,7 @@ REGISTER_ANALYSIS_TYPE(DataSkip, "Textual analysis description here.")
 DataSkip::DataSkip() :
  Analysis(), _file(nullptr), _currentHist(nullptr)
 {
-	addProcess(CS_TRACK,
+	addProcess("analyze", CS_TRACK,
 		std::bind(&DataSkip::analyze, this, std::placeholders::_1, std::placeholders::_2),
 	        std::bind(&DataSkip::finish, this));
 	getOptionsDescription().add_options()

@@ -166,7 +166,7 @@ void Analysis::executeProcess(core::MPAStreamReader& mpareader,
 				if(track_it->eventNumber < (int)mpa.eventNumber + _dataOffset)
 					++track_it;
 				if(evtCount % 1000 == 0) {
-					std::cout << "Processing step " << evtCount;
+					std::cout << process.name << ": Processing step " << evtCount;
 					if(run)
 						std::cout << " rerun " << run;
 					std::cout << std::endl;
@@ -185,7 +185,7 @@ void Analysis::executeProcess(core::MPAStreamReader& mpareader,
 					continue;
 				}
 				if(evtCount % 1000 == 0) {
-					std::cout << "Processing step " << evtCount;
+					std::cout << process.name <<  ": Processing step " << evtCount;
 					if(run)
 						std::cout << " rerun " << run;
 					std::cout << " event no. " << track.eventNumber << "/" << mpa_it->eventNumber;

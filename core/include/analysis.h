@@ -45,6 +45,7 @@ public:
 	                           const MPAStreamReader::event_t&)> run_callback_t;
 	typedef std::function<void()> post_callback_t;
 	struct process_t {
+		std::string name;
 		callback_stop_t mode;
 		run_callback_t run;
 		post_callback_t post;
@@ -114,11 +115,12 @@ public:
 
 protected:
 	void addProcess(const process_t& proc);
-	void addProcess(const callback_stop_t& mode,
+	void addProcess(const std::string& name,
+	                const callback_stop_t& mode,
 	                const run_callback_t& run,
 			const post_callback_t& stop=std::function<void()>())
 	{
-		addProcess({mode, run, stop});
+		addProcess({name, mode, run, stop});
 	}
 	void setDataOffset(int dataOffset);
 	int getDataOffset() const { return _dataOffset; }

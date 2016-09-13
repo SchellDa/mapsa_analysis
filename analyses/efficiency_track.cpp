@@ -14,18 +14,18 @@ REGISTER_ANALYSIS_TYPE(EfficiencyTrack, "Textual analysis description here.")
 EfficiencyTrack::EfficiencyTrack() :
  Analysis(), _aligner(), _file(nullptr)
 {
-/*	addProcess(CS_TRACK,
+/*	addProcess("prealign", CS_TRACK,
 	 std::bind(&EfficiencyTrack::prealignRun, this, std::placeholders::_1, std::placeholders::_2),
 	 std::bind(&EfficiencyTrack::prealignFinish, this)
 	);*/
-	addProcess(CS_TRACK,
+	addProcess("align", CS_TRACK,
 	 std::bind(&EfficiencyTrack::align, this, std::placeholders::_1, std::placeholders::_2),
 	 std::bind(&EfficiencyTrack::alignFinish, this)
 	);
-/*	addProcess(CS_TRACK,
+	/*addProcess("checkCorrelatedHits", CS_TRACK,
 	 std::bind(&EfficiencyTrack::checkCorrelatedHits, this, std::placeholders::_1, std::placeholders::_2)
 	);*/
-	addProcess(CS_TRACK,
+	addProcess("analyze", CS_TRACK,
 	 std::bind(&EfficiencyTrack::analyze, this, std::placeholders::_1, std::placeholders::_2),
 	 std::bind(&EfficiencyTrack::analyzeFinish, this)
 	);

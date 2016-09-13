@@ -8,7 +8,7 @@ Test::Test() :
  Analysis()
 {
 	std::cout << "Constructor" << std::endl;
-	addProcess(CS_ALWAYS, std::bind(&Test::analyze, this, std::placeholders::_1, std::placeholders::_2));
+	addProcess("test", CS_ALWAYS, std::bind(&Test::analyze, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 Test::~Test()
