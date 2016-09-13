@@ -36,7 +36,12 @@ public:
 
 	Eigen::Vector3d pixelCoordToGlobal(const Eigen::Vector2i& pixelCoord) const
 	{
-		auto scaled = _sensitiveSize*(pixelCoord.array().cast<double>()
+		return pixelCoordToGlobal(Eigen::Vector2d{pixelCoord.cast<double>()});
+	}
+
+	Eigen::Vector3d pixelCoordToGlobal(const Eigen::Vector2d& pixelCoord) const
+	{
+		auto scaled = _sensitiveSize*(pixelCoord.array()
 				/_numPixels.cast<double>() - 0.5) + _pixelSize/2;
 		Eigen::Vector3d coord(scaled(0), scaled(1), 0.0);
 		// todo: rotate
