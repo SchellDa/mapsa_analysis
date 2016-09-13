@@ -3,6 +3,7 @@
 #define EFFICIENCY_TRACK_H
 
 #include "analysis.h"
+#include "aligner.h"
 #include <TFile.h>
 #include <TH1D.h>
 #include <TH2D.h>
@@ -32,13 +33,10 @@ private:
 	             const core::MPAStreamReader::event_t& mpa_event);
 	void analyzeFinish();
 
-	Eigen::Vector4d getAlignOffset(TH1D* cor, const double& nrms=0.5, const double& binratio=0.1);
-
 	std::vector<Eigen::Vector3d> _prealignPoints;
 	size_t _numPrealigmentPoints;
 	TFile* _file;
-	TH1D* _alignCorX;
-	TH1D* _alignCorY;
+	core::Aligner _aligner;
 	TH2D* _correlatedHits;
 	TH1D* _correlatedHitsX;
 	TH1D* _correlatedHitsY;
@@ -51,7 +49,6 @@ private:
 	std::vector<size_t> _activatedPixelHits;
 	std::ofstream _alignFile;
 	std::ofstream _analysisHitFile;
-	Eigen::Vector3d _alignSigma;
 };
 
 #endif//EFFICIENCY_TRACK_H

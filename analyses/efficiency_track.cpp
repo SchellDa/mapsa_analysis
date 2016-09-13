@@ -12,8 +12,7 @@
 REGISTER_ANALYSIS_TYPE(EfficiencyTrack, "Textual analysis description here.")
 
 EfficiencyTrack::EfficiencyTrack() :
- Analysis(),
- _file(nullptr), _alignCorX(nullptr), _alignCorY(nullptr)
+ Analysis(), _aligner(), _file(nullptr)
 {
 /*	addProcess(CS_TRACK,
 	 std::bind(&EfficiencyTrack::prealignRun, this, std::placeholders::_1, std::placeholders::_2),
@@ -30,6 +29,9 @@ EfficiencyTrack::EfficiencyTrack() :
 	 std::bind(&EfficiencyTrack::analyze, this, std::placeholders::_1, std::placeholders::_2),
 	 std::bind(&EfficiencyTrack::analyzeFinish, this)
 	);
+	getOptionsDescription().add_options()
+		("align,a", "Force recalculation of alignment parameters")
+	;
 }
 
 EfficiencyTrack::~EfficiencyTrack()
@@ -44,10 +46,14 @@ EfficiencyTrack::~EfficiencyTrack()
 void EfficiencyTrack::init(const po::variables_map& vm)
 {
 	_numPrealigmentPoints = 20000;
-	_nSigmaCut = _config.get<double>("n_sigma_cut");
+	_aligner.setNSigma(_config.get<double>("n_sigma_cut"));
+	if(vm.count("align") < 1) {
+		_aligner.loadAlignmentData(getFilename(".align"));
+	}
 	_file = new TFile(getRootFilename().c_str(), "RECREATE");
-	_alignCorX = new TH1D("alignCorX", "", 1000, -5, 5);
-	_alignCorY = new TH1D("alignCorY", "", 250, -5, 5);
+	if(!_aligner.gotAlignmentData()) {
+		_aligner.initHistograms();
+	}
 	double sizeX = _mpaTransform.getSensitiveSize()(0);
 	double sizeY = _mpaTransform.getSensitiveSize()(1);
 	auto resolution = _config.get<unsigned int>("efficiency_histogram_resolution_factor");
@@ -163,6 +169,9 @@ void EfficiencyTrack::prealignFinish()
 bool EfficiencyTrack::align(const core::TrackStreamReader::event_t& track_event,
                             const core::MPAStreamReader::event_t&  mpa_event)
 {
+	if(_aligner.gotAlignmentData()) {
+		return false;
+	}
 	bool empty = true;
 	for(const auto& track: track_event.tracks) {
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
@@ -170,8 +179,7 @@ bool EfficiencyTrack::align(const core::TrackStreamReader::event_t& track_event,
 			auto a = _mpaTransform.transform(idx);
 			auto pc = _mpaTransform.translatePixelIndex(idx);
 			auto b = track.extrapolateOnPlane(4, 5, 840, 2);
-			_alignCorX->Fill(b(0) - a(0));
-			_alignCorY->Fill(b(1) - a(1));
+			_aligner.Fill(b(0) - a(0), b(1) - a(1));
 			_alignFile << idx << " "
 			     << a(0) << " "
 			     << a(1) << " "
@@ -189,38 +197,18 @@ bool EfficiencyTrack::align(const core::TrackStreamReader::event_t& track_event,
 
 void EfficiencyTrack::alignFinish()
 {
+	_aligner.calculateAlignment();
 	auto offset = _mpaTransform.getOffset();
-	auto fitX = getAlignOffset(_alignCorX, 0.5, 0.1);
-	auto fitY = getAlignOffset(_alignCorY, 1, 0.05);
-	offset += Eigen::Vector3d(
-		fitX(0),
-		fitY(0),
-		0.0);
-	_alignSigma = Eigen::Vector3d(
-		fitX(2),
-		fitY(2),
-		0.0);
-	auto oldY = getAlignOffset(_alignCorY, 0.5);
-	std::cout << "y difference = " << (fitY(0) - oldY(0))/fitY(0)*100.0 << std::endl;
+	offset += _aligner.getOffset();
+	auto cuts = _aligner.getCuts();
 	std::cout << "x_off = " << offset(0)
 	          << "\ny_off = " << offset(1)
-		  << "\nz_off = " << offset(2)  << std::endl;
+		  << "\nz_off = " << offset(2)
+	          << "\nx_sigma = " << cuts(0)
+	          << "\ny_width = " << cuts(1) << std::endl; 
 	_mpaTransform.setOffset(offset);
-	std::ostringstream info;
-	info << "Alignment of MPA run " << _config.get<int>("MpaRun");
-	auto canvas = new TCanvas("alignmentCanvas", info.str().c_str(), 400, 600);
-	canvas->Divide(1, 2);
-	canvas->cd(1);
-	_alignCorX->SetTitle("Correlation alignment X");
-	_alignCorX->Draw();
-
-	canvas->cd(2);
-	_alignCorY->SetTitle("Correlation alignment Y");
-	_alignCorY->Draw();
-	auto img = TImage::Create();
-	img->FromPad(canvas);
-	img->WriteImage(getFilename("_align.png").c_str());
-	delete img;
+	_aligner.writeHistogramImage(getFilename("_align.png"));
+	_aligner.saveAlignmentData(getFilename(".align"));
 }
 
 bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t& track_event,
@@ -234,7 +222,7 @@ bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t
 			auto b = track.extrapolateOnPlane(4, 5, 840, 2);
 			auto center_b(b);
 			center_b -= _mpaTransform.getOffset();
-			if(std::abs(a(0)-b(0)) < _alignSigma(0)*_nSigmaCut) {
+			if(_aligner.pointsCorrelatedX(a, b)) {
 				_correlatedHits->Fill(center_b(0), center_b(1));
 				_correlatedHitsX->Fill(center_b(0));
 				_correlatedHitsY->Fill(center_b(1));
@@ -266,10 +254,7 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 			auto cb(b);
 			cb -= _mpaTransform.getOffset();
 			auto pc = _mpaTransform.translatePixelIndex(idx);
-//			std::cout << std::abs(a(0)-cb(0)) << " " << _alignSigma(0)*2 << " "
-//				<< std::abs(a(1)-cb(1)) << " " << _alignSigma(1)*2 << std::endl;
-			if(std::abs(a(0)-b(0)) < _alignSigma(0)*_nSigmaCut  &&
-			   std::abs(a(1)-b(1)) < _alignSigma(1)*_nSigmaCut) {
+			if(_aligner.pointsCorrelated(a, b)) {
 				try {
 					auto hit_idx = _mpaTransform.getPixelIndex(track);
 					if(hit_idx == idx)
@@ -379,28 +364,3 @@ void EfficiencyTrack::analyzeFinish()
 	delete img;
 }
 
-Eigen::Vector4d EfficiencyTrack::getAlignOffset(TH1D* cor, const double& nrms, const double& binratio)
-{
-	auto maxBin = cor->GetMaximumBin();
-	auto mean = cor->GetBinLowEdge(maxBin);
-	auto rms = cor->GetRMS();
-	if(cor->GetEntries() * binratio * 2 < cor->GetNbinsX()) {
-		std::cout << "REBIN!\n"
-		          << "Num entries: " << cor->GetEntries() << "\n"
-		          << "Entry threshold: " << cor->GetEntries() * binratio * 2 << "\n"
-			  << "Num X bins: " << cor->GetNbinsX() << "\n";
-		cor->Rebin(cor->GetNbinsX() / (cor->GetEntries() * binratio));
-		std::cout << "New reduced bin number: " << cor->GetNbinsX() << std::endl;
-		mean += cor->GetMean();
-		mean /= 2;
-	}
-//	cor->SetParameter(1, mean);
-//	cor->SetParameter(2, rms);
-	auto result = cor->Fit("gaus", "RMS+", "", mean-rms*nrms, mean+rms*nrms);
-	return {
-		result->Parameter(1),
-		result->Error(1),
-		result->Parameter(2),
-		result->Error(2),
-	};
-}
