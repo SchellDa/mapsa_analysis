@@ -7,6 +7,8 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/trackstreamreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/analysis.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/quickrunlistreader.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/aligner.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/functions.cpp
 )
 
 add_definitions("-Wall")
