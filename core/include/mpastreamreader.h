@@ -19,7 +19,7 @@ namespace core {
  * \todo Maybe a check for line format consistency would be useful for debugging and robustness.
  *
  * The MPAStreamReader is compatible with range-based for loops, as it implements an C++11 iterator interface
- * via MPAStreamReader::EventIterator.
+ * via BaseSensorStreamReader::iterator .
  *
  * \code{.cpp}
 MPAStreamReader read("run0028_counter.txt_0");
