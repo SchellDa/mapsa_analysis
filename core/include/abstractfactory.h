@@ -2,6 +2,7 @@
 #ifndef ABSTRACT_FACTORY_H
 #define ABSTRACT_FACTORY_H
 
+#include <map>
 #include <memory>
 #include <functional>
 #include <boost/preprocessor/stringize.hpp>
