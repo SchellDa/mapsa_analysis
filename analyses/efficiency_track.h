@@ -22,15 +22,15 @@ public:
 
 private:
         bool prealignRun(const core::TrackStreamReader::event_t& track_event,
-	              const core::MPAStreamReader::event_t& mpa_event);
+	              const core::BaseSensorStreamReader::event_t& mpa_event);
 	void prealignFinish();
         bool align(const core::TrackStreamReader::event_t& track_event,
-	           const core::MPAStreamReader::event_t& mpa_event);
+	           const core::BaseSensorStreamReader::event_t& mpa_event);
 	void alignFinish();
         bool checkCorrelatedHits(const core::TrackStreamReader::event_t& track_event,
-	           const core::MPAStreamReader::event_t& mpa_event);
+	           const core::BaseSensorStreamReader::event_t& mpa_event);
         bool analyze(const core::TrackStreamReader::event_t& track_event,
-	             const core::MPAStreamReader::event_t& mpa_event);
+	             const core::BaseSensorStreamReader::event_t& mpa_event);
 	void analyzeFinish();
 
 	std::vector<Eigen::Vector3d> _prealignPoints;

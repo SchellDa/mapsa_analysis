@@ -5,89 +5,29 @@
 
 using namespace core;
 
+namespace core {
+REGISTER_PIXEL_STREAM_READER_TYPE(MPAStreamReader)
+}
 
-MPAStreamReader::EventIterator::EventIterator(const std::string& filename, bool end)
- : _fin(), _filename(filename), _end(end), _numEventsRead(0), _currentEvent()
+MPAStreamReader::mpareader::mpareader(const std::string& filename, size_t seek)
+ : reader(filename), _fin(), _numEventsRead(0)
 {
-	if(!_end) {
-		open();
-		++(*this);
+	open(seek);
+	if(seek == 0) {
+		next();
 	}
 }
 
-MPAStreamReader::EventIterator::EventIterator(const EventIterator& other)
- : _fin(), _filename(other._filename), _end(other._end), _numEventsRead(other._numEventsRead),
-   _currentEvent(other._currentEvent)
-{
-	if(_end) {
-		_numEventsRead = other._numEventsRead;
-	} else {
-		open();
-		_fin.seekg(other._fin.tellg());
-	}
-}
-
-MPAStreamReader::EventIterator::EventIterator(EventIterator&& other) noexcept :
-#ifdef NO_IOSTREAM_MOVE
- _fin(),
-#else
- _fin(std::move(other._fin)),
-#endif
- _filename(other._filename), _end(other._end), _numEventsRead(other._numEventsRead),
- _currentEvent{other._currentEvent.eventNumber, std::move(other._currentEvent.data)}
-{
-#ifdef NO_IOSTREAM_MOVE
-	open();
-	_fin.seekg(other._fin.tellg());
-#endif
-}
-
-MPAStreamReader::EventIterator::~EventIterator()
-{
-}
-
-MPAStreamReader::EventIterator& MPAStreamReader::EventIterator::operator=(const EventIterator& other)
-{
-	EventIterator tmp(other);
-	*this = std::move(tmp);
-	return *this;
-}
-
-MPAStreamReader::EventIterator& MPAStreamReader::EventIterator::operator=(EventIterator&& other) noexcept
+MPAStreamReader::mpareader::~mpareader()
 {
 	_fin.close();
-#ifdef NO_IOSTREAM_MOVE
-	open();
-	_fin.seekg(other._fin.tellg());
-#else
-	_fin = std::move(other._fin);
-#endif
-	_filename = other._filename;
-	_numEventsRead = other._numEventsRead;
-	_end = other._end;
-	_currentEvent = std::move(other._currentEvent);
-	return *this;
 }
 
-bool MPAStreamReader::EventIterator::operator==(const EventIterator& other) const
-{
-	// iterators are always equal when they are end iterator, otherwise
-	// event numbers need to match.
-	return _end == other._end && _filename == other._filename &&
-		(_end || _numEventsRead == other._numEventsRead);
-}
-
-bool MPAStreamReader::EventIterator::operator!=(const EventIterator& other) const
-{
-	return !(*this == other);
-}
-
-MPAStreamReader::EventIterator& MPAStreamReader::EventIterator::operator++()
+bool MPAStreamReader::mpareader::next()
 {
 	// last read reached EOF, so we are an end-iterator now
 	if(!_fin.good()) {
-		_end = true;
-		return *this;
+		return true;
 	}
 	std::string line;
 	// try to read only non-empty lines
@@ -98,8 +38,7 @@ MPAStreamReader::EventIterator& MPAStreamReader::EventIterator::operator++()
 	}
 	// empty line(s) at end of file -> reached end!
 	if(!_fin.good()) {
-		_end = true;
-		return *this;
+		return true;
 	}
 
 	_currentEvent.data.clear();
@@ -119,34 +58,29 @@ MPAStreamReader::EventIterator& MPAStreamReader::EventIterator::operator++()
 		offset += m[0].rm_eo;
 	}
 	regfree(&regex);
-	return *this;
+	return false;
 }
 
-MPAStreamReader::EventIterator MPAStreamReader::EventIterator::operator++(int)
-{
-	EventIterator old(*this);
-	++(*this);
-	return old;
-}
 
-void MPAStreamReader::EventIterator::open()
+void MPAStreamReader::mpareader::open(size_t seek)
 {
 	_fin.exceptions(std::ios_base::failbit);
-	_fin.open(_filename);
+	_fin.open(getFilename());
 	_fin.exceptions(std::ios_base::goodbit);
+	if(seek) {
+		_fin.seekg(seek);
+	}
 }
 
-MPAStreamReader::MPAStreamReader(const std::string& filename)
- : _filename(filename)
+BaseSensorStreamReader::reader* MPAStreamReader::mpareader::clone() const
 {
+	auto newReader = new mpareader(getFilename(), _fin.tellg());
+	newReader->_currentEvent = _currentEvent;
+	newReader->_numEventsRead = _numEventsRead;
+	return newReader;
 }
 
-MPAStreamReader::EventIterator MPAStreamReader::begin() const
+BaseSensorStreamReader::reader* MPAStreamReader::getReader(const std::string& filename) const
 {
-	return EventIterator(_filename, false);
-}
-
-MPAStreamReader::EventIterator MPAStreamReader::end() const
-{
-	return EventIterator(_filename, true);
+	return new mpareader(filename);
 }

@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include "basesensorstreamreader.h"
 
 namespace core {
 
@@ -27,92 +28,33 @@ for(auto event: read) {
 }
 \endcode
  */
-class MPAStreamReader
+class MPAStreamReader : public BaseSensorStreamReader
 {
 public:
-	struct event_t {
-		size_t eventNumber;
-		std::vector<int> data;
-	};
+	MPAStreamReader() : BaseSensorStreamReader() {}
+	MPAStreamReader(const std::string& filename) : BaseSensorStreamReader(filename) {}
+
+protected:
 	/** \brief Iterator for traversing separate events in the MPA data file
 	 *
 	 * The work horse of the MPAStreamReader. A C++11 compliant copyable and movable iterator
 	 * implementation. The first event is read during iterator construction, any subsequent read is
 	 * performed when incrementing the iterator.
 	 */
-	class EventIterator {
+	class mpareader : public BaseSensorStreamReader::reader {
 	public:
-		/** Construct a new MPA data iterator.
-		 * \param filename The filename of the file to be opened.
-		 * \param end If set to true, the iterator will be a beyond-last-element iterator. The file
-		 * will not be opened in that case.
-		 */
-		EventIterator(const std::string& filename, bool end);
-		EventIterator(const EventIterator& other);
-		EventIterator(EventIterator&& other) noexcept;
-		~EventIterator();
-		EventIterator& operator=(const EventIterator& other);
-		EventIterator& operator=(EventIterator&& other) noexcept;
-
-		/** Compare iterators for equality.
-		 *
-		 * As part of the comparision, the filenames are compared. If you compare iterators
-		 * from different stream readers pointing to the same file via different paths
-		 * (relative/absolute), the iterators might not compare equal! But you should do that
-		 * anyway...
-		 */
-		bool operator==(const EventIterator& other) const;
-		bool operator!=(const EventIterator& other) const;
-
-		/// Prefix-increment to the next event.
-		/* This will load the next event from file. When the EOF was reached, the iterator is
-		 * converted to an beyond-last-element iterator.
-		 */
-		EventIterator& operator++();
-		EventIterator operator++(int);
-
-		/** \brief Get current event the iterator is pointing to. */
-		const event_t& operator*() const { return _currentEvent; }
-
-		/** \brief Get address of the current event the iterator is pointing to.
-		 *
-		 * Used for it-> style event_t access.
-		 */
-		const event_t* operator->() const { return &_currentEvent; }
-
-		/** \brief Get the current event number. Same as \code *it.eventNumber \endcode */
-		size_t getEventNumber() const noexcept { return _currentEvent.eventNumber; }
-
-		/** \brief Check wether iterator is beyond-last-element iterator */
-		bool isEnd() const noexcept { return _end; }
+		mpareader(const std::string& filename, size_t seek=0);
+		virtual ~mpareader();
+		virtual bool next();
+		virtual BaseSensorStreamReader::reader* clone() const;
 
 	private:
-		void open();
+		void open(size_t seek);
 		mutable std::ifstream _fin;
-		std::string _filename;
-		bool _end;
 		size_t _numEventsRead;
-		event_t _currentEvent;
 	};
-
-	/** \brief Construct a new MPAStreamReader instance.
-	 *
-	 * This will not perform any checks or filesystem operations! The first access to the data file will
-	 * be when calling begin() to create a new iterator.
-	 * \param filename Path of the file to open.
-	 */
-	MPAStreamReader(const std::string& filename);
-
-	/** Get the iterator pointing to the first event.
-	 *
-	 * This will perform a read operation to retrieve the first event.
-	 */
-	EventIterator begin() const;
-
-	/** Get beyond-last-element iterator */
-	EventIterator end() const;
-private:
-	std::string _filename;
+	
+	virtual BaseSensorStreamReader::reader* getReader(const std::string& filename) const;
 };
 
 } // namespace core

@@ -19,7 +19,7 @@ public:
 
 private:
         bool analyze(const core::TrackStreamReader::event_t& track_event,
-	             const core::MPAStreamReader::event_t& mpa_event);
+	             const core::BaseSensorStreamReader::event_t& mpa_event);
 	void finish();
 	TFile* _file;
 	TH1D* _currentHist;

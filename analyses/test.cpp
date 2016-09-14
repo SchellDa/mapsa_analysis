@@ -32,7 +32,7 @@ std::string Test::getHelp(const std::string& argv0) const
 }
 
 bool Test::analyze(const core::TrackStreamReader::event_t& track_event,
-                   const core::MPAStreamReader::event_t& mpa_event)
+                   const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	std::cout << "analyze: " << track_event.eventNumber << " " << mpa_event.eventNumber << std::endl;
 	return false;

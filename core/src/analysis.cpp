@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include <cxxabi.h>
+#include "mpastreamreader.h"
 
 using namespace core;
 
@@ -152,7 +153,7 @@ void Analysis::rerun()
 	_rerunProcess = true;
 }
 
-void Analysis::executeProcess(core::MPAStreamReader& mpareader,
+void Analysis::executeProcess(core::BaseSensorStreamReader& pixelreader,
 		core::TrackStreamReader& trackreader, const process_t& process)
 {
 	int run = 0;
@@ -162,8 +163,8 @@ void Analysis::executeProcess(core::MPAStreamReader& mpareader,
 		size_t evtCount = 0;
 		if(process.mode == CS_ALWAYS && process.run) {
 			auto track_it = trackreader.begin();
-			for(const auto& mpa: mpareader) {
-				if(track_it->eventNumber < (int)mpa.eventNumber + _dataOffset)
+			for(const auto& pixel: pixelreader) {
+				if(track_it->eventNumber < (int)pixel.eventNumber + _dataOffset)
 					++track_it;
 				if(evtCount % 1000 == 0) {
 					std::cout << process.name << ": Processing step " << evtCount;
@@ -172,30 +173,30 @@ void Analysis::executeProcess(core::MPAStreamReader& mpareader,
 					std::cout << std::endl;
 				}
 				++evtCount;
-				if(!process.run(*track_it, mpa))
+				if(!process.run(*track_it, pixel))
 					break;
 			}
 		} else if (process.run) {
-			auto mpa_it = mpareader.begin();
+			auto pixel_it = pixelreader.begin();
 			for(const auto& track: trackreader) {
-				while((int)mpa_it->eventNumber + _dataOffset < track.eventNumber &&
-				      mpa_it != mpareader.end())
-					++mpa_it;
-				if((int)mpa_it->eventNumber + _dataOffset > track.eventNumber) {
+				while((int)pixel_it->eventNumber + _dataOffset < track.eventNumber &&
+				      pixel_it != pixelreader.end())
+					++pixel_it;
+				if((int)pixel_it->eventNumber + _dataOffset > track.eventNumber) {
 					continue;
 				}
 				if(evtCount % 1000 == 0) {
 					std::cout << process.name <<  ": Processing step " << evtCount;
 					if(run)
 						std::cout << " rerun " << run;
-					std::cout << " event no. " << track.eventNumber << "/" << mpa_it->eventNumber;
+					std::cout << " event no. " << track.eventNumber << "/" << pixel_it->eventNumber;
 					std::cout << std::endl;
 				}
 				++evtCount;
-				if(mpa_it == mpareader.end())
+				if(pixel_it == pixelreader.end())
 					break;
-				assert((int)mpa_it->eventNumber + _dataOffset == track.eventNumber);
-				if(!process.run(track, *mpa_it))
+				assert((int)pixel_it->eventNumber + _dataOffset == track.eventNumber);
+				if(!process.run(track, *pixel_it))
 					break;
 			}
 		}

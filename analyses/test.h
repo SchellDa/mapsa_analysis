@@ -16,7 +16,7 @@ public:
 
 private:
         bool analyze(const core::TrackStreamReader::event_t& track_event,
-	             const core::MPAStreamReader::event_t& mpa_event);
+	             const core::BaseSensorStreamReader::event_t& mpa_event);
 };
 
 #endif//TEST_H

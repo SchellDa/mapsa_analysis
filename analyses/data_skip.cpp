@@ -68,7 +68,7 @@ std::string DataSkip::getHelp(const std::string& argv0) const
 }
 
 bool DataSkip::analyze(const core::TrackStreamReader::event_t& track_event,
-                      const core::MPAStreamReader::event_t& mpa_event)
+                      const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	for(const auto& track: track_event.tracks) {
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {

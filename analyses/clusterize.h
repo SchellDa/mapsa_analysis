@@ -30,13 +30,13 @@ public:
 
 private:
         bool clusterize(const core::TrackStreamReader::event_t& track_event,
-	             const core::MPAStreamReader::event_t& mpa_event);
+	             const core::BaseSensorStreamReader::event_t& mpa_event);
 	void finishClusterize();
         bool align(const core::TrackStreamReader::event_t& track_event,
-	             const core::MPAStreamReader::event_t& mpa_event);
+	             const core::BaseSensorStreamReader::event_t& mpa_event);
 	void finishAlign();
         bool cutClusterSize(const core::TrackStreamReader::event_t& track_event,
-	             const core::MPAStreamReader::event_t& mpa_event);
+	             const core::BaseSensorStreamReader::event_t& mpa_event);
 	void finishCutClusterSize();
 
 	std::unordered_map<Eigen::Vector2i, int> getCluster(const std::unordered_map<Eigen::Vector2i, int>& pixels) const;

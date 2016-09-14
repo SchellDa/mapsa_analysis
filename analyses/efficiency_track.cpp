@@ -106,7 +106,7 @@ std::string EfficiencyTrack::getHelp(const std::string& argv0) const
 }
 
 bool EfficiencyTrack::prealignRun(const core::TrackStreamReader::event_t& track_event,
-                                  const core::MPAStreamReader::event_t& mpa_event)
+                                  const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	bool hasFiredPixel = false;
 	for(const auto& counter: mpa_event.data) {
@@ -166,7 +166,7 @@ void EfficiencyTrack::prealignFinish()
 }
 
 bool EfficiencyTrack::align(const core::TrackStreamReader::event_t& track_event,
-                            const core::MPAStreamReader::event_t&  mpa_event)
+                            const core::BaseSensorStreamReader::event_t&  mpa_event)
 {
 	if(_aligner.gotAlignmentData()) {
 		return false;
@@ -211,7 +211,7 @@ void EfficiencyTrack::alignFinish()
 }
 
 bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t& track_event,
-                              const core::MPAStreamReader::event_t& mpa_event)
+                              const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	for(const auto& track: track_event.tracks) {
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
@@ -232,7 +232,7 @@ bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t
 }
 
 bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_event,
-                              const core::MPAStreamReader::event_t& mpa_event)
+                              const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	for(const auto& track: track_event.tracks) {
 /*		try {

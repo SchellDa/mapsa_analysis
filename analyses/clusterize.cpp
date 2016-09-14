@@ -63,7 +63,7 @@ std::string Clusterize::getHelp(const std::string& argv0) const
 }
 
 bool Clusterize::clusterize(const core::TrackStreamReader::event_t& track_event,
-                      const core::MPAStreamReader::event_t& mpa_event)
+                      const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	event_t evt;
 	evt.eventNumber = mpa_event.eventNumber;
@@ -114,7 +114,7 @@ void Clusterize::finishClusterize()
 }
 
 bool Clusterize::align(const core::TrackStreamReader::event_t& track_event,
-                       const core::MPAStreamReader::event_t& mpa_event)
+                       const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	if(_aligner.gotAlignmentData()) {
 		return false;
@@ -148,7 +148,7 @@ void Clusterize::finishAlign()
 }
 
 bool Clusterize::cutClusterSize(const core::TrackStreamReader::event_t& track_event,
-                       const core::MPAStreamReader::event_t& mpa_event)
+                       const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	const auto& clusters = _eventData[track_event.eventNumber].clusters;
 	for(const auto& track: track_event.tracks) {
