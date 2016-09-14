@@ -4,9 +4,8 @@
 
 #include <boost/program_options.hpp>
 #include "cfgparse.h"
-#include "abstractfactory.h"
 #include "trackstreamreader.h"
-#include "mpastreamreader.h"
+#include "basesensorstreamreader.h"
 #include "quickrunlistreader.h"
 #include "mpatransform.h"
 
@@ -42,7 +41,7 @@ public:
 		CS_TRACK
 	};
 	typedef std::function<bool(const TrackStreamReader::event_t&,
-	                           const MPAStreamReader::event_t&)> run_callback_t;
+	                           const BaseSensorStreamReader::event_t&)> run_callback_t;
 	typedef std::function<void()> post_callback_t;
 	struct process_t {
 		std::string name;
@@ -131,7 +130,7 @@ protected:
 	MpaTransform _mpaTransform;
 
 private:
-	void executeProcess(core::MPAStreamReader& mpareader,
+	void executeProcess(core::BaseSensorStreamReader& pixelreader,
 	                    core::TrackStreamReader& trackreader,
                             const process_t& proc);
 
