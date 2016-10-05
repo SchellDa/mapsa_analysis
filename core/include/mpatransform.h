@@ -8,6 +8,9 @@
 
 namespace core {
 
+/** \brief Performs various transforms and index translations for MPA type sensors
+ *
+ */
 class MpaTransform
 {
 public:
@@ -16,12 +19,14 @@ public:
 		// Initialize normal vector and rotation matrix
 		setRotation(0.0);
 	}
-	
+
+	/// \brief Transform pixel index to world coordinates	
 	Eigen::Vector3d transform(const size_t& pixelIdx) const
 	{
 		return pixelCoordToGlobal(translatePixelIndex(pixelIdx));
 	}
 
+	/// \brief Translates the pixel index to 2D pixel coordinates
 	Eigen::Vector2i translatePixelIndex(const size_t& pixelIdx) const
 	{
 		if(pixelIdx > _numPixels(0)*_numPixels(1)) {
@@ -34,11 +39,20 @@ public:
 		);
 	}
 
+	/** \brief Transforms pixel coordinates to world-space coordinates
+	 *
+	 * Takes geometry and positioning of the MPA into account.
+	 */
 	Eigen::Vector3d pixelCoordToGlobal(const Eigen::Vector2i& pixelCoord) const
 	{
 		return pixelCoordToGlobal(Eigen::Vector2d{pixelCoord.cast<double>()});
 	}
 
+	/** \brief Transforms pixel coordinates to world-space coordinates
+	 *
+	 * Takes geometry and positioning of the MPA into account. This is the generalized version which takes
+	 * floating-point coordinates.
+	 */
 	Eigen::Vector3d pixelCoordToGlobal(const Eigen::Vector2d& pixelCoord) const
 	{
 		auto scaled = _sensitiveSize*(pixelCoord.array()
@@ -80,7 +94,7 @@ public:
 		} else if(local(1) == 2) {
 			return local(0);
 		}
-		return 0; // todo implement
+		return 0; // todo implement further pixel arrangements...
 	}
 
 	Eigen::Vector2d globalToPixelCoord(const Eigen::Vector3d& global) const
@@ -98,12 +112,23 @@ public:
 		_normal = _rotation * Eigen::Vector3d::UnitZ();
 	}
 
-	void setOffset(const Eigen::Vector3d& offset) { _offset = offset; }
+	void setBaseOffset(const Eigen::Vector3d& offset)
+	{
+		_baseOffset = offset;
+		_offset = _baseOffset + _alignmentOffset;
+	}
+	void setAlignmentOffset(const Eigen::Vector3d& offset)
+	{
+		_alignmentOffset = offset;
+		_offset = _baseOffset + _alignmentOffset;
+	}
 	void setSensitiveSize(const Eigen::Array2d& sensitiveSize) { _sensitiveSize = sensitiveSize; }
 	void setPixelSize(const Eigen::Array2d& pixelSize) { _pixelSize = pixelSize; }
 	void setNumPixels(const Eigen::Array2i& numPixels) { _numPixels = numPixels; }
 
 	Eigen::Vector3d getOffset() const { return _offset; }
+	Eigen::Vector3d getBaseOffset() const { return _baseOffset; }
+	Eigen::Vector3d getAlignemntOffset() const { return _alignmentOffset; }
 	Eigen::Array2d getSensitiveSize() const { return _sensitiveSize; }
 	Eigen::Array2d getPixelSize() const { return _pixelSize; }
 	Eigen::Array2i getNumPixels() const { return _numPixels; }
@@ -115,6 +140,8 @@ private:
 	Eigen::Matrix3d _rotation;
 	Eigen::Vector3d _normal;
 	Eigen::Vector3d _offset;
+	Eigen::Vector3d _baseOffset;
+	Eigen::Vector3d _alignmentOffset;
 };
 
 } // namespace core

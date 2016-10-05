@@ -72,6 +72,12 @@ int main(int argc, char* argv[])
 	}
 	po::notify(vm);
 	try {
+		if(!analysis->loadConfig(vm)) {
+			return 3;
+		}
+		if(!analysis->multirunConsistencyCheck(argv[0], vm)) {
+			return 2;
+		}
 		analysis->run(vm);
 	} catch(core::CfgParse::parse_error& e) {
 		std::cerr << argv[0] << ": Error while parsing configuration:\n" << e.what() << std::endl;

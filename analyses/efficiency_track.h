@@ -24,11 +24,13 @@ private:
         bool prealignRun(const core::TrackStreamReader::event_t& track_event,
 	              const core::BaseSensorStreamReader::event_t& mpa_event);
 	void prealignFinish();
-        bool align(const core::TrackStreamReader::event_t& track_event,
+	void alignInit();
+        bool alignRun(const core::TrackStreamReader::event_t& track_event,
 	           const core::BaseSensorStreamReader::event_t& mpa_event);
 	void alignFinish();
         bool checkCorrelatedHits(const core::TrackStreamReader::event_t& track_event,
 	           const core::BaseSensorStreamReader::event_t& mpa_event);
+	void analyzeRunInit();
         bool analyze(const core::TrackStreamReader::event_t& track_event,
 	             const core::BaseSensorStreamReader::event_t& mpa_event);
 	void analyzeFinish();
@@ -36,12 +38,16 @@ private:
 	std::vector<Eigen::Vector3d> _prealignPoints;
 	size_t _numPrealigmentPoints;
 	TFile* _file;
-	core::Aligner _aligner;
+	bool _forceAlignment;
+	std::map<int, core::Aligner> _aligner;
 	TH2D* _correlatedHits;
 	TH1D* _correlatedHitsX;
 	TH1D* _correlatedHitsY;
 	TH2D* _efficiency;
+	TH2D* _efficiencyOverlayed;
+	TH2D* _efficiencyLocal;
 	TH2D* _trackHits;
+	TH2D* _trackHitsOverlayed;
 	TH2D* _directHits;
 	TH2D* _neighbourHits;
 	double _nSigmaCut;

@@ -205,6 +205,8 @@ public:
 
 	/** Get beyond-last-element iterator */
 	EventIterator end() const;
+
+	std::string getFilename() const { return _filename; }
 private:
 	std::string _filename;
 };

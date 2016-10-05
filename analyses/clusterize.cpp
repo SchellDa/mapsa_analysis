@@ -11,15 +11,24 @@ Clusterize::Clusterize() :
  Analysis(), _file(nullptr), _aligner(), _clusterSizeHist(nullptr)
 {
 	addProcess("clusterize", CS_ALWAYS /* CS_TRACK */,
+	           core::Analysis::init_callback_t{},
+		   core::Analysis::run_init_callback_t{},
 	           std::bind(&Clusterize::clusterize, this, std::placeholders::_1, std::placeholders::_2),
+		   core::Analysis::run_post_callback_t{},
 	           std::bind(&Clusterize::finishClusterize, this)
 	           );
 	addProcess("align", CS_TRACK,
+	           core::Analysis::init_callback_t{},
+		   core::Analysis::run_init_callback_t{},
 	           std::bind(&Clusterize::align, this, std::placeholders::_1, std::placeholders::_2),
+		   core::Analysis::run_post_callback_t{},
 	           std::bind(&Clusterize::finishAlign, this)
 	           );
 	addProcess("cutClusterSize", CS_TRACK,
+	           core::Analysis::init_callback_t{},
+		   core::Analysis::run_init_callback_t{},
 	           std::bind(&Clusterize::cutClusterSize, this, std::placeholders::_1, std::placeholders::_2),
+		   core::Analysis::run_post_callback_t{},
 	           std::bind(&Clusterize::finishCutClusterSize, this)
 	           );
 	getOptionsDescription().add_options()
@@ -136,15 +145,14 @@ void Clusterize::finishAlign()
 	_aligner.writeHistogramImage(getFilename("_align.png"));
 	_aligner.writeHistograms();
 	_aligner.saveAlignmentData(getFilename(".align"));
+	_mpaTransform.setAlignmentOffset(_aligner.getOffset());
 	auto offset = _mpaTransform.getOffset();
-	offset += _aligner.getOffset();
 	auto cuts = _aligner.getCuts();
 	std::cout << "x_off = " << offset(0)
 	          << "\ny_off = " << offset(1)
 		  << "\nz_off = " << offset(2)
 	          << "\nx_sigma = " << cuts(0)
 	          << "\ny_width = " << cuts(1) << std::endl;
-	_mpaTransform.setOffset(offset);
 }
 
 bool Clusterize::cutClusterSize(const core::TrackStreamReader::event_t& track_event,

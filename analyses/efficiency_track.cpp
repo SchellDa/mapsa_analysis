@@ -11,21 +11,27 @@
 REGISTER_ANALYSIS_TYPE(EfficiencyTrack, "Textual analysis description here.")
 
 EfficiencyTrack::EfficiencyTrack() :
- Analysis(), _aligner(), _file(nullptr)
+ Analysis(), _file(nullptr), _forceAlignment(false)
 {
 /*	addProcess("prealign", CS_TRACK,
 	 std::bind(&EfficiencyTrack::prealignRun, this, std::placeholders::_1, std::placeholders::_2),
 	 std::bind(&EfficiencyTrack::prealignFinish, this)
 	);*/
 	addProcess("align", CS_TRACK,
-	 std::bind(&EfficiencyTrack::align, this, std::placeholders::_1, std::placeholders::_2),
-	 std::bind(&EfficiencyTrack::alignFinish, this)
+	 Analysis::init_callback_t{},
+	 std::bind(&EfficiencyTrack::alignInit, this),
+	 std::bind(&EfficiencyTrack::alignRun, this, std::placeholders::_1, std::placeholders::_2),
+	 std::bind(&EfficiencyTrack::alignFinish, this),
+	 Analysis::post_callback_t{}
 	);
 	/*addProcess("checkCorrelatedHits", CS_TRACK,
 	 std::bind(&EfficiencyTrack::checkCorrelatedHits, this, std::placeholders::_1, std::placeholders::_2)
 	);*/
 	addProcess("analyze", CS_TRACK,
+	 core::Analysis::init_callback_t{},
+	 std::bind(&EfficiencyTrack::analyzeRunInit, this),
 	 std::bind(&EfficiencyTrack::analyze, this, std::placeholders::_1, std::placeholders::_2),
+	 Analysis::run_post_callback_t{},
 	 std::bind(&EfficiencyTrack::analyzeFinish, this)
 	);
 	getOptionsDescription().add_options()
@@ -45,14 +51,10 @@ EfficiencyTrack::~EfficiencyTrack()
 void EfficiencyTrack::init(const po::variables_map& vm)
 {
 	_numPrealigmentPoints = 20000;
-	_aligner.setNSigma(_config.get<double>("n_sigma_cut"));
-	if(vm.count("align") < 1) {
-		_aligner.loadAlignmentData(getFilename(".align"));
+	if(vm.count("align") >= 1) {
+		_forceAlignment = true;
 	}
 	_file = new TFile(getRootFilename().c_str(), "RECREATE");
-	if(!_aligner.gotAlignmentData()) {
-		_aligner.initHistograms();
-	}
 	double sizeX = _mpaTransform.getSensitiveSize()(0);
 	double sizeY = _mpaTransform.getSensitiveSize()(1);
 	auto resolution = _config.get<unsigned int>("efficiency_histogram_resolution_factor");
@@ -89,6 +91,30 @@ void EfficiencyTrack::init(const po::variables_map& vm)
 	                           _mpaTransform.getNumPixels()(1) * resolution * sizeY/sizeX,
 	                           -sizeY / 2,
 				   sizeY / 2);
+	int nx = 2;
+	int ny = 3;
+	int overlayed_resolution_factor = 2;
+	_efficiencyOverlayed = new TH2D("efficiencyOverlayed", "",
+	                           nx * resolution*overlayed_resolution_factor,
+				   0,
+				   nx,
+	                           ny * resolution*overlayed_resolution_factor,
+	                           0,
+				   ny);
+	_trackHitsOverlayed = new TH2D("trackHitsOverlayed", "",
+	                           nx * resolution*overlayed_resolution_factor,
+				   0,
+				   nx,
+	                           ny * resolution*overlayed_resolution_factor,
+	                           0,
+				   ny);
+	_efficiencyLocal = new TH2D("efficiencyLocal", "Efficiency in local pixel coordinates",
+	                           16 * resolution,
+				   0,
+				   16,
+				   3 * resolution * sizeY/sizeX,
+				   0,
+				   3);
 	_totalPixelHits.resize(48, 0);
 	_activatedPixelHits.resize(48, 0);
 	_alignFile.open(getFilename("_align.csv"));
@@ -161,14 +187,27 @@ void EfficiencyTrack::prealignFinish()
 			break;
 		offset = t[max_idx];
 	}
-	_mpaTransform.setOffset(offset);
+	_mpaTransform.setAlignmentOffset(offset);
 	std::cout << "Prealignment offset\n" << offset << std::endl;
 }
 
-bool EfficiencyTrack::align(const core::TrackStreamReader::event_t& track_event,
-                            const core::BaseSensorStreamReader::event_t&  mpa_event)
+void EfficiencyTrack::alignInit()
 {
-	if(_aligner.gotAlignmentData()) {
+	const int runId = getCurrentRunId();
+	_aligner[runId].setNSigma(_config.get<double>("n_sigma_cut"));
+	if(!_forceAlignment) {
+		_aligner[runId].loadAlignmentData(getFilename(runId, ".align"));
+	}
+	if(!_aligner[runId].gotAlignmentData()) {
+		_aligner[runId].initHistograms();
+	}
+}
+
+bool EfficiencyTrack::alignRun(const core::TrackStreamReader::event_t& track_event,
+                               const core::BaseSensorStreamReader::event_t&  mpa_event)
+{
+	const auto runId = getCurrentRunId();
+	if(_aligner[runId].gotAlignmentData()) {
 		return false;
 	}
 	bool empty = true;
@@ -178,7 +217,7 @@ bool EfficiencyTrack::align(const core::TrackStreamReader::event_t& track_event,
 			if(mpa_event.data[idx] == 0) continue;
 			auto a = _mpaTransform.transform(idx);
 			auto pc = _mpaTransform.translatePixelIndex(idx);
-			_aligner.Fill(b(0) - a(0), b(1) - a(1));
+			_aligner[runId].Fill(b(0) - a(0), b(1) - a(1));
 			_alignFile << idx << " "
 			     << a(0) << " "
 			     << a(1) << " "
@@ -196,18 +235,19 @@ bool EfficiencyTrack::align(const core::TrackStreamReader::event_t& track_event,
 
 void EfficiencyTrack::alignFinish()
 {
-	_aligner.calculateAlignment();
+	const auto runId = getCurrentRunId();
+	_aligner[runId].calculateAlignment();
 	auto offset = _mpaTransform.getOffset();
-	offset += _aligner.getOffset();
-	auto cuts = _aligner.getCuts();
-	std::cout << "x_off = " << offset(0)
-	          << "\ny_off = " << offset(1)
-		  << "\nz_off = " << offset(2)
-	          << "\nx_sigma = " << cuts(0)
-	          << "\ny_width = " << cuts(1) << std::endl; 
-	_mpaTransform.setOffset(offset);
-	_aligner.writeHistogramImage(getFilename("_align.png"));
-	_aligner.saveAlignmentData(getFilename(".align"));
+	offset += _aligner[runId].getOffset();
+	auto cuts = _aligner[runId].getCuts();
+	std::cout << "Alignment for run " << runId
+	          << "\n  x_off = " << offset(0)
+	          << "\n  y_off = " << offset(1)
+		  << "\n  z_off = " << offset(2)
+	          << "\n  x_sigma = " << cuts(0)
+	          << "\n  y_width = " << cuts(1) << std::endl; 
+	_aligner[runId].writeHistogramImage(getFilename(runId, "_align.png"));
+	_aligner[runId].saveAlignmentData(getFilename(runId, ".align"));
 }
 
 bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t& track_event,
@@ -221,7 +261,7 @@ bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t
 			auto b = track.extrapolateOnPlane(4, 5, 840, 2);
 			auto center_b(b);
 			center_b -= _mpaTransform.getOffset();
-			if(_aligner.pointsCorrelatedX(a, b)) {
+			if(_aligner[getCurrentRunId()].pointsCorrelatedX(a, b)) {
 				_correlatedHits->Fill(center_b(0), center_b(1));
 				_correlatedHitsX->Fill(center_b(0));
 				_correlatedHitsY->Fill(center_b(1));
@@ -231,9 +271,20 @@ bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t
 	return true;
 }
 
+void EfficiencyTrack::analyzeRunInit()
+{
+	_mpaTransform.setAlignmentOffset(_aligner[getCurrentRunId()].getOffset());
+	auto offset = _mpaTransform.getOffset();
+	std::cout << "Run MPA offset: "
+	          << offset(0) << " "
+		  << offset(1) << " "
+		  << offset(2) << std::endl;
+}
+
 bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_event,
                               const core::BaseSensorStreamReader::event_t& mpa_event)
 {
+	const auto runId = getCurrentRunId();
 	for(const auto& track: track_event.tracks) {
 /*		try {
 			auto hit_idx = _mpaTransform.getPixelIndex(track);
@@ -248,14 +299,23 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 		}*/
 		bool hitMpa = false;
 		bool hitActivatedPixel = false;
-		auto b = track.extrapolateOnPlane(4, 5, 840, 2);
+		auto b = track.extrapolateOnPlane(4, 5, _mpaTransform.getOffset()(2), 2);
 		auto cb(b);
 		cb -= _mpaTransform.getOffset();
 		_trackHits->Fill(cb(0), cb(1));
+		// combine results of pixels in first and second row in a 2x2
+		// pixel grid. That way, we have the same geometry
+		// (punch-through etc.) for each overlayed pixel.
+		auto globalHitpoint = _mpaTransform.mpaPlaneTrackIntersect(track, 4, 5);
+		auto pc = _mpaTransform.globalToPixelCoord(globalHitpoint);
+		Eigen::Vector2d subpc(std::fmod(pc(0), 2.0), std::fmod(pc(1), 3.0));
+		if(subpc(1) < 0.0 || subpc(1) > 3.0) {
+			subpc(1) += 10.0;
+		}
+		_trackHitsOverlayed->Fill(subpc(0), subpc(1));
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
 			auto a = _mpaTransform.transform(idx);
-			auto pc = _mpaTransform.translatePixelIndex(idx);
-			if(_aligner.pointsCorrelated(a, b)) {
+			if(_aligner[runId].pointsCorrelated(a, b)) {
 				try {
 					auto hit_idx = _mpaTransform.getPixelIndex(track);
 					if(hit_idx == idx)
@@ -278,6 +338,8 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 						<<"\t1\n";
 					if(!hitActivatedPixel) {
 						_efficiency->Fill(cb(0), cb(1));
+						_efficiencyOverlayed->Fill(subpc(0), subpc(1));
+						_efficiencyLocal->Fill(pc(0), pc(1));
 						hitActivatedPixel = true;
 					}
 				}
@@ -293,6 +355,7 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 
 void EfficiencyTrack::analyzeFinish()
 {
+	std::cout << "Write analysis results..." << std::endl;
 /*	for(size_t x = 0; x < _trackHits->GetNbinsX(); ++x) {
 		for(size_t y = 0; y < _trackHits->GetNbinsY(); ++y) {
 			auto bin = _trackHits->GetBin(x, y);
@@ -310,18 +373,18 @@ void EfficiencyTrack::analyzeFinish()
 	neigh->Divide(_trackHits);
 	dir->Divide(_trackHits);
 
-	auto canvas = new TCanvas("comparision", "", 400*3*2, 300*3*4);
+	auto canvas = new TCanvas("comparision", "", 400*3*2, 300*3*6);
 	gStyle->SetOptStat(11);
 	gStyle->cd();
-	canvas->Divide(2,4);
+	canvas->Divide(2, 6);
 	canvas->cd(1);
 	_trackHits->Draw("COLZ");
 
 	canvas->cd(2);
-	auto run = _runlist.getByMpaRun(_config.get<int>("MpaRun"));
+	auto run = _runlist.getByMpaRun(getAllRunIds()[0]);
 	std::ostringstream info;
 	auto txt = new TPaveText(0.1, 0.1, 0.9, 0.9);
-	info << "MPA run no: " << run.mpa_run << "\n";
+	info << "Info for MPA run: " << run.mpa_run << "\n";
 	txt->AddText(info.str().c_str());
 	
 	info.str("");
@@ -339,11 +402,27 @@ void EfficiencyTrack::analyzeFinish()
 	info.str("");
 	info << "Bias current: " << run.bias_current << " uA\n";
 	txt->AddText(info.str().c_str());
-	txt->Draw();
 
 	info.str("");
 	info << "Threshold: " << run.threshold << " uA\n";
 	txt->AddText(info.str().c_str());
+
+	const auto& runs = getAllRunIds();
+	if(runs.size() > 1) {
+		info.str("");
+		info << "Runs used for analysis:";
+		txt->AddText(info.str().c_str());
+		info.str("");
+		int counter = 0;
+		for(const auto& runId: runs) {
+			if(++counter % 8 == 0) {
+				txt->AddText(info.str().c_str());
+				info.str("");
+			}
+			info << runId << " ";
+		}
+		txt->AddText(info.str().c_str());
+	}
 	txt->Draw();
 
 	canvas->cd(3);
@@ -360,7 +439,18 @@ void EfficiencyTrack::analyzeFinish()
 	_directHits->Draw("COLZ");
 	canvas->cd(8);
 	dir->Draw("COLZ");
-	_file->Add(canvas);
+
+	canvas->cd(9);
+	_trackHitsOverlayed->Draw("COLZ");
+	canvas->cd(10);
+	_efficiencyOverlayed->Draw("COLZ");
+
+	canvas->cd(11);
+	auto overlayeff = dynamic_cast<TH2D*>(_efficiencyOverlayed->Clone("efficiencyOverlayedScaled"));
+	overlayeff->Divide(_trackHitsOverlayed);
+	overlayeff->Draw("COLZ");
+
+
 	auto img = TImage::Create();
 	img->FromPad(canvas);
 	img->WriteImage(getFilename("_results.png").c_str());

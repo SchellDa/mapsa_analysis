@@ -40,13 +40,19 @@ public:
 		CS_ALWAYS,
 		CS_TRACK
 	};
+	typedef std::function<void()> init_callback_t;
+	typedef std::function<void()> run_init_callback_t;
 	typedef std::function<bool(const TrackStreamReader::event_t&,
 	                           const BaseSensorStreamReader::event_t&)> run_callback_t;
+	typedef std::function<void()> run_post_callback_t;
 	typedef std::function<void()> post_callback_t;
 	struct process_t {
 		std::string name;
 		callback_stop_t mode;
+		init_callback_t init;
+		run_init_callback_t run_init;
 		run_callback_t run;
+		run_post_callback_t run_post;
 		post_callback_t post;
 	};
 
@@ -105,21 +111,27 @@ public:
 
 	static std::string getPaddedIdString(int id, unsigned int width);
 
-	virtual std::string getMpaIdPadded(int id);
-	virtual std::string getRunIdPadded(int id);
+	virtual std::string getMpaIdPadded(int id) const;
+	virtual std::string getRunIdPadded(int id) const;
 
 	virtual std::string getName() const;
 	virtual std::string getRootFilename(const std::string& suffix="") const;
 	virtual std::string getFilename(const std::string& suffix="") const;
+	virtual std::string getFilename(const int& runId, const std::string& suffix="") const;
+
+	virtual bool multirunConsistencyCheck(const std::string& argv0, const po::variables_map& vm);
 
 protected:
 	void addProcess(const process_t& proc);
 	void addProcess(const std::string& name,
 	                const callback_stop_t& mode,
+	                const init_callback_t& init,
+			const run_init_callback_t& run_init,
 	                const run_callback_t& run,
-			const post_callback_t& stop=std::function<void()>())
+	                const run_post_callback_t& run_post,
+			const post_callback_t& stop)
 	{
-		addProcess({name, mode, run, stop});
+		addProcess({name, mode, init, run_init, run, run_post, stop});
 	}
 	void setDataOffset(int dataOffset);
 	int getDataOffset() const { return _dataOffset; }
@@ -129,14 +141,25 @@ protected:
 	QuickRunlistReader _runlist;
 	MpaTransform _mpaTransform;
 
+	const std::vector<int>& getAllRunIds() const { return _allRunIds; }
+	int getCurrentRunId() const { return _currentRunId; }
+
 private:
-	void executeProcess(core::BaseSensorStreamReader& pixelreader,
-	                    core::TrackStreamReader& trackreader,
+	struct run_read_pair_t
+	{
+		int runId;
+		std::shared_ptr<core::BaseSensorStreamReader> pixelreader;
+		core::TrackStreamReader trackreader;
+	};
+
+	void executeProcess(const std::vector<run_read_pair_t>& reader,
                             const process_t& proc);
 
 	po::options_description _options;
 	po::positional_options_description _positionals;
 	std::vector<process_t> _processes;
+	std::vector<int> _allRunIds;
+	int _currentRunId;
 	int _dataOffset;
 	bool _analysisRunning;
 	bool _rerunProcess;

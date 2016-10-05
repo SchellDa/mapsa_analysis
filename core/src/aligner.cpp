@@ -129,6 +129,7 @@ void Aligner::saveAlignmentData(const std::string& filename) const
 
 bool Aligner::loadAlignmentData(const std::string& filename)
 {
+	std::cout << "Alignment data filename: " << filename << std::endl;
 	std::ifstream fin(filename);
 	if(fin.fail()) {
 		return false;

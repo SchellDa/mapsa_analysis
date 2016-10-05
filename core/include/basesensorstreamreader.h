@@ -171,6 +171,8 @@ public:
 		_filename = filename;
 	}
 
+	std::string getFilename() const { return _filename; }
+
 	/** \brief Create new iterator pointing to the first event
 	 *
 	 * \sa getReader
