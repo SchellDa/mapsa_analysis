@@ -251,6 +251,7 @@ void Analysis::setDataOffset(int dataOffset)
 
 void Analysis::rerun()
 {
+	assert(_analysisRunning == false);
 	_rerunProcess = true;
 }
 
