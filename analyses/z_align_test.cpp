@@ -14,12 +14,12 @@ ZAlignTest::ZAlignTest() :
 		("num-steps,s", po::value<int>()->default_value(10), "Number of steps in the range (low,high)")
 		("sample-size,n", po::value<int>()->default_value(10000), "Number of data points to include in alignment histogram")
 	;
-	addProcess("align", /* CS_ALWAYS */ CS_TRACK,
+	addProcess("scan", /* CS_ALWAYS */ CS_TRACK,
 	           core::Analysis::init_callback_t {},
-	           std::bind(&ZAlignTest::initRun, this),	           
-		   std::bind(&ZAlignTest::analyze, this, std::placeholders::_1, std::placeholders::_2),
+	           std::bind(&ZAlignTest::scanInit, this),
+		   std::bind(&ZAlignTest::scanRun, this, std::placeholders::_1, std::placeholders::_2),
 	           core::Analysis::run_post_callback_t {},
-	           std::bind(&ZAlignTest::finish, this)
+	           std::bind(&ZAlignTest::scanFinish, this)
 	           );
 }
 
@@ -66,7 +66,7 @@ std::string ZAlignTest::getHelp(const std::string& argv0) const
         return Analysis::getHelp(argv0);
 }
 
-void ZAlignTest::initRun()
+void ZAlignTest::scanInit()
 {
 	_numProcessedSamples = 0;
 	_currentZ = _lowZ + (_highZ - _lowZ) / (_numSteps-1) * _currentScanStep;
@@ -78,7 +78,7 @@ void ZAlignTest::initRun()
 
 }
 
-bool ZAlignTest::analyze(const core::TrackStreamReader::event_t& track_event,
+bool ZAlignTest::scanRun(const core::TrackStreamReader::event_t& track_event,
                       const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	for(const auto& track: track_event.tracks) {
@@ -93,7 +93,7 @@ bool ZAlignTest::analyze(const core::TrackStreamReader::event_t& track_event,
 	return (_numProcessedSamples++ < _sampleSize);
 }
 
-void ZAlignTest::finish()
+void ZAlignTest::scanFinish()
 {
 	int cd = _currentScanStep+2;
 	std::cout << "cd-ing to Pad " << cd << std::endl;

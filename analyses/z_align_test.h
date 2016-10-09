@@ -18,10 +18,10 @@ public:
 	virtual std::string getHelp(const std::string& argv0) const;
 
 private:
-	void initRun();
-        bool analyze(const core::TrackStreamReader::event_t& track_event,
+	void scanInit();
+        bool scanRun(const core::TrackStreamReader::event_t& track_event,
 	             const core::BaseSensorStreamReader::event_t& mpa_event);
-	void finish();
+	void scanFinish();
 
 	core::Aligner _aligner;
 	TCanvas* _xCanvas;
