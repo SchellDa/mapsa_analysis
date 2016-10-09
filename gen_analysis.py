@@ -37,8 +37,11 @@ REGISTER_ANALYSIS_TYPE({class}, "Textual analysis description here.")
 {class}::{class}() :
  Analysis()
 {{
-\taddProcess(CS_ALWAYS /* CS_TRACK */, "analyze",
+\taddProcess("analyze", CS_ALWAYS /* CS_TRACK */,
+\t           core::Analysis::init_callback_t {{}},
+\t           core::Analysis::run_init_callback_t {{}},
 \t           std::bind(&{class}::analyze, this, std::placeholders::_1, std::placeholders::_2),
+\t           core::Analysis::run_post_callback_t {{}}
 \t           std::bind(&{class}::finish, this)
 \t           );
 }}
