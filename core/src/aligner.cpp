@@ -31,8 +31,7 @@ TH1D* Aligner::getHistY() const
 
 void Aligner::initHistograms(const std::string& xname, const std::string& yname)
 {
-	assert(_alignX == nullptr);
-	assert(_alignY == nullptr);
+	_calculated = false;
 	_alignX = new TH1D(xname.c_str(), "Alignment Correlation on X axis", 1000, -5, 5);
 	_alignY = new TH1D(yname.c_str(), "Alignment Correlation on Y axis", 250, -5, 5);
 }
@@ -116,14 +115,33 @@ bool Aligner::pointsCorrelatedY(const double& a, const double& b) const
 	return std::abs(a-b) < _cuts(1);
 }
 
-void Aligner::saveAlignmentData(const std::string& filename) const
+void Aligner::saveAlignmentData(const std::string& filename, const std::string& extra) const
 {
 	std::ofstream of(filename);
 	of << _offset(0) << " "
 	   << _offset(1) << " "
 	   << _offset(2) << " "
 	   << _cuts(0) << " "
-	   << _cuts(1) << "\n";
+	   << _cuts(1);
+	if(extra.size()) {
+		of << " " << extra;
+	}
+	of << std::endl;
+	of.close();
+}
+
+void Aligner::appendAlignmentData(const std::string& filename, const std::string& extra) const
+{
+	std::ofstream of(filename, std::ios_base::app);
+	of << _offset(0) << " "
+	   << _offset(1) << " "
+	   << _offset(2) << " "
+	   << _cuts(0) << " "
+	   << _cuts(1);
+	if(extra.size()) {
+		of << " " << extra;
+	}
+	of << std::endl;
 	of.close();
 }
 

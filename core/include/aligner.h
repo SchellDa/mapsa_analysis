@@ -54,7 +54,8 @@ public:
 	bool pointsCorrelatedY(const double& a, const double& b) const;
 
 	bool loadAlignmentData(const std::string& filename);
-	void saveAlignmentData(const std::string& filename) const;
+	void saveAlignmentData(const std::string& filename, const std::string& extra="") const;
+	void appendAlignmentData(const std::string& filename, const std::string& extra="") const;
 
 	bool gotAlignmentData() const { return _calculated; }
 
