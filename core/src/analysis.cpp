@@ -81,7 +81,7 @@ void Analysis::run(const po::variables_map& vm)
 		_config.setVariable("MpaRun", getMpaIdPadded(runId));
 		run_read_pair_t r {
 					runId,
-					std::make_shared<MPAStreamReader>(_config.getVariable("mapsa_data")),
+					createPixelReader(_config.getVariable("mapsa_data")),
 					{_config.getVariable("track_data")}
 				};
 
@@ -253,6 +253,11 @@ void Analysis::rerun()
 {
 	assert(_analysisRunning == false);
 	_rerunProcess = true;
+}
+
+std::shared_ptr<core::BaseSensorStreamReader> Analysis::createPixelReader(const std::string& filename) const
+{
+	return std::make_shared<core::MPAStreamReader>(filename);
 }
 
 void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& reader, const process_t& process)
