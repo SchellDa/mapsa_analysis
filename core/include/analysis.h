@@ -144,8 +144,6 @@ protected:
 	const std::vector<int>& getAllRunIds() const { return _allRunIds; }
 	int getCurrentRunId() const { return _currentRunId; }
 
-	virtual std::shared_ptr<core::BaseSensorStreamReader> createPixelReader(const std::string& filename) const;
-
 private:
 	struct run_read_pair_t
 	{

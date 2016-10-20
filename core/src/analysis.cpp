@@ -79,11 +79,21 @@ void Analysis::run(const po::variables_map& vm)
 	for(auto runId: _allRunIds) {
 		_config.setVariable("TelRun", getRunIdPadded(_runlist.getTelRunByMpaRun(runId)));
 		_config.setVariable("MpaRun", getMpaIdPadded(runId));
+		std::string reader_type("MPAStreamReader");
+		try {
+			_config.getVariable("pixel_reader_type");
+		} catch(CfgParse::no_variable_error& e) {
+		} catch(std::out_of_range& e) {
+			std::cout << "The specified pixel_reader_type " << reader_type << " is unknown!" << std::endl;
+			throw;
+		}
+		auto reader = BaseSensorStreamReader::Factory::Instance()->create(reader_type);
+		reader->setFilename(_config.getVariable("mapsa_data"));
 		run_read_pair_t r {
-					runId,
-					createPixelReader(_config.getVariable("mapsa_data")),
-					{_config.getVariable("track_data")}
-				};
+			runId,
+			reader,
+			{_config.getVariable("track_data")}
+		};
 
 		try {
 			r.pixelreader->begin();
@@ -253,11 +263,6 @@ void Analysis::rerun()
 {
 	assert(_analysisRunning == false);
 	_rerunProcess = true;
-}
-
-std::shared_ptr<core::BaseSensorStreamReader> Analysis::createPixelReader(const std::string& filename) const
-{
-	return std::make_shared<core::MPAStreamReader>(filename);
 }
 
 void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& reader, const process_t& process)
