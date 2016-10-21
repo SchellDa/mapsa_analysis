@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <functional>
+#include <typeinfo>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/cat.hpp>
 
@@ -101,7 +102,16 @@ public:
 	 */
 	std::shared_ptr<T> create(const std::string& type) const
 	{
-		return _creators.at(type)();
+		try {
+			return _creators.at(type)();
+		} catch(std::out_of_range& e) {
+			std::string message("AbstractFactory<");
+			message += typeid(T).name();
+			message += ">::create(\"";
+			message += type;
+			message += "\"): specific class unknown!";
+			throw std::out_of_range(message);
+		}
 	}
 
 private:
