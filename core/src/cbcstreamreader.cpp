@@ -6,11 +6,24 @@
 
 using namespace core;
 
-namespace core {
+
+CBCStreamReader::CBCStreamReader() :
+ BaseSensorStreamReader()
+{
 }
 
-CBCStreamReader::cbcreader::cbcreader(const std::string& filename, size_t eventNum)
-	: reader(filename), _fin(new TFile(filename.c_str(),"READ")), _numEventsRead(eventNum), _dutEvent(new tbeam::dutEvent)
+CBCStreamReader::CBCStreamReader(const std::string& filename) :
+ BaseSensorStreamReader(filename)
+{
+}
+
+CBCStreamReader::~CBCStreamReader()
+{
+}
+
+CBCStreamReader::cbcreader::cbcreader(const std::string& filename, size_t eventNum) :
+ reader(filename), _fin(filename.c_str(), "READ"), _analysisTree(nullptr), _dutEvent(new tbeam::dutEvent),
+ _numEventsRead(eventNum)
 {
         open();
 	if(eventNum == 0) {
@@ -20,7 +33,8 @@ CBCStreamReader::cbcreader::cbcreader(const std::string& filename, size_t eventN
 
 CBCStreamReader::cbcreader::~cbcreader()
 {
-	_fin->Close();
+	_fin.Close();
+	delete _dutEvent;
 }
 
 bool CBCStreamReader::cbcreader::next()
@@ -35,7 +49,7 @@ bool CBCStreamReader::cbcreader::next()
 	_currentEvent.data.clear();
 	_currentEvent.eventNumber = _numEventsRead++;
 	
-	for(const auto &n: _dutEvent->dut_channel["det"])
+	for(const auto &n: _dutEvent->dut_channel["det0"])
         {
 	    _currentEvent.data.push_back(n);
 	}  
@@ -46,21 +60,17 @@ bool CBCStreamReader::cbcreader::next()
 
 void CBCStreamReader::cbcreader::open()
 {
-        //_fin = TFile::Open(getFilename().c_str());
-        if(!_fin)
+        /*if(_fin)
 	{
 		throw std::ios_base::failure("Cannot open");
-	}
-	_analysisTree = dynamic_cast<TTree*>(_fin->Get("analysisTree"));
+	}*/
+	_analysisTree = dynamic_cast<TTree*>(_fin.Get("analysisTree"));
 	if(!_analysisTree)
 	{
-		throw std::ios_base::failure("Cannot open");
+		throw std::ios_base::failure("analysisTree not found in ROOT file.");
 	}
-	
-	_analysisTree->SetBranchAddress("DUT",&_dutEvent);
-	
+	_analysisTree->SetBranchAddress("DUT", &_dutEvent);
 }
-
 
 BaseSensorStreamReader::reader* CBCStreamReader::cbcreader::clone() const
 {

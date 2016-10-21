@@ -14,8 +14,9 @@ namespace core {
 class CBCStreamReader : public BaseSensorStreamReader
 {
 public:
-	CBCStreamReader() : BaseSensorStreamReader() {}
-        CBCStreamReader(const std::string& filename) : BaseSensorStreamReader(filename) {}
+	CBCStreamReader();
+	CBCStreamReader(const std::string& filename);
+	virtual ~CBCStreamReader();
 
 protected:
 	/** \brief Iterator for traversing separate events in the CBC data file
@@ -33,9 +34,9 @@ protected:
 
 	private:
                 void open();
-                mutable TFile* _fin;
-                mutable TTree* _analysisTree;
-                mutable tbeam::dutEvent* _dutEvent;
+                TFile _fin;
+                TTree* _analysisTree;
+                tbeam::dutEvent* _dutEvent;
 		size_t _numEventsRead;
 	};
 	
