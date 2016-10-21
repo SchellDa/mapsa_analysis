@@ -81,7 +81,7 @@ void Analysis::run(const po::variables_map& vm)
 		_config.setVariable("MpaRun", getMpaIdPadded(runId));
 		std::string reader_type("MPAStreamReader");
 		try {
-			_config.getVariable("pixel_reader_type");
+			reader_type = _config.getVariable("pixel_reader_type");
 		} catch(CfgParse::no_variable_error& e) {
 		} catch(std::out_of_range& e) {
 			std::cout << "The specified pixel_reader_type " << reader_type << " is unknown!" << std::endl;
