@@ -32,8 +32,9 @@ TH1D* Aligner::getHistY() const
 void Aligner::initHistograms(const std::string& xname, const std::string& yname)
 {
 	_calculated = false;
-	_alignX = new TH1D(xname.c_str(), "Alignment Correlation on X axis", 1000, -5, 5);
-	_alignY = new TH1D(yname.c_str(), "Alignment Correlation on Y axis", 250, -5, 5);
+	const int factor = 4;
+	_alignX = new TH1D(xname.c_str(), "Alignment Correlation on X axis", 1000*factor, -5*factor, 5*factor);
+	_alignY = new TH1D(yname.c_str(), "Alignment Correlation on Y axis", 250*factor, -5*factor, 5*factor);
 }
 
 void Aligner::writeHistograms()
