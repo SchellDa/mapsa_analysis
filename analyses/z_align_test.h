@@ -6,6 +6,7 @@
 #include "aligner.h"
 #include <TH1D.h>
 #include <TCanvas.h>
+#include <TFile.h>
 
 class ZAlignTest : public core::Analysis
 {
@@ -23,9 +24,20 @@ private:
 	             const core::BaseSensorStreamReader::event_t& mpa_event);
 	void scanFinish();
 
+	void scanFineInit();
+	void scanFineFinish();
+
+	struct alignment_t {
+		Eigen::Vector3d position;
+		double x_sigma;
+		double y_width;
+	};
+
 	core::Aligner _aligner;
+	TFile* _file;
 	TCanvas* _xCanvas;
 	TCanvas* _yCanvas;
+	std::vector<alignment_t> _alignments;
 	double _lowZ;
 	double _highZ;
 	double _currentZ;
@@ -33,6 +45,8 @@ private:
 	int _numSteps;
 	int _numProcessedSamples;
 	int _sampleSize;
+	bool _twoPass;
+	Eigen::Vector2d _currentSigmaMinimum;
 };
 
 #endif//Z_ALIGN_TEST_H

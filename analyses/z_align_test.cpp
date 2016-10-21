@@ -2,11 +2,12 @@
 #include "z_align_test.h"
 #include <TImage.h>
 #include <TText.h>
+#include <TGraph.h>
 
 REGISTER_ANALYSIS_TYPE(ZAlignTest, "Textual analysis description here.")
 
 ZAlignTest::ZAlignTest() :
- Analysis(), _aligner()
+ Analysis(), _aligner(), _file(nullptr)
 {
 	getOptionsDescription().add_options()
 		("low-z", po::value<double>()->default_value(820), "Lower bound of Z align scan")
@@ -25,10 +26,15 @@ ZAlignTest::ZAlignTest() :
 
 ZAlignTest::~ZAlignTest()
 {
+	if(_file) {
+		delete _file;
+	}
 }
 
 void ZAlignTest::init(const po::variables_map& vm)
 {
+	_file = new TFile(getFilename(".root").c_str(), "RECREATE");
+	_twoPass = vm.count("two-pass") > 0;
 	_sampleSize = vm["sample-size"].as<int>();
 	_lowZ = vm["low-z"].as<double>();
 	_highZ = vm["high-z"].as<double>();
@@ -75,7 +81,7 @@ void ZAlignTest::scanInit()
 	          << ": Calculate alignment constants for Z=" << _currentZ << std::endl;
 	_aligner.initHistograms(std::string("x_align_")+std::to_string(_currentScanStep),
 	                        std::string("y_align_")+std::to_string(_currentScanStep));
-
+	_currentSigmaMinimum = { 0.0, -1.0 };
 }
 
 bool ZAlignTest::scanRun(const core::TrackStreamReader::event_t& track_event,
@@ -100,11 +106,24 @@ void ZAlignTest::scanFinish()
 	_xCanvas->cd(cd);
 	_aligner.calculateAlignment();
 	_aligner.appendAlignmentData(getFilename(".csv"), std::to_string(_currentZ));
+	_alignments.push_back({
+		Eigen::Vector3d(
+			_aligner.getOffset()(0),
+			_aligner.getOffset()(1),
+			_currentZ),
+		_aligner.getCuts()(0),
+		_aligner.getCuts()(1)
+	});
+	if(_currentSigmaMinimum(1) < _aligner.getCuts()(0) || _currentSigmaMinimum(1) < 0) {
+		_currentSigmaMinimum = { _currentZ, _aligner.getCuts()(0) };
+	}
 	std::string title = "Z = ";
 	title += std::to_string(_currentZ);
 	title += " mm";
 	auto xcor = _aligner.getHistX();
 	auto ycor = _aligner.getHistY();
+	xcor->Write();
+	ycor->Write();
 	xcor->SetTitle(title.c_str());
 	ycor->SetTitle(title.c_str());
 	xcor->Draw();
@@ -122,5 +141,92 @@ void ZAlignTest::scanFinish()
 		img->FromPad(_yCanvas);
 		img->WriteImage(getFilename("_y.png").c_str());
 		delete img;
+
+		auto xgraph = new TGraph(_numSteps);
+		xgraph->SetName("x_sigma");
+		auto ygraph = new TGraph(_numSteps);
+		ygraph->SetName("y_width");
+		for(size_t i=0; i < _alignments.size(); ++i) {
+			const auto& align = _alignments[i];
+			xgraph->SetPoint(i, align.position(2), align.x_sigma);
+			ygraph->SetPoint(i, align.position(2), align.y_width);
+		}
+		xgraph->Write();
+		ygraph->Write();
+		double x_min = xgraph->GetX()[0];
+		double y_min = xgraph->GetY()[0];
+		size_t best_idx = 0;
+		for(size_t i=0; i < xgraph->GetN(); ++i) {
+			if(y_min > xgraph->GetY()[i]) {
+				x_min = xgraph->GetX()[i];
+				y_min = xgraph->GetY()[i];
+				best_idx = 0;
+			}
+		}
+		if(_currentScanStep+1 >= _numSteps) {
+			std::ofstream of(getFilename("_best.align"));
+			auto align = _alignments[best_idx];
+			of << align.position(0) << " "
+			   << align.position(1) << " "
+			   << align.position(2) << " "
+			   << align.x_sigma << " "
+			   << align.y_width << "\n";
+			of.flush();
+			of.close();
+		}
 	}
 }
+
+void ZAlignTest::scanFineInit()
+{
+	if(_currentScanStep == 0) {
+		auto x_sigma = dynamic_cast<TGraph*>(_file->Get("x_sigma"));
+		double x_min = x_sigma->GetX()[0];
+		double y_min = x_sigma->GetY()[0];
+		for(size_t i=1; i < x_sigma->GetN(); ++i) {
+			if(y_min > x_sigma->GetY()[i]) {
+				x_min = x_sigma->GetX()[i];
+				y_min = x_sigma->GetY()[i];
+			}
+		}
+		double rms = x_sigma->GetRMS();
+		_lowZ = x_min - rms/2;
+		_highZ = x_min + rms/2;
+		_numSteps *= 8;
+		std::cout << "FINE\nMin/RMS: " << x_min << "/" << rms
+		          << "\nLow/High: " << _lowZ << "/" << _highZ
+			  << "\nNum steps: " << _numSteps
+			  << std::endl;
+		_alignments.clear();
+	}
+	scanInit();
+}
+
+void ZAlignTest::scanFineFinish()
+{
+	scanFinish();
+	auto x_sigma = dynamic_cast<TGraph*>(_file->Get("x_sigma"));
+	double x_min = x_sigma->GetX()[0];
+	double y_min = x_sigma->GetY()[0];
+	size_t best_idx = 0;
+	for(size_t i=0; i < x_sigma->GetN(); ++i) {
+		if(y_min > x_sigma->GetY()[i]) {
+			x_min = x_sigma->GetX()[i];
+			y_min = x_sigma->GetY()[i];
+			best_idx = 0;
+		}
+	}
+	std::cout << "Z Alignment: " << x_min << " " << y_min << std::endl;
+	if(_currentScanStep+1 >= _numSteps) {
+		std::ofstream of(getFilename(".align"));
+		auto align = _alignments[best_idx];
+		of << align.position(0) << " "
+		   << align.position(1) << " "
+		   << align.position(2) << " "
+		   << align.x_sigma << " "
+		   << align.y_width << "\n";
+		of.flush();
+		of.close();
+	}
+}
+
