@@ -61,8 +61,8 @@ void EfficiencyTrack::init(const po::variables_map& vm)
 	_correlatedHits = new TH2D("correlatedHits", "Coordinates of hits correlated on X axis",
 	                           250, -_mpaTransform.getSensitiveSize()(0), sizeX,
 	                           250, -_mpaTransform.getSensitiveSize()(1), _mpaTransform.getSensitiveSize()(1));
-	_correlatedHitsX = new TH1D("correlatedHitsX", "X coordinates of hits correlated on X axis", 250, -5, 5);
-	_correlatedHitsY = new TH1D("correlatedHitsY", "Y coordinates of hits correlated on X axis", 250, -5, 5);
+	_correlatedHitsX = new TH1D("correlatedHitsX", "X coordinates of hits correlated on X axis", 500, -10, 10);
+	_correlatedHitsY = new TH1D("correlatedHitsY", "Y coordinates of hits correlated on X axis", 500, -10, 10);
 	_efficiency = new TH2D("correlatedHits", "", // 16, 0, 16, 3, 0, 3);
 	                           _mpaTransform.getNumPixels()(0) * resolution,
 				   -sizeX / 2,
@@ -236,6 +236,9 @@ bool EfficiencyTrack::alignRun(const core::TrackStreamReader::event_t& track_eve
 void EfficiencyTrack::alignFinish()
 {
 	const auto runId = getCurrentRunId();
+	_aligner[runId].writeHistogramImage(getFilename(runId, "_align.png"));
+	_aligner[runId].writeHistograms();
+	_file->Write();
 	_aligner[runId].calculateAlignment();
 	auto offset = _mpaTransform.getOffset();
 	offset += _aligner[runId].getOffset();
