@@ -2,6 +2,7 @@
 #include <cassert>
 #include <regex.h>
 #include <TFile.h>
+#include <iostream>
 
 using namespace core;
 
@@ -9,29 +10,28 @@ namespace core {
 REGISTER_PIXEL_STREAM_READER_TYPE(CBCStreamReader)
 }
 
-CBCStreamReader::cbcreader::cbcreader(const std::string& filename, size_t seek)
-: reader(filename), _fin(filename), _numEventsRead(0)
+CBCStreamReader::cbcreader::cbcreader(const std::string& filename, size_t eventNum)
+	: reader(filename), _fin(new TFile(filename.c_str(),"READ")), _numEventsRead(eventNum), _dutEvent(new tbeam::dutEvent)
 {
-        _dutEvent = new tbeam::dutEvent;
-        open()
-	if(seek == 0) {
+        open();
+	if(eventNum == 0) {
 		next();
 	}
 }
 
 CBCStreamReader::cbcreader::~cbcreader()
 {
-	_fin.Close();
+	_fin->Close();
 }
 
 bool CBCStreamReader::cbcreader::next()
 {
-        if(_t1.GetEntries() == _numEventsRead)
+        if(_numEventsRead == _analysisTree->GetEntries())
 	{
 	        return true;
 	}
 	
-	_t1.GetEvent(_numEventsRead);
+	_analysisTree->GetEvent(_numEventsRead);
 	
 	_currentEvent.data.clear();
 	_currentEvent.eventNumber = _numEventsRead++;
@@ -45,30 +45,27 @@ bool CBCStreamReader::cbcreader::next()
 }
 
 
-void CBCStreamReader::cbcreader::open(size_t seek)
+void CBCStreamReader::cbcreader::open()
 {
-        _fin = TFile::Open(getFilename());
+        //_fin = TFile::Open(getFilename().c_str());
         if(!_fin)
 	{
-	        std::cout << "File " << getFilename() <<  "could not be opened!" << std::endl;
-	        return false;
+		throw std::ios_base::failure("Cannot open");
 	}
 	_analysisTree = dynamic_cast<TTree*>(_fin->Get("analysisTree"));
 	if(!_analysisTree)
 	{
-	        std::cout << "Analysis Tree not found" << std::endl;
-		return false;
+		throw std::ios_base::failure("Cannot open");
 	}
 	
 	_analysisTree->SetBranchAddress("DUT",&_dutEvent);
 	
-
 }
 
 
 BaseSensorStreamReader::reader* CBCStreamReader::cbcreader::clone() const
 {
-	auto newReader = new cbcreader(getFilename(), _fin.tellg());
+	auto newReader = new cbcreader(getFilename(), _numEventsRead);
 	newReader->_currentEvent = _currentEvent;
 	newReader->_numEventsRead = _numEventsRead;
 	return newReader;

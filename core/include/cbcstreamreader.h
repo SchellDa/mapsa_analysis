@@ -5,16 +5,17 @@
 #include <string>
 #include <fstream>
 #include <TFile.h>
+#include <TTree.h>
 #include "basesensorstreamreader.h"
-#include "DataFormats.h"
+#include "interface/DataFormats.h"
 
 namespace core {
 
 class CBCStreamReader : public BaseSensorStreamReader
 {
 public:
-	MPAStreamReader() : BaseSensorStreamReader() {}
-        MPAStreamReader(const std::string& filename) : BaseSensorStreamReader(filename) {}
+	CBCStreamReader() : BaseSensorStreamReader() {}
+        CBCStreamReader(const std::string& filename) : BaseSensorStreamReader(filename) {}
 
 protected:
 	/** \brief Iterator for traversing separate events in the CBC data file
@@ -25,16 +26,16 @@ protected:
 	 */
         class cbcreader : public BaseSensorStreamReader::reader {
 	public:
-		cbcreader(const std::string& filename, size_t seek=0);
-		virtual ~mpareader();
+		cbcreader(const std::string& filename, size_t eventNum=0);
+		virtual ~cbcreader();
 		virtual bool next();
 		virtual BaseSensorStreamReader::reader* clone() const;
 
 	private:
-                void open(size_t seek);
-                mutable TFile _fin;
-                mutable TTree _analysisTree;
-                mutable auto _dutEvent;
+                void open();
+                mutable TFile* _fin;
+                mutable TTree* _analysisTree;
+                mutable tbeam::dutEvent* _dutEvent;
 		size_t _numEventsRead;
 	};
 	
