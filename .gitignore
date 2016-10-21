@@ -3,3 +3,4 @@ build
 *.swp
 docs/html/
 docs/latex/
+*~

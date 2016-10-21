@@ -5,6 +5,7 @@ include(CTest)
 set(GOOGLETEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/external/googletest/googletest/include")
 add_subdirectory(external)
 include_directories("${CMAKE_SOURCE_DIR}/external/eigen/include")
+include_directories("${CMAKE_SOURCE_DIR}/interface/include")
 
 find_package(ROOT REQUIRED)
 add_definitions("--std=c++11" ${ROOT_DEFINITIONS})

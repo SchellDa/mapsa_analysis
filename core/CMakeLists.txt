@@ -9,6 +9,7 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/quickrunlistreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/aligner.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/functions.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cbcstreamreader.cpp
 )
 
 add_definitions("-Wall")
