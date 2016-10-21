@@ -15,6 +15,7 @@ using namespace core;
 
 
 Aligner::Aligner() :
+ xHistogramConfig{1000, -5, 5}, yHistogramConfig{250, -5, 5},
  _nsigma(1.0), _alignX(nullptr), _alignY(nullptr),
  _calculated(false), _offset(0, 0, 0), _cuts(0, 0)
 {
@@ -32,9 +33,10 @@ TH1D* Aligner::getHistY() const
 void Aligner::initHistograms(const std::string& xname, const std::string& yname)
 {
 	_calculated = false;
-	const int factor = 4;
-	_alignX = new TH1D(xname.c_str(), "Alignment Correlation on X axis", 1000*factor, -5*factor, 5*factor);
-	_alignY = new TH1D(yname.c_str(), "Alignment Correlation on Y axis", 250*factor, -5*factor, 5*factor);
+	_alignX = new TH1D(xname.c_str(), "Alignment Correlation on X axis",
+	                   xHistogramConfig.nbins, xHistogramConfig.min, xHistogramConfig.max);
+	_alignY = new TH1D(yname.c_str(), "Alignment Correlation on Y axis",
+	                   yHistogramConfig.nbins, yHistogramConfig.min, yHistogramConfig.max);
 }
 
 void Aligner::writeHistograms()

@@ -12,6 +12,13 @@ namespace core
 class Aligner
 {
 public:
+	struct histogram_cfg_t
+	{
+		double min;
+		double max;
+		int nbins;
+	};
+
 	Aligner();
 	TH1D* getHistX() const;
 	TH1D* getHistY() const;
@@ -58,6 +65,9 @@ public:
 	void appendAlignmentData(const std::string& filename, const std::string& extra="") const;
 
 	bool gotAlignmentData() const { return _calculated; }
+
+	histogram_cfg_t xHistogramConfig;
+	histogram_cfg_t yHistogramConfig;
 
 private:
 	bool rebinIfNeccessary(TH1D* cor, const double& nrms, const double& binratio);
