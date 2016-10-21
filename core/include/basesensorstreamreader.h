@@ -165,6 +165,7 @@ public:
 	
 	BaseSensorStreamReader() : _filename("") {}
 	BaseSensorStreamReader(const std::string& filename) : _filename(filename) {}
+	virtual ~BaseSensorStreamReader() {}
 
 	void setFilename(const std::string& filename)
 	{
