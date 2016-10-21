@@ -1,10 +1,12 @@
 
 #include <getopt.h>
 #include <iostream>
+#include "core.h"
 #include "analysis.h"
 
 int main(int argc, char* argv[])
 {
+	core::initClasses();
 	bool show_basic_help = false;
 	bool list_analyses = false;
 	if(argc == 1) {

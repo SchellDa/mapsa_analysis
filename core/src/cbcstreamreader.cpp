@@ -7,7 +7,6 @@
 using namespace core;
 
 namespace core {
-REGISTER_PIXEL_STREAM_READER_TYPE(CBCStreamReader)
 }
 
 CBCStreamReader::cbcreader::cbcreader(const std::string& filename, size_t eventNum)

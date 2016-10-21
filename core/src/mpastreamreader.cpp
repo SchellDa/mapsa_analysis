@@ -5,10 +5,6 @@
 
 using namespace core;
 
-namespace core {
-REGISTER_PIXEL_STREAM_READER_TYPE(MPAStreamReader)
-}
-
 MPAStreamReader::mpareader::mpareader(const std::string& filename, size_t seek)
  : reader(filename), _fin(), _numEventsRead(0)
 {
