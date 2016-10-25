@@ -1,6 +1,7 @@
 # MPA Run	Telescope Run	Angle (°)	Bias Volt (V)	Bias Cur (μA)	Threshold	MPA Trigger	Telescope  Trigger	Comments	Converted	Data Offset	Correlation	Comments	
 28	133	0	110		110	750812	750809	Distance to REF = 35mm	Yes	0	Yes		
 769	1602	0	110		110	750812	750809	Distance to REF = 35mm	Yes	0	Yes		
+770	1604	0	110		110	750812	750809	Distance to REF = 35mm	Yes	0	Yes
 29	146	0	110		110	750812	100504		Yes	-1	Yes		
 30	147	0	110		110	100720	100718		Yes	-1	Yes		
 31	148	0	110		110	100452	100453		Yes	-1	Yes		
