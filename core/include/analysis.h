@@ -136,6 +136,7 @@ protected:
 	void setDataOffset(int dataOffset);
 	int getDataOffset() const { return _dataOffset; }
 	void rerun();
+	size_t getRerunNumber() const { return _rerunNumber; }
 
 	CfgParse _config;
 	QuickRunlistReader _runlist;
@@ -163,6 +164,7 @@ private:
 	int _dataOffset;
 	bool _analysisRunning;
 	bool _rerunProcess;
+	size_t _rerunNumber;
 };
 
 /** \brief short-hand type for the factory class for core::Analysis. */

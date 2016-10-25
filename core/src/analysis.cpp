@@ -267,12 +267,11 @@ void Analysis::rerun()
 
 void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& reader, const process_t& process)
 {
-	int run = 0;
+	_rerunNumber = 0;
 	do {
 		if(process.init) {
 			process.init();
 		}
-		_analysisRunning = true;
 		_rerunProcess = false;
 		size_t evtCount = 0;
 		if(process.mode == CS_ALWAYS && process.run) {
@@ -283,6 +282,7 @@ void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& read
 				if(process.run_init) {
 					process.run_init();
 				}
+				_analysisRunning = true;
 				evtCount = 0;
 				auto track_it = read.trackreader.begin();
 				for(const auto& pixel: *read.pixelreader) {
@@ -290,14 +290,15 @@ void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& read
 						++track_it;
 					if(evtCount % 1000 == 0) {
 						std::cout << process.name << ": Processing step " << evtCount;
-						if(run)
-							std::cout << " rerun " << run;
+						if(_rerunNumber)
+							std::cout << " rerun " << _rerunNumber;
 						std::cout << " for MPA run " << read.runId << std::endl;
 					}
 					++evtCount;
 					if(!process.run(*track_it, pixel))
 						break;
 				}
+				_analysisRunning = false;
 				if(process.run_post) {
 					process.run_post();
 				}
@@ -310,6 +311,7 @@ void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& read
 				if(process.run_init) {
 					process.run_init();
 				}
+				_analysisRunning = true;
 				evtCount = 0;
 				auto pixel_it = read.pixelreader->begin();
 				for(const auto& track: read.trackreader) {
@@ -321,8 +323,8 @@ void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& read
 					}
 					if(evtCount % 1000 == 0) {
 						std::cout << process.name <<  ": Processing step " << evtCount;
-						if(run)
-							std::cout << " rerun " << run;
+						if(_rerunNumber)
+							std::cout << " rerun " << _rerunNumber;
 						std::cout << " event no. " << track.eventNumber << "/" << pixel_it->eventNumber;
 						std::cout << " for MPA run " << _currentRunId << std::endl;
 					}
@@ -333,15 +335,15 @@ void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& read
 					if(!process.run(track, *pixel_it))
 						break;
 				}
+				_analysisRunning = false;
 				if(process.run_post) {
 					process.run_post();
 				}
 			}
 		}
-		_analysisRunning = false;
 		if(process.post) {
 			process.post();
 		}
-		++run;
+		++_rerunNumber;
 	} while(_rerunProcess);
 }
