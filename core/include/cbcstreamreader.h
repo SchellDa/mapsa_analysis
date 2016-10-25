@@ -37,6 +37,9 @@ protected:
                 TFile _fin;
                 TTree* _analysisTree;
                 tbeam::dutEvent* _dutEvent;
+                tbeam::condEvent* _condition;
+		tbeam::TelescopeEvent* _telescopeEvent;
+		bool _goodEventFlag;
 		size_t _numEventsRead;
 	};
 	
