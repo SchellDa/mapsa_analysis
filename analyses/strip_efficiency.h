@@ -21,19 +21,21 @@ public:
 	virtual std::string getHelp(const std::string& argv0) const;
 
 private:
-	void alignInit();
-        bool alignRun(const core::TrackStreamReader::event_t& track_event,
-	           const core::BaseSensorStreamReader::event_t& mpa_event);
-	void alignFinish();
 	void analyzeRunInit();
         bool analyze(const core::TrackStreamReader::event_t& track_event,
 	             const core::BaseSensorStreamReader::event_t& mpa_event);
 	void analyzeFinish();
 
-	std::map<int, core::Aligner> _aligner;
+	struct alignment_t {
+		Eigen::Vector3d position;
+		double sigma;
+	};
+	std::map<int, alignment_t> _alignments;
+
 	TFile* _file;
-	bool _forceAlignment;
 	double _nSigmaCut;
+	size_t _totalHits;
+	size_t _correlatedHits;
 };
 
 #endif//STRIP_EFFICIENCY_H
