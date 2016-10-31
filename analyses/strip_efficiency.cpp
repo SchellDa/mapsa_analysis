@@ -124,10 +124,20 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 
 void StripEfficiency::analyzeFinish()
 {
+	double eff = static_cast<double>(_correlatedHits) / _totalHits;
+	const auto runId = getCurrentRunId();
 	std::cout << "Total hits: " << _totalHits
 	          << "\nDUT hits: " << _correlatedHits
-		  << "\nEfficiency: " << std::setprecision(0) << std::fixed
-		  << static_cast<double>(_correlatedHits) / _totalHits * 100.0 << "%"
+		  << "\nEfficiency: " << std::setprecision(2) << std::fixed
+		  << eff * 100.0 << "%"
 		  << std::endl;
+	auto run = _runlist.getByMpaRun(runId);
+	std::ofstream fout(getFilename(".eff"));
+	fout << runId << "\t"
+	     << _totalHits << "\t"
+	     << _correlatedHits << "\t"
+	     << eff << "\t"
+	     << run.angle << "\t"
+	     << run.threshold << "\n";
 }
 
