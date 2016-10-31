@@ -18,13 +18,13 @@ EfficiencyTrack::EfficiencyTrack() :
 	 std::bind(&EfficiencyTrack::prealignRun, this, std::placeholders::_1, std::placeholders::_2),
 	 std::bind(&EfficiencyTrack::prealignFinish, this)
 	);*/
-	addProcess("align", CS_TRACK,
+	/*addProcess("align", CS_TRACK,
 	 Analysis::init_callback_t{},
 	 std::bind(&EfficiencyTrack::alignInit, this),
 	 std::bind(&EfficiencyTrack::alignRun, this, std::placeholders::_1, std::placeholders::_2),
 	 std::bind(&EfficiencyTrack::alignFinish, this),
 	 Analysis::post_callback_t{}
-	);
+	);*/
 	/*addProcess("checkCorrelatedHits", CS_TRACK,
 	 std::bind(&EfficiencyTrack::checkCorrelatedHits, this, std::placeholders::_1, std::placeholders::_2)
 	);*/
@@ -36,7 +36,7 @@ EfficiencyTrack::EfficiencyTrack() :
 	 std::bind(&EfficiencyTrack::analyzeFinish, this)
 	);
 	getOptionsDescription().add_options()
-		("align,a", "Force recalculation of alignment parameters")
+//		("align,a", "Force recalculation of alignment parameters")
 	;
 }
 
@@ -277,6 +277,19 @@ bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t
 
 void EfficiencyTrack::analyzeRunInit()
 {
+	const int runId = getCurrentRunId();
+	_aligner[runId].setNSigma(_config.get<double>("n_sigma_cut"));
+	std::string alignfile (
+		_config.get<std::string>("output_dir") +
+		std::string("/ZAlignTest_") +
+		getMpaIdPadded(runId) +
+		".align"
+	);
+	_aligner[runId].loadAlignmentData(alignfile);
+	if(!_aligner[runId].gotAlignmentData()) {
+		throw std::runtime_error(std::string("Cannot find alignment data for run ")
+		                         + std::to_string(runId));
+	}
 	_mpaTransform.setAlignmentOffset(_aligner[getCurrentRunId()].getOffset());
 	auto offset = _mpaTransform.getOffset();
 	std::cout << "Run MPA offset: "
