@@ -43,29 +43,34 @@ CBCStreamReader::cbcreader::~cbcreader()
 
 bool CBCStreamReader::cbcreader::next()
 {
-	_currentEvent.data.clear();
-	if(_numEventsRead == _analysisTree->GetEntries())
-	{
-		return true;
-	}
-	_analysisTree->GetEvent(_numEventsRead);
-	// The +2 offset was "empiricaly" observed. Quite a magic constant ATM
-	if(_currentEvent.eventNumber + 2 == _condition->event) {
-		//good = _goodEventFlag > 0;
-	/*	std::cout << "\n-----------------------------\n  Event No:" << _currentEvent.eventNumber
-		          << "\ngoodEvent " << _goodEventFlag
-			  << "\ncondEvent.event " << _condition->event
-			  << "\nTelescopeEvent.euEvt " << _telescopeEvent->euEvt
-			  << "\nevt difference " << (_condition->event - _currentEvent.eventNumber)
-			  << "\n-----------------------------"
-			  << std::endl; */
-		for(const auto &n: _dutEvent->dut_channel.at("det0"))
-		{
-		    _currentEvent.data.push_back(n);
+	bool good = true;
+	do {
+//		if(!good) {
+//			std::cout << "Skipped not-good event " << _currentEvent.eventNumber << std::endl;
+//		}
+		_currentEvent.data.clear();
+		if(_numEventsRead == _analysisTree->GetEntries()) {
+			return true;
 		}
-		++_numEventsRead;
+		_analysisTree->GetEvent(_numEventsRead);
+		good = _goodEventFlag > 0;
+		// The +2 offset was "empiricaly" observed. Quite a magic constant ATM
+		if(_currentEvent.eventNumber + 2 == _condition->event) {
+		/*	std::cout << "\n-----------------------------\n  Event No:" << _currentEvent.eventNumber
+			          << "\ngoodEvent " << _goodEventFlag
+				  << "\ncondEvent.event " << _condition->event
+				  << "\nTelescopeEvent.euEvt " << _telescopeEvent->euEvt
+				  << "\nevt difference " << (_condition->event - _currentEvent.eventNumber)
+				  << "\n-----------------------------"
+				  << std::endl; */
+			++_numEventsRead;
+		}
+		_currentEvent.eventNumber++;
+	} while(!good);
+	for(const auto &n: _dutEvent->dut_channel.at("det0"))
+	{
+	    _currentEvent.data.push_back(n);
 	}
-	_currentEvent.eventNumber++;
 	return false;
 }
 
