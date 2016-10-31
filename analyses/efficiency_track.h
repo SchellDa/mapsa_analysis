@@ -55,6 +55,8 @@ private:
 	std::vector<size_t> _activatedPixelHits;
 	std::ofstream _alignFile;
 	std::ofstream _analysisHitFile;
+	size_t _totalHitCount;
+	size_t _correlatedHitCount;
 };
 
 #endif//EFFICIENCY_TRACK_H

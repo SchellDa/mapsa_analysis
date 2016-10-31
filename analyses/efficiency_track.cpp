@@ -1,6 +1,7 @@
 
 #include "efficiency_track.h"
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <TCanvas.h>
 #include <TStyle.h>
@@ -11,7 +12,7 @@
 REGISTER_ANALYSIS_TYPE(EfficiencyTrack, "Textual analysis description here.")
 
 EfficiencyTrack::EfficiencyTrack() :
- Analysis(), _file(nullptr), _forceAlignment(false)
+ Analysis(), _file(nullptr), _forceAlignment(false), _totalHitCount(0), _correlatedHitCount(0)
 {
 /*	addProcess("prealign", CS_TRACK,
 	 std::bind(&EfficiencyTrack::prealignRun, this, std::placeholders::_1, std::placeholders::_2),
@@ -306,6 +307,7 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 		auto cb(b);
 		cb -= _mpaTransform.getOffset();
 		_trackHits->Fill(cb(0), cb(1));
+		++_totalHitCount;
 		// combine results of pixels in first and second row in a 2x2
 		// pixel grid. That way, we have the same geometry
 		// (punch-through etc.) for each overlayed pixel.
@@ -340,6 +342,7 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 						<< a(0) << "\t" << a(1)
 						<<"\t1\n";
 					if(!hitActivatedPixel) {
+						++_correlatedHitCount;
 						_efficiency->Fill(cb(0), cb(1));
 						_efficiencyOverlayed->Fill(subpc(0), subpc(1));
 						_efficiencyLocal->Fill(pc(0), pc(1));
@@ -458,5 +461,25 @@ void EfficiencyTrack::analyzeFinish()
 	img->FromPad(canvas);
 	img->WriteImage(getFilename("_results.png").c_str());
 	delete img;
+
+	double efficiency = static_cast<double>(_correlatedHitCount) / _totalHitCount;
+	std::ofstream fout(getFilename(".eff"));
+	fout << "0\t"
+	     << _totalHitCount << "\t"
+	     << _correlatedHitCount << "\t"
+	     << efficiency << "\t"
+	     << run.angle << "\t"
+	     << run.threshold << "\t";
+	std::cout << "Total hits: " << _totalHitCount
+	          << "\nDUT hits: " << _correlatedHitCount
+		  << "\nEfficiency: " << std::setprecision(2) << std::fixed
+		  << efficiency * 100.0 << "%"
+		  << std::endl;
+	bool first = true;
+	for(const auto runId: getAllRunIds()) {
+		if(!first) fout << ",";
+		fout << runId;
+	}
+	fout << "\n";
 }
 
