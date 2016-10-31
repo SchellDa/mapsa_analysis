@@ -170,11 +170,16 @@ void StripAlign::scanInit()
 	header += std::to_string(_currentZ);
 	header += "mm, skip = ";
 	header += std::to_string(getDataOffset());
-	_corHist = new TH1D((std::string("align_")+std::to_string(_currentScanStep)).c_str(), header.c_str(), 4000, -10, 10);
+	const int k = 2;
+	_corHist = new TH1D((std::string("align_")+std::to_string(_currentScanStep)).c_str(), header.c_str(), 4000*k, -10*k, 10*k);
 	_corX = new TH2D((std::string("cor_x_")+std::to_string(_currentScanStep)).c_str(),
-	                 (std::string("X: ")+header).c_str(), 50, -10, 10, 50, -10, 10);
+	                 (std::string("X: ")+header).c_str(), 50*k, -10*k, 10*k, 50*k, -10*k, 10*k);
+	_corX->GetXaxis()->SetTitle("Track X");
+	_corX->GetYaxis()->SetTitle("Strip Position");
 	_corY = new TH2D((std::string("cor_y_")+std::to_string(_currentScanStep)).c_str(),
-	                 (std::string("Y: ")+header).c_str(), 50, -10, 10, 50, -10, 10);
+	                 (std::string("Y: ")+header).c_str(), 50*k, -10*k, 10*k, 50*k, -10*k, 10*k);
+	_corY->GetXaxis()->SetTitle("Track Y");
+	_corY->GetYaxis()->SetTitle("Strip Position");
 	_file->Add(_corHist);
 	_file->Add(_corX);
 	_file->Add(_corY);
@@ -307,8 +312,8 @@ bool StripAlign::yAlignRun(const core::TrackStreamReader::event_t& track_event,
 	if(_noY) return false;
 	const double sensor_active_x = 11.860; // mm, 127 strips + bias ring
 	const double sensor_active_y = 48.522; // mm, strip length
-	double x_low = _zAlignment.position(0) - sensor_active_x/2;
-	double x_high = _zAlignment.position(0) + sensor_active_x/2;
+	double x_low = -_zAlignment.position(0) - sensor_active_x/2;
+	double x_high = -_zAlignment.position(0) + sensor_active_x/2;
 	double y_low = _currentY - sensor_active_y/2;
 	double y_high = _currentY + sensor_active_y/2;
 	auto& counter = _yHitcounter[_currentY];
