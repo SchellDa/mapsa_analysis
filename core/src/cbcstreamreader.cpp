@@ -71,6 +71,10 @@ bool CBCStreamReader::cbcreader::next()
 	{
 	    _currentEvent.data.push_back(n);
 	}
+	for(const auto &n: _dutEvent->dut_channel.at("det1"))
+	{
+	    _currentEvent.data.push_back(n + 254);
+	}
 	return false;
 }
 

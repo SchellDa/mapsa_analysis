@@ -109,6 +109,9 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 		if(x_low < b(0) && x_high > b(0) && y_low < b(1) && y_high > b(1)) {
 			++_totalHits;
 			for(const auto& strip_idx: mpa_event.data) {
+				if(strip_idx >= 254) {
+					continue;
+				}
 				double x = static_cast<double>(strip_idx) - strip_count/2;
 				x *= strip_pitch;
 				x += align.position(0);

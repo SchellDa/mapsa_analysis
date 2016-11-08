@@ -198,6 +198,10 @@ bool StripAlign::scanRun(const core::TrackStreamReader::event_t& track_event,
 	for(const auto& track: track_event.tracks) {
 		auto b = track.extrapolateOnPlane(1, 3, _currentZ, 2);
 		for(const auto& idx: mpa_event.data) {
+			// ignore det1
+			if(idx >= 254) {
+				continue;
+			}
 			double x = (static_cast<double>(idx) - n_strips/2) * pitch;
 			_out << mpa_event.eventNumber << "\t"
 			     << b(0) << "\t"
