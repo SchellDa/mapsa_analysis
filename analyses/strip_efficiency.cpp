@@ -22,6 +22,11 @@ StripEfficiency::StripEfficiency() :
 	 std::bind(&StripEfficiency::analyzeFinish, this)
 	);
 	getOptionsDescription().add_options()
+		("mask,m",
+		 po::value<std::string>()->default_value("../masks/maskedChannelsMay16.txt"),
+		 "Channel mask file used by analysis to ignore dead strips.")
+		("no-mask",
+		 "Ignore any masking file")
 	;
 }
 
@@ -40,6 +45,33 @@ void StripEfficiency::init(const po::variables_map& vm)
 	double sizeX = _mpaTransform.getSensitiveSize()(0);
 	double sizeY = _mpaTransform.getSensitiveSize()(1);
 	auto resolution = _config.get<unsigned int>("efficiency_histogram_resolution_factor");
+	if(!vm.count("no-mask") > 0) {
+		auto fname = vm["mask"].as<std::string>();
+		std::ifstream fin(fname);
+		if(!fin.good()) {
+			throw std::ios_base::failure(std::string("Cannot open mask file ") + fname);
+		}
+		std::string line;
+		std::getline(fin, line);
+		int cbc_id;
+		fin >> cbc_id;
+		fin.ignore(10, ':');
+		while(fin.good()) {
+			int chnum;
+			fin >> chnum;
+			int spread_ch = chnum / 2;
+			if(chnum % 2 == 1) {
+				spread_ch = chnum / 2 + 254;
+			}
+			fin.ignore(10, ',');
+			_channelMask.push_back(cbc_id*128 + spread_ch);
+		}
+		std::cout << "Use following channel mask: ";
+		for(const auto& idx: _channelMask) {
+			std::cout << idx << " ";
+		}
+		std::cout << std::endl;
+	}
 }
 
 std::string StripEfficiency::getUsage(const std::string& argv0) const
