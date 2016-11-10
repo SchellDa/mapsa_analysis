@@ -174,13 +174,14 @@ void StripAlign::scanInit()
 	header += "mm, skip = ";
 	header += std::to_string(getDataOffset());
 	const int k = 2;
+	const int k_bin = 4;
 	_corHist = new TH1D((std::string("align_")+std::to_string(_currentScanStep)).c_str(), header.c_str(), 4000*k, -10*k, 10*k);
 	_corX = new TH2D((std::string("cor_x_")+std::to_string(_currentScanStep)).c_str(),
-	                 (std::string("X: ")+header).c_str(), 50*k, -10*k, 10*k, 50*k, -10*k, 10*k);
+	                 (std::string("X: ")+header).c_str(), 50*k_bin, -5*k, 5*k, 50*k_bin, -5*k, 5*k);
 	_corX->GetXaxis()->SetTitle("Track X");
 	_corX->GetYaxis()->SetTitle("Strip Position");
 	_corY = new TH2D((std::string("cor_y_")+std::to_string(_currentScanStep)).c_str(),
-	                 (std::string("Y: ")+header).c_str(), 50*k, -10*k, 10*k, 50*k, -10*k, 10*k);
+	                 (std::string("Y: ")+header).c_str(), 50*k_bin, -5*k, 5*k, 50*k_bin, -5*k, 5*k);
 	_corY->GetXaxis()->SetTitle("Track Y");
 	_corY->GetYaxis()->SetTitle("Strip Position");
 	_file->Add(_corHist);
