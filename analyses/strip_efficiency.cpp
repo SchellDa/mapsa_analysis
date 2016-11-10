@@ -161,7 +161,7 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 				double x = static_cast<double>(strip_idx) - strip_count;
 				x *= strip_pitch;
 				x += align.position(0);
-				if(std::abs(x - b(0)) < 3*align.sigma) {
+				if(std::abs(x - b(0)) < 0.1) {
 					++_correlatedHits;
 					++_maskedTotalHits;
 					_hitmap->Fill(b(0), b(1));
