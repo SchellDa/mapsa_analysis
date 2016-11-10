@@ -42,9 +42,21 @@ StripEfficiency::~StripEfficiency()
 void StripEfficiency::init(const po::variables_map& vm)
 {
 	_file = new TFile(getRootFilename().c_str(), "RECREATE");
-	double sizeX = _mpaTransform.getSensitiveSize()(0);
-	double sizeY = _mpaTransform.getSensitiveSize()(1);
 	auto resolution = _config.get<unsigned int>("efficiency_histogram_resolution_factor");
+	const double half_span_x = 15;
+	const double half_span_y = 30;
+	const int nbins_x = 2*half_span_x / 0.09;
+	const int nbins_y = 2*half_span_y / 0.09;
+	_xCorrelation = new TH2D("xCorrelation", "X-Axis Correlation",
+	                        nbins_x, -half_span_x, half_span_x,
+				nbins_y, -half_span_y, half_span_y);
+	_xCorrelation->GetXaxis()->SetTitle("Track X Position (mm)");
+	_xCorrelation->GetYaxis()->SetTitle("Strip Position (mm)");
+	_hitmap = new TH2D("hitmap", "Hitmap",
+	                        nbins_x, -half_span_x, half_span_x,
+				nbins_y, -half_span_y, half_span_y);
+	_channels = new TH1D("channels", "Channels",
+			508, 0, 508);
 	if(!vm.count("no-mask") > 0) {
 		auto fname = vm["mask"].as<std::string>();
 		std::ifstream fin(fname);
@@ -135,6 +147,8 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 	if(track_event.tracks.size() != 1) {
 		return true;
 	}
+	for(const auto& strip_idx: mpa_event.data) {
+		_channels->Fill(strip_idx);
 	for(const auto& track: track_event.tracks) {
 		bool got_trackhit = false;
 		auto b = track.extrapolateOnPlane(1, 3, align.position(2), 2);
@@ -149,6 +163,8 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 				x += align.position(0);
 				if(std::abs(x - b(0)) < 3*align.sigma) {
 					++_correlatedHits;
+					_hitmap->Fill(b(0), b(1));
+					_xCorrelation->Fill(b(0), x);
 					break;
 				}
 			}
@@ -161,6 +177,13 @@ void StripEfficiency::analyzeFinish()
 {
 	double eff = static_cast<double>(_correlatedHits) / _totalHits;
 	const auto runId = getCurrentRunId();
+	const auto& align = _alignments[runId];
+	const double sensor_active_x = 11.860; // mm, 127 strips + bias ring
+	const double sensor_active_y = 48.522; // mm, strip length
+	double x_low = align.position(0) - sensor_active_x/2;
+	double x_high = align.position(0) + sensor_active_x/2;
+	double y_low = align.position(1) - sensor_active_y/2;
+	double y_high = align.position(1) + sensor_active_y/2;
 	std::cout << "Total hits: " << _totalHits
 	          << "\nDUT hits: " << _correlatedHits
 		  << "\nEfficiency: " << std::setprecision(2) << std::fixed
@@ -174,5 +197,44 @@ void StripEfficiency::analyzeFinish()
 	     << eff << "\t"
 	     << run.angle << "\t"
 	     << run.threshold << "\n";
+	auto img = TImage::Create();
+	auto canvas = new TCanvas("canvas", "", 2000, 1500);
+	auto box = new TBox();
+	_hitmap->Draw("COLZ");
+	box->SetFillStyle(0);
+	box->SetLineStyle(1);
+	box->SetDrawOption("SAME");
+	box->DrawBox(align.position(0), align.position(1)-sensor_active_y/2,
+	             align.position(0)+sensor_active_x, align.position(1)+sensor_active_y/2);
+	box->DrawBox(align.position(0)-sensor_active_x, align.position(1)-sensor_active_y/2,
+	             align.position(0), align.position(1)+sensor_active_y/2);
+	box->SetFillColor(2);
+	box->SetFillStyle(1001);
+	box->SetLineStyle(0);
+	box->DrawBox(align.position(0)-0.5, align.position(1)-0.5,
+	             align.position(0)+0.5, align.position(1)+0.5);
+	img->FromPad(canvas);
+	img->WriteImage(getFilename("_hitmap.png").c_str());
+
+	_xCorrelation->Draw("COLZ");
+	img->FromPad(canvas);
+	img->WriteImage(getFilename("_correlation.png").c_str());
+
+	_channels->Draw();
+	for(const auto& strip_idx: _channelMask) {
+		// std::cout << strip_idx << std::endl;
+		double dx = -0.5;
+		TLine* l = new TLine(dx + strip_idx, 0, dx + strip_idx, _channels->GetMaximum());
+		l->Draw();
+	}
+	TLine* l = new TLine(127, 0, 127, _channels->GetMaximum());
+	l->SetLineWidth(3); l->Draw();
+	l = new TLine(254, 0, 254, _channels->GetMaximum());
+	l->SetLineWidth(3); l->Draw();
+	l = new TLine(127*3, 0, 127*3, _channels->GetMaximum());
+	l->SetLineWidth(3); l->Draw();
+	img->FromPad(canvas);
+	img->WriteImage(getFilename("_channels.png").c_str());
+	delete img;
 }
 

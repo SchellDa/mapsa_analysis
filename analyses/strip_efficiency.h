@@ -33,6 +33,9 @@ private:
 	std::map<int, alignment_t> _alignments;
 
 	TFile* _file;
+	TH2D* _xCorrelation;
+	TH2D* _hitmap;
+	TH1D* _channels;
 	std::vector<size_t> _channelMask;
 	double _nSigmaCut;
 	size_t _totalHits;
