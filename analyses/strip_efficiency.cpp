@@ -12,7 +12,7 @@
 REGISTER_ANALYSIS_TYPE(StripEfficiency, "Measure the efficiency of a strip sensor.")
 
 StripEfficiency::StripEfficiency() :
- Analysis(), _file(nullptr)
+ Analysis(), _file(nullptr), _channelMask(), _totalHits(0), _maskedTotalHits(0), _correlatedHits(0)
 {
 	addProcess("analyze", CS_TRACK,
 	 core::Analysis::init_callback_t{},
@@ -163,9 +163,30 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 				x += align.position(0);
 				if(std::abs(x - b(0)) < 3*align.sigma) {
 					++_correlatedHits;
+					++_maskedTotalHits;
 					_hitmap->Fill(b(0), b(1));
 					_xCorrelation->Fill(b(0), x);
+					got_trackhit = true;
 					break;
+				}
+			}
+			// if a masked strip was potentialy hit, do not count to total hits
+			if(!got_trackhit) {
+				bool mask_hit = false;
+				for(const auto& strip_idx: _channelMask) {
+					if(strip_idx >= 254) {
+						continue;
+					}
+					double x = static_cast<double>(strip_idx) - strip_count;
+					x *= strip_pitch;
+					x += align.position(0);
+					if(std::abs(x - b(0)) < 0.1) {
+						mask_hit = true;
+						break;
+					}
+				}
+				if(!mask_hit) {
+					++_maskedTotalHits;
 				}
 			}
 		}
@@ -176,6 +197,15 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 void StripEfficiency::analyzeFinish()
 {
 	double eff = static_cast<double>(_correlatedHits) / _totalHits;
+	int N_masked = 0;
+	for(const auto& m: _channelMask) {
+		if(m < 254) {
+			++N_masked;
+		}
+	}
+	std::cout << "N_masked " << N_masked << std::endl;
+	double correction = 127.0 / (127.0 - N_masked);
+	double masked_eff = static_cast<double>(_correlatedHits) / _maskedTotalHits;
 	const auto runId = getCurrentRunId();
 	const auto& align = _alignments[runId];
 	const double sensor_active_x = 11.860; // mm, 127 strips + bias ring
@@ -186,8 +216,10 @@ void StripEfficiency::analyzeFinish()
 	double y_high = align.position(1) + sensor_active_y/2;
 	std::cout << "Total hits: " << _totalHits
 	          << "\nDUT hits: " << _correlatedHits
-		  << "\nEfficiency: " << std::setprecision(2) << std::fixed
-		  << eff * 100.0 << "%"
+		  << std::setprecision(2) << std::fixed
+		  << "\nUnmasked Efficiency: " << eff * 100.0 << "%"
+		  << "\nCorrected Efficiency: " << correction*eff * 100.0 << "%"
+		  << "\nMasked Efficiency: " << masked_eff * 100.0 << "%"
 		  << std::endl;
 	auto run = _runlist.getByMpaRun(runId);
 	std::ofstream fout(getFilename(".eff"));
@@ -196,7 +228,9 @@ void StripEfficiency::analyzeFinish()
 	     << _correlatedHits << "\t"
 	     << eff << "\t"
 	     << run.angle << "\t"
-	     << run.threshold << "\n";
+	     << run.threshold << "\t"
+	     << correction*eff << "\t"
+	     << masked_eff << "\n";
 	auto img = TImage::Create();
 	auto canvas = new TCanvas("canvas", "", 2000, 1500);
 	auto box = new TBox();

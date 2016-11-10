@@ -39,6 +39,7 @@ private:
 	std::vector<size_t> _channelMask;
 	double _nSigmaCut;
 	size_t _totalHits;
+	size_t _maskedTotalHits;
 	size_t _correlatedHits;
 };
 
