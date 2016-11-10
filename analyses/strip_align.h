@@ -63,6 +63,7 @@ private:
 	int _numSteps;
 	int _numProcessedSamples;
 	int _sampleSize;
+	bool _noisyAsFuckMode;
 	std::map<double, int> _yHitcounter;
 	std::ofstream _out;
 	Eigen::Vector2d _currentSigmaMinimum;

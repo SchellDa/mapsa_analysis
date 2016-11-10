@@ -1,6 +1,7 @@
 
 #include "strip_align.h"
 #include <TImage.h>
+#include <TF1.h>
 #include <TText.h>
 #include <TGraph.h>
 #include <TFitResult.h>
@@ -22,6 +23,7 @@ StripAlign::StripAlign() :
 		("low-shift", po::value<int>()->default_value(-10), "Lower shift value for --shift mode")
 		("high-shift", po::value<int>()->default_value(10), "Upper shift value for --shift mode")
 		("shift", "Do not scan different Z positions but different data shift values.")
+		("noisy-as-fuck,F", "Use alternative, slightly less stable residual fit. Useful for rather noisy runs")
 	;
 	addProcess("scan", /* CS_ALWAYS */ CS_TRACK,
 	           core::Analysis::init_callback_t {},
@@ -68,6 +70,7 @@ void StripAlign::init(const po::variables_map& vm)
 	_shift = vm.count("shift") > 0;
 	_reuseZ	= vm.count("reuse-z") > 0;
 	_noY = vm.count("no-y") > 0;
+	_noisyAsFuckMode = vm.count("noisy-as-fuck") > 0;
 	if(_shift) {
 		assert(_highShift > _lowShift);
 		_numSteps = _highShift - _lowShift + 1;
@@ -234,8 +237,22 @@ void StripAlign::scanFinish()
 	double mean = _corHist->GetMean();
 	double rms = _corHist->GetRMS();
 	auto result = _corHist->Fit("gaus", "SAME", "", mean-rms*2, mean+rms*2);
+
 	double sigma = result->Parameter(2);
 	double x = result->Parameter(1);
+	if(_noisyAsFuckMode) {
+		mean = x;
+		rms = 0.6;
+		auto func = new TF1("gaus_base", "[0]*exp(-(x-[1])**2 / [2]**2) + [3]");
+		func->SetParameter(0, result->Parameter(0));
+		func->SetParameter(1, result->Parameter(1));
+		func->SetParameter(2, 0.1);
+		func->SetParameter(3, 1);
+		func->SetParLimits(2, 0, 0.3);
+		result = _corHist->Fit("gaus_base", "SAMER+", "", mean-rms, mean+rms);
+		sigma = result->Parameter(2);
+		x = result->Parameter(1);
+	}
 	_alignments.push_back({
 		Eigen::Vector3d(
 			x, 0,
