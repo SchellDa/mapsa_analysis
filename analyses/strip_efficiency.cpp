@@ -128,8 +128,8 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 	const int strip_count = 127;
 	const double strip_pitch = 0.09;
 	const auto& align = _alignments[runId];
-	double x_low = align.position(0) - sensor_active_x/2;
-	double x_high = align.position(0) + sensor_active_x/2;
+	double x_low = align.position(0) - sensor_active_x/1;
+	double x_high = align.position(0) + sensor_active_x/1;
 	double y_low = align.position(1) - sensor_active_y/2;
 	double y_high = align.position(1) + sensor_active_y/2;
 	if(track_event.tracks.size() != 1) {
@@ -144,7 +144,7 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 				if(strip_idx >= 254) {
 					continue;
 				}
-				double x = static_cast<double>(strip_idx) - strip_count/2;
+				double x = static_cast<double>(strip_idx) - strip_count;
 				x *= strip_pitch;
 				x += align.position(0);
 				if(std::abs(x - b(0)) < 3*align.sigma) {

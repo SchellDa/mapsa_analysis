@@ -205,7 +205,7 @@ bool StripAlign::scanRun(const core::TrackStreamReader::event_t& track_event,
 			if(idx >= 254) {
 				continue;
 			}
-			double x = (static_cast<double>(idx) - n_strips/2) * pitch;
+			double x = (static_cast<double>(idx) - n_strips) * pitch;
 			_out << mpa_event.eventNumber << "\t"
 			     << b(0) << "\t"
 			     << b(1) << "\t"
