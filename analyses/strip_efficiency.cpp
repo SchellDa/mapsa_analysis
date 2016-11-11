@@ -149,6 +149,7 @@ bool StripEfficiency::analyze(const core::TrackStreamReader::event_t& track_even
 	}
 	for(const auto& strip_idx: mpa_event.data) {
 		_channels->Fill(strip_idx);
+	}
 	for(const auto& track: track_event.tracks) {
 		bool got_trackhit = false;
 		auto b = track.extrapolateOnPlane(1, 3, align.position(2), 2);
