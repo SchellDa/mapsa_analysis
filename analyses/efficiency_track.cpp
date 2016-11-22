@@ -9,7 +9,7 @@
 #include <TText.h>
 #include <TPaveText.h>
 
-REGISTER_ANALYSIS_TYPE(EfficiencyTrack, "Textual analysis description here.")
+REGISTER_ANALYSIS_TYPE(EfficiencyTrack, "[legacy] Old and dubious analysis for calculating the MPA efficiency.")
 
 EfficiencyTrack::EfficiencyTrack() :
  Analysis(), _file(nullptr), _totalHitCount(0), _correlatedHitCount(0)
