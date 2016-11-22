@@ -15,7 +15,7 @@ using namespace core;
 
 
 Aligner::Aligner() :
- xHistogramConfig{1000, -5, 5}, yHistogramConfig{250, -5, 5},
+ xHistogramConfig{-5, 5, 1000} , yHistogramConfig{-5, 5, 250},
  _nsigma(1.0), _alignX(nullptr), _alignY(nullptr),
  _calculated(false), _offset(0, 0, 0), _cuts(0, 0)
 {
