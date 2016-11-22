@@ -48,6 +48,8 @@ private:
 	std::vector<size_t> _totalPixelHits;
 	std::vector<size_t> _activatedPixelHits;
 	std::ofstream _analysisHitFile;
+	std::ofstream _hitDebugFile;
+	size_t _debugFileCounter;
 	size_t _totalHitCount;
 	size_t _correlatedHitCount;
 };

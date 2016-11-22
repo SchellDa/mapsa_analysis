@@ -69,7 +69,7 @@ void EfficiencyTrack::init(const po::variables_map& vm)
 	                           -sizeY / 2,
 				   sizeY / 2);
 	int nx = 2;
-	int ny = 3;
+	int ny = 2;
 	int overlayed_resolution_factor = 2;
 	_efficiencyOverlayed = new TH2D("efficiencyOverlayed", "",
 	                           nx * resolution*overlayed_resolution_factor,
@@ -128,6 +128,11 @@ void EfficiencyTrack::analyzeRunInit()
 	          << offset(0) << " "
 		  << offset(1) << " "
 		  << offset(2) << std::endl;
+	if(_hitDebugFile.good()) {
+		_hitDebugFile.close();
+	}
+	_hitDebugFile.open(getFilename()+"_"+std::to_string(runId)+".csv");
+	_debugFileCounter = 0;
 }
 
 bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_event,
@@ -152,7 +157,14 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 		auto cb(b);
 		cb -= _mpaTransform.getOffset();
 		_trackHits->Fill(cb(0), cb(1));
-		++_totalHitCount;
+		if(_debugFileCounter < 10) {
+			++_debugFileCounter;
+			_hitDebugFile << runId << "\t"
+			              << cb(0) << "\t"
+			              << cb(1) << "\t"
+				      << std::endl;
+		}
+		bool trackOnMpa = false;
 		// combine results of pixels in first and second row in a 2x2
 		// pixel grid. That way, we have the same geometry
 		// (punch-through etc.) for each overlayed pixel.
@@ -166,6 +178,7 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
 			auto a = _mpaTransform.transform(idx);
 			if(_aligner[runId].pointsCorrelated(a, b)) {
+				trackOnMpa = true;
 				try {
 					auto hit_idx = _mpaTransform.getPixelIndex(track);
 					if(hit_idx == idx)
@@ -196,6 +209,9 @@ bool EfficiencyTrack::analyze(const core::TrackStreamReader::event_t& track_even
 				}
 			}
 		}
+		if(trackOnMpa) {
+			++_totalHitCount;
+		}
 		if(hitMpa) {
 			_analysisHitFile << "\n\n";
 			_analysisHitFile.flush();
@@ -217,6 +233,15 @@ void EfficiencyTrack::analyzeFinish()
 			_directHits->SetBinContent(bin, _directHits->GetBinContent(bin) / total);
 		}
 	}*/
+	auto run = _runlist.getByMpaRun(getAllRunIds()[0]);
+	double efficiency = static_cast<double>(_correlatedHitCount) / _totalHitCount;
+	std::ofstream fout(getFilename(".eff"));
+	fout << "0\t"
+	     << _totalHitCount << "\t"
+	     << _correlatedHitCount << "\t"
+	     << efficiency << "\t"
+	     << run.angle << "\t"
+	     << run.threshold << "\t";
 	auto eff = dynamic_cast<TH2D*>(_efficiency->Clone("pixelEfficiency"));
 	auto neigh = dynamic_cast<TH2D*>(_neighbourHits->Clone("neighbourHitsScaled"));
 	auto dir = dynamic_cast<TH2D*>(_directHits->Clone("directHitsScaled"));
@@ -255,6 +280,11 @@ void EfficiencyTrack::analyzeFinish()
 
 	info.str("");
 	info << "Threshold: " << run.threshold << " uA\n";
+	txt->AddText(info.str().c_str());
+
+	info.str("");
+	info << "Global Efficiency: " << std::setprecision(2) << std::fixed
+		  << efficiency * 100.0 << "%";
 	txt->AddText(info.str().c_str());
 
 	const auto& runs = getAllRunIds();
@@ -306,24 +336,34 @@ void EfficiencyTrack::analyzeFinish()
 	img->WriteImage(getFilename("_results.png").c_str());
 	delete img;
 
-	double efficiency = static_cast<double>(_correlatedHitCount) / _totalHitCount;
-	std::ofstream fout(getFilename(".eff"));
-	fout << "0\t"
-	     << _totalHitCount << "\t"
-	     << _correlatedHitCount << "\t"
-	     << efficiency << "\t"
-	     << run.angle << "\t"
-	     << run.threshold << "\t";
-	std::cout << "Total hits: " << _totalHitCount
-	          << "\nDUT hits: " << _correlatedHitCount
-		  << "\nEfficiency: " << std::setprecision(2) << std::fixed
-		  << efficiency * 100.0 << "%"
-		  << std::endl;
 	bool first = true;
 	for(const auto runId: getAllRunIds()) {
 		if(!first) fout << ",";
 		fout << runId;
 	}
 	fout << "\n";
+	assert(_trackHits->GetSize() == _efficiency->GetSize());
+	int total_bins = _trackHits->GetSize();
+	std::cout << "Total hits: " << _totalHitCount
+	          << "\nDUT hits: " << _correlatedHitCount
+		  << "\nEfficiency: " << std::setprecision(2) << std::fixed
+		  << efficiency * 100.0 << "%"
+		  << std::endl;
+	int total2d_xflow = _trackHits->GetBinContent(0) + _trackHits->GetBinContent(total_bins-1);
+	int hit2d_xflow = _efficiency->GetBinContent(0) + _efficiency->GetBinContent(total_bins-1);
+	int total2d = 0;
+	int hit2d = 0;
+	for(size_t i=1; i<total_bins; ++i) {
+		total2d += _trackHits->GetBinContent(i);
+		hit2d += _efficiency->GetBinContent(i);
+	}
+	std::cout << "Global Efficiency based on 2D Histograms"
+	          << "\n <Total> Xflow entries: " << total2d_xflow
+		  << "\n <Total> bin entries:   " << total2d
+		  << "\n <Hit> Xflow entries:   " << hit2d_xflow
+		  << "\n <Hit> bin entries:     " << hit2d
+		  << std::setprecision(2) << std::fixed
+		  << "\n Resulting efficiency:  " << static_cast<double>(hit2d)/total2d*100.0 << "%"
+		  << std::endl;
 }
 
