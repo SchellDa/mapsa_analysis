@@ -35,14 +35,8 @@ private:
 	             const core::BaseSensorStreamReader::event_t& mpa_event);
 	void analyzeFinish();
 
-	std::vector<Eigen::Vector3d> _prealignPoints;
-	size_t _numPrealigmentPoints;
 	TFile* _file;
-	bool _forceAlignment;
 	std::map<int, core::Aligner> _aligner;
-	TH2D* _correlatedHits;
-	TH1D* _correlatedHitsX;
-	TH1D* _correlatedHitsY;
 	TH2D* _efficiency;
 	TH2D* _efficiencyOverlayed;
 	TH2D* _efficiencyLocal;
@@ -53,7 +47,6 @@ private:
 	double _nSigmaCut;
 	std::vector<size_t> _totalPixelHits;
 	std::vector<size_t> _activatedPixelHits;
-	std::ofstream _alignFile;
 	std::ofstream _analysisHitFile;
 	size_t _totalHitCount;
 	size_t _correlatedHitCount;

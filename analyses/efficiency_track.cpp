@@ -12,22 +12,8 @@
 REGISTER_ANALYSIS_TYPE(EfficiencyTrack, "Textual analysis description here.")
 
 EfficiencyTrack::EfficiencyTrack() :
- Analysis(), _file(nullptr), _forceAlignment(false), _totalHitCount(0), _correlatedHitCount(0)
+ Analysis(), _file(nullptr), _totalHitCount(0), _correlatedHitCount(0)
 {
-/*	addProcess("prealign", CS_TRACK,
-	 std::bind(&EfficiencyTrack::prealignRun, this, std::placeholders::_1, std::placeholders::_2),
-	 std::bind(&EfficiencyTrack::prealignFinish, this)
-	);*/
-	/*addProcess("align", CS_TRACK,
-	 Analysis::init_callback_t{},
-	 std::bind(&EfficiencyTrack::alignInit, this),
-	 std::bind(&EfficiencyTrack::alignRun, this, std::placeholders::_1, std::placeholders::_2),
-	 std::bind(&EfficiencyTrack::alignFinish, this),
-	 Analysis::post_callback_t{}
-	);*/
-	/*addProcess("checkCorrelatedHits", CS_TRACK,
-	 std::bind(&EfficiencyTrack::checkCorrelatedHits, this, std::placeholders::_1, std::placeholders::_2)
-	);*/
 	addProcess("analyze", CS_TRACK,
 	 core::Analysis::init_callback_t{},
 	 std::bind(&EfficiencyTrack::analyzeRunInit, this),
@@ -36,7 +22,6 @@ EfficiencyTrack::EfficiencyTrack() :
 	 std::bind(&EfficiencyTrack::analyzeFinish, this)
 	);
 	getOptionsDescription().add_options()
-//		("align,a", "Force recalculation of alignment parameters")
 	;
 }
 
@@ -51,19 +36,10 @@ EfficiencyTrack::~EfficiencyTrack()
 
 void EfficiencyTrack::init(const po::variables_map& vm)
 {
-	_numPrealigmentPoints = 20000;
-	if(vm.count("align") >= 1) {
-		_forceAlignment = true;
-	}
 	_file = new TFile(getRootFilename().c_str(), "RECREATE");
 	double sizeX = _mpaTransform.getSensitiveSize()(0);
 	double sizeY = _mpaTransform.getSensitiveSize()(1);
 	auto resolution = _config.get<unsigned int>("efficiency_histogram_resolution_factor");
-	_correlatedHits = new TH2D("correlatedHits", "Coordinates of hits correlated on X axis",
-	                           250, -_mpaTransform.getSensitiveSize()(0), sizeX,
-	                           250, -_mpaTransform.getSensitiveSize()(1), _mpaTransform.getSensitiveSize()(1));
-	_correlatedHitsX = new TH1D("correlatedHitsX", "X coordinates of hits correlated on X axis", 500, -10, 10);
-	_correlatedHitsY = new TH1D("correlatedHitsY", "Y coordinates of hits correlated on X axis", 500, -10, 10);
 	_efficiency = new TH2D("correlatedHits", "", // 16, 0, 16, 3, 0, 3);
 	                           _mpaTransform.getNumPixels()(0) * resolution,
 				   -sizeX / 2,
@@ -118,7 +94,6 @@ void EfficiencyTrack::init(const po::variables_map& vm)
 				   3);
 	_totalPixelHits.resize(48, 0);
 	_activatedPixelHits.resize(48, 0);
-	_alignFile.open(getFilename("_align.csv"));
 	_analysisHitFile.open(getFilename("_corhits.csv"));
 }
 
@@ -130,149 +105,6 @@ std::string EfficiencyTrack::getUsage(const std::string& argv0) const
 std::string EfficiencyTrack::getHelp(const std::string& argv0) const
 {
         return Analysis::getHelp(argv0);
-}
-
-bool EfficiencyTrack::prealignRun(const core::TrackStreamReader::event_t& track_event,
-                                  const core::BaseSensorStreamReader::event_t& mpa_event)
-{
-	bool hasFiredPixel = false;
-	for(const auto& counter: mpa_event.data) {
-		if(counter)
-			hasFiredPixel = true;
-	}
-	for(const auto& track: track_event.tracks) {
-		_prealignPoints.push_back(track.extrapolateOnPlane(0, 4, 840, 2));
-	}
-	return _prealignPoints.size() < _numPrealigmentPoints;
-}
-
-void EfficiencyTrack::prealignFinish()
-{
-	std::cout << "Maximize count in prealigned MPA rectangle." << std::endl;
-	Eigen::Vector3d offset(0, 0, 0);
-	for(const auto& p: _prealignPoints) {
-		offset += p;
-	}
-	offset /= _prealignPoints.size();
-	auto hsize = _mpaTransform.getSensitiveSize()/2;
-	auto shift = std::min(_mpaTransform.getPixelSize()(0), _mpaTransform.getPixelSize()(1));
-	while(1) {
-		std::vector<Eigen::Vector3d> t;
-		std::vector<size_t> count;
-		t.push_back(offset);
-		t.push_back(offset + Eigen::Vector3d(shift, 0.0, 0.0));
-		t.push_back(offset + Eigen::Vector3d(-shift, 0.0, 0.0));
-		t.push_back(offset + Eigen::Vector3d(0.0, shift, 0.0));
-		t.push_back(offset + Eigen::Vector3d(0.0, -shift, 0.0));
-		for(const auto& of: t) {
-			size_t c = 0;
-			for(const auto& p: _prealignPoints) {
-				if((p(0) < of(0)+hsize(0)) &&
-				   (p(0) > of(0)-hsize(0)) &&
-				   (p(1) < of(1)+hsize(1)) &&
-				   (p(1) > of(1)-hsize(1))) {
-					++c;
-				}
-			}
-			count.push_back(c);
-		}
-		auto max = *std::max_element(count.begin(), count.end());
-		assert(t.size() == count.size());
-		size_t max_idx = 0;
-		for(; max_idx < t.size(); ++max_idx) {
-			if(count[max_idx] == max) {
-				break;
-			}
-		}
-		if(max_idx == 0)
-			break;
-		offset = t[max_idx];
-	}
-	_mpaTransform.setAlignmentOffset(offset);
-	std::cout << "Prealignment offset\n" << offset << std::endl;
-}
-
-void EfficiencyTrack::alignInit()
-{
-	const int runId = getCurrentRunId();
-	_aligner[runId].setNSigma(_config.get<double>("n_sigma_cut"));
-	if(!_forceAlignment) {
-		_aligner[runId].loadAlignmentData(getFilename(runId, ".align"));
-	}
-	if(!_aligner[runId].gotAlignmentData()) {
-		_aligner[runId].initHistograms();
-	}
-}
-
-bool EfficiencyTrack::alignRun(const core::TrackStreamReader::event_t& track_event,
-                               const core::BaseSensorStreamReader::event_t&  mpa_event)
-{
-	const auto runId = getCurrentRunId();
-	if(_aligner[runId].gotAlignmentData()) {
-		return false;
-	}
-	bool empty = true;
-	for(const auto& track: track_event.tracks) {
-		auto b = track.extrapolateOnPlane(4, 5, 840, 2);
-		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
-			if(mpa_event.data[idx] == 0) continue;
-			auto a = _mpaTransform.transform(idx);
-			auto pc = _mpaTransform.translatePixelIndex(idx);
-			_aligner[runId].Fill(b(0) - a(0), b(1) - a(1));
-			_alignFile << idx << " "
-			     << a(0) << " "
-			     << a(1) << " "
-			     << b(0) << " "
-			     << b(1) << " "
-			     << pc(0) << " "
-			     << pc(1) << "\n";
-			empty = false;
-		}
-	}
-	if(!empty)
-		_alignFile << "\n\n" << std::flush;
-	return true;
-}
-
-void EfficiencyTrack::alignFinish()
-{
-	const auto runId = getCurrentRunId();
-	_aligner[runId].writeHistogramImage(getFilename(runId, "_align.png"));
-	_aligner[runId].writeHistograms();
-	_file->Write();
-	_aligner[runId].calculateAlignment();
-	auto offset = _mpaTransform.getOffset();
-	offset += _aligner[runId].getOffset();
-	auto cuts = _aligner[runId].getCuts();
-	std::cout << "Alignment for run " << runId
-	          << "\n  x_off = " << offset(0)
-	          << "\n  y_off = " << offset(1)
-		  << "\n  z_off = " << offset(2)
-	          << "\n  x_sigma = " << cuts(0)
-	          << "\n  y_width = " << cuts(1) << std::endl; 
-	_aligner[runId].writeHistogramImage(getFilename(runId, "_align.png"));
-	_aligner[runId].saveAlignmentData(getFilename(runId, ".align"));
-}
-
-bool EfficiencyTrack::checkCorrelatedHits(const core::TrackStreamReader::event_t& track_event,
-                              const core::BaseSensorStreamReader::event_t& mpa_event)
-{
-	for(const auto& track: track_event.tracks) {
-		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
-			if(mpa_event.data[idx] == 0) continue;
-			auto a = _mpaTransform.transform(idx);
-			auto pc = _mpaTransform.translatePixelIndex(idx);
-			auto b = track.extrapolateOnPlane(4, 5, 840, 2);
-			auto center_b(b);
-			center_b -= _mpaTransform.getOffset();
-			if(_aligner[getCurrentRunId()].pointsCorrelatedX(a, b)) {
-				_correlatedHits->Fill(center_b(0), center_b(1));
-				_correlatedHitsX->Fill(center_b(0));
-				_correlatedHitsY->Fill(center_b(1));
-			}
-		}
-	}
-	return true;
 }
 
 void EfficiencyTrack::analyzeRunInit()
@@ -400,7 +232,6 @@ void EfficiencyTrack::analyzeFinish()
 	_trackHits->Draw("COLZ");
 
 	canvas->cd(2);
-	auto run = _runlist.getByMpaRun(getAllRunIds()[0]);
 	std::ostringstream info;
 	auto txt = new TPaveText(0.1, 0.1, 0.9, 0.9);
 	info << "Info for MPA run: " << run.mpa_run << "\n";
