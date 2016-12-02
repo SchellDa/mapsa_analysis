@@ -150,6 +150,13 @@ std::string Analysis::getFilename(const std::string& suffix) const
 {
 	std::ostringstream sstr;
 	sstr << _config.getVariable("output_dir") << "/" << getName();
+	try {
+		auto prefix = _config.getVariable("output_prefix");
+		if(prefix.size()) {
+			sstr << "_" << prefix;
+		}
+	} catch(CfgParse::no_variable_error& e) {
+	}
 	for(const auto& id: _allRunIds) {
 		sstr << "_" << getMpaIdPadded(id);
 	}
