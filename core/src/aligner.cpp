@@ -103,7 +103,7 @@ bool Aligner::pointsCorrelated(const Eigen::Vector2d& a, const Eigen::Vector2d& 
 	assert(_calculated);
 	Eigen::Array2d diff{(a - b).array().abs()};
 	return diff(0) < _cuts(0)*_nsigma &&
-	       diff(1) < _cuts(1);
+	       diff(1) < _cuts(1)*_nsigma;
 }
 
 bool Aligner::pointsCorrelatedX(const double& a, const double& b) const
@@ -115,7 +115,7 @@ bool Aligner::pointsCorrelatedX(const double& a, const double& b) const
 bool Aligner::pointsCorrelatedY(const double& a, const double& b) const
 {
 	assert(_calculated);
-	return std::abs(a-b) < _cuts(1);
+	return std::abs(a-b) < _cuts(1)*_nsigma;
 }
 
 void Aligner::saveAlignmentData(const std::string& filename, const std::string& extra) const
