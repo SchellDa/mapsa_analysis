@@ -40,8 +40,9 @@ void ZAlignTest::init(const po::variables_map& vm)
 	_highZ = vm["high-z"].as<double>();
 	_numSteps = vm["num-steps"].as<int>();
 	_currentScanStep = 0;
-	int n_x = std::sqrt(_numSteps + 1);
-	int n_y = std::sqrt(_numSteps + 1);
+	int num_plots = _numSteps + 3;
+	int n_x = std::sqrt(num_plots);
+	int n_y = std::sqrt(num_plots);
 	while(n_x*n_y < _numSteps + 1) {
 		++n_y;
 	}
@@ -76,7 +77,7 @@ void ZAlignTest::scanInit()
 {
 	_numProcessedSamples = 0;
 	_currentZ = _lowZ + (_highZ - _lowZ) / (_numSteps-1) * _currentScanStep;
-	_config.setVariable("mpa_z_offset", _currentZ);
+	_mpaTransform.setOffset({0, 0, _currentZ});
 	std::cout << _currentScanStep << "/" << _numSteps
 	          << ": Calculate alignment constants for Z=" << _currentZ << std::endl;
 	_aligner.initHistograms(std::string("x_align_")+std::to_string(_currentScanStep),
@@ -92,7 +93,6 @@ bool ZAlignTest::scanRun(const core::TrackStreamReader::event_t& track_event,
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
 			if(mpa_event.data[idx] == 0) continue;
 			auto a = _mpaTransform.transform(idx);
-			auto pc = _mpaTransform.translatePixelIndex(idx);
 			_aligner.Fill(b(0) - a(0), b(1) - a(1));
 		}
 	}
@@ -126,6 +126,7 @@ void ZAlignTest::scanFinish()
 	ycor->Write();
 	xcor->SetTitle(title.c_str());
 	ycor->SetTitle(title.c_str());
+	_xCanvas->cd(cd);
 	xcor->Draw();
 	_yCanvas->cd(cd);
 	ycor->Draw();
@@ -133,15 +134,6 @@ void ZAlignTest::scanFinish()
 	if(_currentScanStep < _numSteps) {
 		rerun();
 	} else {
-		auto img = TImage::Create();
-		img->FromPad(_xCanvas);
-		img->WriteImage(getFilename("_x.png").c_str());
-		delete img;
-		img = TImage::Create();
-		img->FromPad(_yCanvas);
-		img->WriteImage(getFilename("_y.png").c_str());
-		delete img;
-
 		auto xgraph = new TGraph(_numSteps);
 		xgraph->SetName("x_sigma");
 		auto ygraph = new TGraph(_numSteps);
@@ -153,6 +145,23 @@ void ZAlignTest::scanFinish()
 		}
 		xgraph->Write();
 		ygraph->Write();
+
+		_xCanvas->cd(_currentScanStep+2);
+		xgraph->Draw("A*");
+		_xCanvas->Update();
+		_yCanvas->cd(_currentScanStep+2);
+		ygraph->Draw("A*");
+		_yCanvas->Update();
+
+		auto img = TImage::Create();
+		img->FromPad(_xCanvas);
+		img->WriteImage(getFilename("_x.png").c_str());
+		delete img;
+		img = TImage::Create();
+		img->FromPad(_yCanvas);
+		img->WriteImage(getFilename("_y.png").c_str());
+		delete img;
+
 		double x_min = xgraph->GetX()[0];
 		double y_min = xgraph->GetY()[0];
 		size_t best_idx = 0;
@@ -164,7 +173,7 @@ void ZAlignTest::scanFinish()
 			}
 		}
 		if(_currentScanStep+1 >= _numSteps) {
-			std::ofstream of(getFilename("_best.align"));
+			std::ofstream of(getFilename(".align"));
 			auto align = _alignments[best_idx];
 			of << align.position(0) << " "
 			   << align.position(1) << " "
@@ -174,59 +183,6 @@ void ZAlignTest::scanFinish()
 			of.flush();
 			of.close();
 		}
-	}
-}
-
-void ZAlignTest::scanFineInit()
-{
-	if(_currentScanStep == 0) {
-		auto x_sigma = dynamic_cast<TGraph*>(_file->Get("x_sigma"));
-		double x_min = x_sigma->GetX()[0];
-		double y_min = x_sigma->GetY()[0];
-		for(size_t i=1; i < x_sigma->GetN(); ++i) {
-			if(y_min > x_sigma->GetY()[i]) {
-				x_min = x_sigma->GetX()[i];
-				y_min = x_sigma->GetY()[i];
-			}
-		}
-		double rms = x_sigma->GetRMS();
-		_lowZ = x_min - rms/2;
-		_highZ = x_min + rms/2;
-		_numSteps *= 8;
-		std::cout << "FINE\nMin/RMS: " << x_min << "/" << rms
-		          << "\nLow/High: " << _lowZ << "/" << _highZ
-			  << "\nNum steps: " << _numSteps
-			  << std::endl;
-		_alignments.clear();
-	}
-	scanInit();
-}
-
-void ZAlignTest::scanFineFinish()
-{
-	scanFinish();
-	auto x_sigma = dynamic_cast<TGraph*>(_file->Get("x_sigma"));
-	double x_min = x_sigma->GetX()[0];
-	double y_min = x_sigma->GetY()[0];
-	size_t best_idx = 0;
-	for(size_t i=0; i < x_sigma->GetN(); ++i) {
-		if(y_min > x_sigma->GetY()[i]) {
-			x_min = x_sigma->GetX()[i];
-			y_min = x_sigma->GetY()[i];
-			best_idx = 0;
-		}
-	}
-	std::cout << "Z Alignment: " << x_min << " " << y_min << std::endl;
-	if(_currentScanStep+1 >= _numSteps) {
-		std::ofstream of(getFilename(".align"));
-		auto align = _alignments[best_idx];
-		of << align.position(0) << " "
-		   << align.position(1) << " "
-		   << align.position(2) << " "
-		   << align.x_sigma << " "
-		   << align.y_width << "\n";
-		of.flush();
-		of.close();
 	}
 }
 
