@@ -24,6 +24,7 @@ public:
 	TH1D* getHistY() const;
 
 	void setNSigma(const double& nsigma) { _nsigma = nsigma; }
+	double getNSigma() const { return _nsigma; }
 
 	void initHistograms(const std::string& xname="alignHistX", const std::string& yname="alignHistY");
 	void writeHistograms();
@@ -68,6 +69,11 @@ public:
 
 	histogram_cfg_t xHistogramConfig;
 	histogram_cfg_t yHistogramConfig;
+
+	void setCuts(Eigen::Vector2d cuts)
+	{
+		_cuts = cuts;
+	}
 
 private:
 	bool rebinIfNeccessary(TH1D* cor, const double& nrms, const double& binratio);
