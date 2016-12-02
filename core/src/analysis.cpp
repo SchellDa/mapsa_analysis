@@ -62,13 +62,6 @@ bool Analysis::loadConfig(const po::variables_map& vm)
 		std::cerr << "Cannot parse runlist file: " << e.what() << std::endl;
 		return false;
 	}
-	_mpaTransform.setBaseOffset({0.0, 0.0, _config.get<double>("mpa_z_offset")});
-	_mpaTransform.setSensitiveSize({_config.get<double>("mpa_size_x"),
-	                               _config.get<double>("mpa_size_y")});
-	_mpaTransform.setPixelSize({_config.get<double>("mpa_pixel_size_x"),
-	                           _config.get<double>("mpa_pixel_size_y")});
-	_mpaTransform.setNumPixels({_config.get<size_t>("mpa_num_pixels_x"),
-	                           _config.get<size_t>("mpa_num_pixels_y")});
 	return true;
 }
 
