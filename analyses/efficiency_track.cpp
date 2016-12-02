@@ -37,35 +37,35 @@ EfficiencyTrack::~EfficiencyTrack()
 void EfficiencyTrack::init(const po::variables_map& vm)
 {
 	_file = new TFile(getRootFilename().c_str(), "RECREATE");
-	double sizeX = _mpaTransform.getSensitiveSize()(0);
-	double sizeY = _mpaTransform.getSensitiveSize()(1);
+	double sizeX = _mpaTransform.total_width;
+	double sizeY = _mpaTransform.total_height;
 	auto resolution = _config.get<unsigned int>("efficiency_histogram_resolution_factor");
 	_efficiency = new TH2D("correlatedHits", "", // 16, 0, 16, 3, 0, 3);
-	                           _mpaTransform.getNumPixels()(0) * resolution,
+	                           _mpaTransform.num_pixels_x * resolution,
 				   -sizeX / 2,
 				   sizeX / 2,
-	                           _mpaTransform.getNumPixels()(1) * resolution * sizeY/sizeX,
+	                           _mpaTransform.num_pixels_y * resolution * sizeY/sizeX,
 	                           -sizeY / 2,
 				   sizeY / 2);
 	_trackHits = new TH2D("trackHits", "",
-	                           _mpaTransform.getNumPixels()(0) * resolution,
+	                           _mpaTransform.num_pixels_x * resolution,
 				   -sizeX / 2,
 				   sizeX / 2,
-	                           _mpaTransform.getNumPixels()(1) * resolution * sizeY/sizeX,
+	                           _mpaTransform.num_pixels_y * resolution * sizeY/sizeX,
 	                           -sizeY / 2,
 				   sizeY / 2);
 	_directHits = new TH2D("directHits", "",
-	                           _mpaTransform.getNumPixels()(0) * resolution,
+	                           _mpaTransform.num_pixels_x * resolution,
 				   -sizeX / 2,
 				   sizeX / 2,
-	                           _mpaTransform.getNumPixels()(1) * resolution * sizeY/sizeX,
+	                           _mpaTransform.num_pixels_y * resolution * sizeY/sizeX,
 	                           -sizeY / 2,
 				   sizeY / 2);
 	_neighbourHits = new TH2D("neighbourHits", "",
-	                           _mpaTransform.getNumPixels()(0) * resolution,
+	                           _mpaTransform.num_pixels_x * resolution,
 				   -sizeX / 2,
 				   sizeX / 2,
-	                           _mpaTransform.getNumPixels()(1) * resolution * sizeY/sizeX,
+	                           _mpaTransform.num_pixels_y * resolution * sizeY/sizeX,
 	                           -sizeY / 2,
 				   sizeY / 2);
 	int nx = 2;
