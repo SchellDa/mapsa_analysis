@@ -36,6 +36,11 @@ public:
 		_jobs.pop();
 		return j;
 	}
+	size_t size()
+	{
+		std::lock_guard<std::mutex>(this->_mutex);
+		return _jobs.size();
+	}
 
 private:
 	std::queue<std::string> _jobs;
@@ -51,9 +56,11 @@ void workerFunction(int workerId, JobQueue* jobQueue)
 	try {
 		while(true) {
 			auto job = jobQueue->pop();
+			auto numJobs = jobQueue->size();
 			{
 				std::lock_guard<std::mutex> cl(mutex_cerr);
-				std::cerr << "Worker " << workerId << ": '" << job << "'" << std::endl;
+				std::cerr << "Worker " << workerId
+				          << " (" << numJobs << " jobs left): '" << job << "'" << std::endl;
 			}
 			system(job.c_str());
 		}
