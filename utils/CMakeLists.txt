@@ -12,3 +12,4 @@ include_directories("${CMAKE_SOURCE_DIR}/core/include" ${Boost_INCLUDE_DIR} ${RO
 #add_executable(histogram_combiner histogram_combiner.cpp)
 add_executable(batchsubmit batchsubmit.cpp)
 add_executable(efficiency_combiner efficiency_combiner.cpp)
+add_executable(mpatransformimages mpatransformimages.cpp)
