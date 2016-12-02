@@ -122,7 +122,7 @@ void EfficiencyTrack::analyzeRunInit()
 		throw std::runtime_error(std::string("Cannot find alignment data for run ")
 		                         + std::to_string(runId));
 	}
-	_mpaTransform.setAlignmentOffset(_aligner[getCurrentRunId()].getOffset());
+	_mpaTransform.setOffset(_aligner[getCurrentRunId()].getOffset());
 	auto offset = _mpaTransform.getOffset();
 	std::cout << "Run MPA offset: "
 	          << offset(0) << " "

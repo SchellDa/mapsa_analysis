@@ -10,9 +10,9 @@ class Env : public ::testing::Environment
 public:
 	virtual void SetUp()
 	{
-		_mpa.setNumPixels({16, 3});
+		/*_mpa.setNumPixels({16, 3});
 		_mpa.setPixelSize({0.1, 1.446});
-		_mpa.setSensitiveSize({1.7, 4.338});
+		_mpa.setSensitiveSize({1.7, 4.338});*/
 	}
 
 	virtual void TearDown()

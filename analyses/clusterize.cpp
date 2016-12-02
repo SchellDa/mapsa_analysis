@@ -145,7 +145,7 @@ void Clusterize::finishAlign()
 	_aligner.writeHistogramImage(getFilename("_align.png"));
 	_aligner.writeHistograms();
 	_aligner.saveAlignmentData(getFilename(".align"));
-	_mpaTransform.setAlignmentOffset(_aligner.getOffset());
+	_mpaTransform.setOffset(_aligner.getOffset());
 	auto offset = _mpaTransform.getOffset();
 	auto cuts = _aligner.getCuts();
 	std::cout << "x_off = " << offset(0)
