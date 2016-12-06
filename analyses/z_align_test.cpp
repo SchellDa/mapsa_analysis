@@ -169,7 +169,7 @@ void ZAlignTest::scanFinish()
 			if(y_min > xgraph->GetY()[i]) {
 				x_min = xgraph->GetX()[i];
 				y_min = xgraph->GetY()[i];
-				best_idx = 0;
+				best_idx = i;
 			}
 		}
 		if(_currentScanStep+1 >= _numSteps) {
