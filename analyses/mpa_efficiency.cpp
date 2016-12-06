@@ -57,6 +57,13 @@ void MpaEfficiency::init(const po::variables_map& vm)
 	                  _mpaTransform.num_pixels_y * resolution * sizeY/sizeX,
 	                  0.0,
 			  sizeY);
+	_shitTracks = new TH2D("shitTracks", "Non-masked Tracks without MPA hits",
+	                  _mpaTransform.num_pixels_x * resolution,
+			  0.0,
+			  sizeX,
+	                  _mpaTransform.num_pixels_y * resolution * sizeY/sizeX,
+	                  0.0,
+			  sizeY);
 	int nx = 2;
 	int ny = 2;
 	int overlayed_resolution_factor = 2;
@@ -78,10 +85,17 @@ void MpaEfficiency::init(const po::variables_map& vm)
 	_hitsPerEvent->GetXaxis()->SetTitle("# of MPA Hits");
 	_hitsPerEventWithTrack = new TH1D("hitsPerEventWithTrack", "MPA Hits per Event with Track", 48, 0, 48);
 	_hitsPerEventWithTrack->GetXaxis()->SetTitle("# of MPA Hits");
+	_hitsPerEventWithTrackMasked = new TH1D("hitsPerEventWithTrackMasked", "MPA Hits per Event with Track using Pixel Mask", 48, 0, 48);
+	_hitsPerEventWithTrackMasked->GetXaxis()->SetTitle("# of MPA Hits");
+
 	double max_x = _mpaTransform.num_pixels_x*2;
 	_correlationDistance = new TH1D("correlationDistance", "Distances between correlated tracks and pixels",
 	                                max_x*4, 0, max_x);
 	_correlationDistance->GetXaxis()->SetTitle("Distance \\times 100{\\mu}m");
+	_fiducialResidual = new TH1D("fiducalResidual", "Residual Histogram for non-masked Pixels",
+	                             1000,
+				     -_mpaTransform.total_width,
+				     _mpaTransform.total_width);
 	_totalCount = 0;
 	_correlatedCount = 0;
 	try {
@@ -151,6 +165,7 @@ bool MpaEfficiency::analyze(const core::TrackStreamReader::event_t& track_event,
 		return true;
 	}
 	bool hasTrackOnMpa = false;
+	bool hasNonmaskedTrackOnMpa = false;
 	for(const auto& track: track_event.tracks) {
 		Eigen::Vector3d t_global = track.extrapolateOnPlane(3, 5, _mpaTransform.getOffset()(2), 2);
 		Eigen::Vector3d t_local(t_global - _mpaTransform.getOffset());
@@ -160,11 +175,30 @@ bool MpaEfficiency::analyze(const core::TrackStreamReader::event_t& track_event,
 		   t_local(1) < 0.0 || t_local(1) > sizeY) {
 			continue;
 		}
+		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
+			if(mpa_event.data[idx] > 0 && !_pixelMask[idx]) {
+				auto pixel_coord = _mpaTransform.transform(idx, true);
+				_fiducialResidual->Fill(pixel_coord(0) - t_global(0));
+			}
+		}
 		hasTrackOnMpa = true;
-		bool no_hit = true;
+		bool is_masked = false;
+		static const double maskSigma = 0.5;
+		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
+			if(!_pixelMask[idx]) continue;
+			auto pixel_coord = _mpaTransform.transform(idx, true);
+			auto pixel_size = _mpaTransform.getPixelSize(idx);
+			if(((pixel_coord - t_global).head<2>().array().abs() < pixel_size.array()*maskSigma).all()) {
+				is_masked = true;
+				break;
+			}
+		}
+		if(is_masked) {
+			continue;
+		}
+		hasNonmaskedTrackOnMpa = true;
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
 			auto pixel_coord = _mpaTransform.transform(idx, true);
-			auto masked = _pixelMask[idx];
 			auto pixel_size = _mpaTransform.getPixelSize(idx);
 			if(!((pixel_coord - t_global).head<2>().array().abs() < pixel_size.array()*_nSigma).all()) {
 				continue;
@@ -172,27 +206,22 @@ bool MpaEfficiency::analyze(const core::TrackStreamReader::event_t& track_event,
 			if(mpa_event.data[idx] > 0) {
 				_correlated->Fill(t_local(0), t_local(1));
 				++_correlatedCount;
-				no_hit = false;
-				_correlationDistance->Fill((pixel_coord-t_global).head<2>().norm() / 0.1);
+				//_correlationDistance->Fill((pixel_coord-t_global).head<2>().norm() / 0.1);
+				_correlationDistance->Fill((pixel_coord-t_global).head<1>().norm() / 0.1);
 				break;
 			}
 		}
-		bool is_masked = false;
-		static const double maskSigma = 0.5;
-		if(no_hit) {
-			for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
-				if(!_pixelMask[idx]) continue;
-				auto pixel_coord = _mpaTransform.transform(idx, true);
-				auto pixel_size = _mpaTransform.getPixelSize(idx);
-				if(((pixel_coord - t_global).head<2>().array().abs() < pixel_size.array()*maskSigma).all()) {
-					is_masked = true;
-					break;
-				}
+		_total->Fill(t_local(0), t_local(1));
+		++_totalCount;
+	}
+	if(hasNonmaskedTrackOnMpa) {
+		_hitsPerEventWithTrackMasked->Fill(mpaHits);
+		if(mpaHits == 0) {
+			for(const auto& track: track_event.tracks) {
+				Eigen::Vector3d t_global = track.extrapolateOnPlane(3, 5, _mpaTransform.getOffset()(2), 2);
+				Eigen::Vector3d t_local(t_global - _mpaTransform.getOffset());
+				_shitTracks->Fill(t_local(0), t_local(1));
 			}
-		}
-		if(!is_masked) {
-			_total->Fill(t_local(0), t_local(1));
-			++_totalCount;
 		}
 	}
 	if(hasTrackOnMpa) {
@@ -312,19 +341,40 @@ void MpaEfficiency::analyzeFinish()
 	img->WriteImage(getFilename("_results.png").c_str());
 	delete img;
 
-	canvas = new TCanvas("hpe_canvas", "", 800, 1200);
-	canvas->Divide(1, 2);
+	canvas = new TCanvas("hpe_canvas", "", 1600, 1200);
+	canvas->Divide(2, 2);
 	canvas->cd(1);
 	_hitsPerEvent->Draw();
-	canvas->cd(2);
+	canvas->cd(3);
 	_hitsPerEventWithTrack->Draw();
+	canvas->cd(4);
+	_hitsPerEventWithTrackMasked->Draw();
 	img = TImage::Create();
 	img->FromPad(canvas);
 	img->WriteImage(getFilename("_hits.png").c_str());
 	delete img;
 
+	canvas = new TCanvas("shit_canvas", "", 800, 600);
+	_shitTracks->Draw("COLZ");
+	img = TImage::Create();
+	img->FromPad(canvas);
+	img->WriteImage(getFilename("_nohit.png").c_str());
+	delete img;
+
+	canvas = new TCanvas("fiduc_res_canvas", "", 800, 600);
+	double fr_rms = _fiducialResidual->GetRMS();
+	gStyle->SetOptFit();
+	_fiducialResidual->Fit("gaus", "SAME", "", -fr_rms/2, fr_rms/2);
+	_fiducialResidual->Draw();
+	img = TImage::Create();
+	img->FromPad(canvas);
+	img->WriteImage(getFilename("_fiducres.png").c_str());
+	delete img;
+
+
 	canvas = new TCanvas("cordist_canvas", "", 800, 600);
 	gStyle->SetOptStat("nmer");
+	canvas->SetLogy();
 	_correlationDistance->SetStats(true);
 	_correlationDistance->Draw();
 	canvas->Update();

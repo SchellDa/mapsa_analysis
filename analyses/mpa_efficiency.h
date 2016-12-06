@@ -34,7 +34,10 @@ private:
 	TH2D* _totalOverlayed;
 	TH1D* _hitsPerEvent;
 	TH1D* _hitsPerEventWithTrack;
+	TH1D* _hitsPerEventWithTrackMasked;
+	TH2D* _shitTracks;
 	TH1D* _correlationDistance;
+	TH1D* _fiducialResidual;
 	std::vector<bool> _pixelMask;
 	double _nSigma;
 	size_t _totalCount;
