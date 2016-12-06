@@ -24,6 +24,7 @@ MpaEfficiency::MpaEfficiency() :
 	 std::bind(&MpaEfficiency::analyzeFinish, this)
 	);
 	getOptionsDescription().add_options()
+		("singular", "If set, only events with a single track and MPA hit are selected for analysis.")
 	;
 }
 
@@ -99,6 +100,7 @@ void MpaEfficiency::init(const po::variables_map& vm)
 	} catch(core::CfgParse::no_variable_error& e) {
 		std::cout << "No pixel_mask option set." << std::endl;
 	}
+	_singularEventAnalysis = vm.count("singular") > 0;
 }
 
 std::string MpaEfficiency::getUsage(const std::string& argv0) const
@@ -145,7 +147,7 @@ bool MpaEfficiency::analyze(const core::TrackStreamReader::event_t& track_event,
 			++mpaHits;
 	}
 	_hitsPerEvent->Fill(mpaHits);
-	if(mpaHits != 1 || track_event.tracks.size() != 1) {
+	if((mpaHits != 1 || track_event.tracks.size() != 1) && _singularEventAnalysis) {
 		return true;
 	}
 	bool hasTrackOnMpa = false;
@@ -277,6 +279,10 @@ void MpaEfficiency::analyzeFinish()
 	info << "n sigma: " << std::setprecision(2) << std::fixed
 		  << _nSigma;
 	txt->AddText(info.str().c_str());
+	if(_singularEventAnalysis) {
+		info.str("Singular events only!");
+		txt->AddText(info.str().c_str());
+	}
 
 	const auto& runs = getAllRunIds();
 	if(runs.size() > 1) {

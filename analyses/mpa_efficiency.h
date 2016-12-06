@@ -39,6 +39,7 @@ private:
 	double _nSigma;
 	size_t _totalCount;
 	size_t _correlatedCount;
+	bool _singularEventAnalysis;
 };
 
 #endif//MPA_EFFICIENCY_H
