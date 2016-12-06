@@ -5,6 +5,7 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/core.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/cfgparse.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/mpastreamreader.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/mpamemorystreamreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/cbcstreamreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/trackstreamreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/analysis.cpp
