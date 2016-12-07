@@ -1,12 +1,12 @@
 
-#include "z_align_test.h"
+#include "mpa_align.h"
 #include <TImage.h>
 #include <TText.h>
 #include <TGraph.h>
 
-REGISTER_ANALYSIS_TYPE(ZAlignTest, "Textual analysis description here.")
+REGISTER_ANALYSIS_TYPE(MpaAlign, "Perform XYZ and angular alignment of MPA.")
 
-ZAlignTest::ZAlignTest() :
+MpaAlign::MpaAlign() :
  Analysis(), _aligner(), _file(nullptr)
 {
 	getOptionsDescription().add_options()
@@ -17,21 +17,21 @@ ZAlignTest::ZAlignTest() :
 	;
 	addProcess("scan", /* CS_ALWAYS */ CS_TRACK,
 	           core::Analysis::init_callback_t {},
-	           std::bind(&ZAlignTest::scanInit, this),
-		   std::bind(&ZAlignTest::scanRun, this, std::placeholders::_1, std::placeholders::_2),
+	           std::bind(&MpaAlign::scanInit, this),
+		   std::bind(&MpaAlign::scanRun, this, std::placeholders::_1, std::placeholders::_2),
 	           core::Analysis::run_post_callback_t {},
-	           std::bind(&ZAlignTest::scanFinish, this)
+	           std::bind(&MpaAlign::scanFinish, this)
 	           );
 }
 
-ZAlignTest::~ZAlignTest()
+MpaAlign::~MpaAlign()
 {
 	if(_file) {
 		delete _file;
 	}
 }
 
-void ZAlignTest::init(const po::variables_map& vm)
+void MpaAlign::init(const po::variables_map& vm)
 {
 	_file = new TFile(getFilename(".root").c_str(), "RECREATE");
 	_twoPass = vm.count("two-pass") > 0;
@@ -63,17 +63,17 @@ void ZAlignTest::init(const po::variables_map& vm)
 	std::remove(getFilename(".csv").c_str());
 }
 
-std::string ZAlignTest::getUsage(const std::string& argv0) const
+std::string MpaAlign::getUsage(const std::string& argv0) const
 {
 	return Analysis::getUsage(argv0);
 }
 
-std::string ZAlignTest::getHelp(const std::string& argv0) const
+std::string MpaAlign::getHelp(const std::string& argv0) const
 {
         return Analysis::getHelp(argv0);
 }
 
-void ZAlignTest::scanInit()
+void MpaAlign::scanInit()
 {
 	_numProcessedSamples = 0;
 	_currentZ = _lowZ + (_highZ - _lowZ) / (_numSteps-1) * _currentScanStep;
@@ -85,7 +85,7 @@ void ZAlignTest::scanInit()
 	_currentSigmaMinimum = { 0.0, -1.0 };
 }
 
-bool ZAlignTest::scanRun(const core::TrackStreamReader::event_t& track_event,
+bool MpaAlign::scanRun(const core::TrackStreamReader::event_t& track_event,
                       const core::BaseSensorStreamReader::event_t& mpa_event)
 {
 	for(const auto& track: track_event.tracks) {
@@ -99,7 +99,7 @@ bool ZAlignTest::scanRun(const core::TrackStreamReader::event_t& track_event,
 	return (_numProcessedSamples++ < _sampleSize);
 }
 
-void ZAlignTest::scanFinish()
+void MpaAlign::scanFinish()
 {
 	int cd = _currentScanStep+2;
 	std::cout << "cd-ing to Pad " << cd << std::endl;

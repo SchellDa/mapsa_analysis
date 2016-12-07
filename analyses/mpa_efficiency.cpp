@@ -134,7 +134,7 @@ void MpaEfficiency::analyzeRunInit()
 	_nSigma = _config.get<double>("n_sigma_cut");
 	std::string alignfile (
 		_config.get<std::string>("output_dir") +
-		std::string("/ZAlignTest_") +
+		std::string("/MpaAlign_") +
 		getMpaIdPadded(runId) +
 		".align"
 	);

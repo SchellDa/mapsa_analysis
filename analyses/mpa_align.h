@@ -1,6 +1,6 @@
 
-#ifndef Z_ALIGN_TEST_H
-#define Z_ALIGN_TEST_H
+#ifndef MPA_ALIGN_H
+#define MPA_ALIGN_H
 
 #include "analysis.h"
 #include "aligner.h"
@@ -8,11 +8,11 @@
 #include <TCanvas.h>
 #include <TFile.h>
 
-class ZAlignTest : public core::Analysis
+class MpaAlign : public core::Analysis
 {
 public:
-        ZAlignTest();
-	virtual ~ZAlignTest();
+        MpaAlign();
+	virtual ~MpaAlign();
 
 	virtual void init(const po::variables_map& vm);
 	virtual std::string getUsage(const std::string& argv0) const;
@@ -49,4 +49,4 @@ private:
 	Eigen::Vector2d _currentSigmaMinimum;
 };
 
-#endif//Z_ALIGN_TEST_H
+#endif//MPA_ALIGN_H
