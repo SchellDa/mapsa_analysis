@@ -41,6 +41,7 @@ bool MpaMemoryStreamReader::mpareader::next()
 
 	_currentEvent.data.clear();
 	_currentEvent.data.resize(48, 0);
+	_currentEvent.bunchCrossing.clear();
 	_currentEvent.eventNumber = _numEventsRead++;
 
 	regex_t regex;
@@ -49,8 +50,11 @@ bool MpaMemoryStreamReader::mpareader::next()
 	size_t offset = 0;
 	regmatch_t m[3];
 	while((ret = regexec(&regex, line.c_str()+offset, 3, m, 0)) == 0) {
+		auto bxId = line.substr(offset+m[1].rm_so, m[1].rm_eo-m[1].rm_so);
 		auto pixelmap = line.substr(offset+m[2].rm_so, m[2].rm_eo - m[2].rm_so);
+		assert(bxId.size() == 16);
 		assert(pixelmap.size() == 48);
+		_currentEvent.bunchCrossing.push_back(std::stoi(bxId, nullptr, 2));
 		for(size_t i = 0; i < pixelmap.size(); ++i) {
 			int new_idx = i;
 			if(i >= 16 && i <= 31) {

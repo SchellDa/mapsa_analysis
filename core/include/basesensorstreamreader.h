@@ -35,6 +35,10 @@ public:
 		 * \sa MpaTransform
 		 */
 		std::vector<int> data;
+		/** Bunch crossing id for MPA memory data
+		 *
+		 */
+		std::vector<int> bunchCrossing;
 	};
 
 	/** \brief Abstract data reader, the work horse

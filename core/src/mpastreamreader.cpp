@@ -6,7 +6,7 @@
 using namespace core;
 
 MPAStreamReader::mpareader::mpareader(const std::string& filename, size_t seek)
- : reader(filename), _fin(), _numEventsRead(0)
+	: reader(filename), _fin(), _numEventsRead(0)
 {
 	open(seek);
 	if(seek == 0) {
@@ -39,7 +39,8 @@ bool MPAStreamReader::mpareader::next()
 
 	_currentEvent.data.clear();
 	_currentEvent.eventNumber = _numEventsRead++;
-
+	_currentEvent.bunchCrossing.clear();
+	_currentEvent.bunchCrossing.push_back(0);
 	regex_t regex;
 	// possible optimization: do not recompile regex all the time...
 	int ret = regcomp(&regex, "[0-9]+", REG_EXTENDED);
