@@ -43,7 +43,7 @@ public:
 	MpaTransform()
 	{
 		// Initialize normal vector and rotation matrix
-		setRotation(0.0);
+		setRotation({0.0, 0.0, 0.0});
 	}
 
 	/// \brief Transform pixel index to world coordinates	
@@ -106,7 +106,8 @@ public:
 		y /= (2 + bottom_scale);
 		// We now have the "module coordinates" x and y in a [0:1] range
 		Eigen::Vector3d coord(x*total_width, y*total_height, 0.0);
-		// todo: rotate
+		static const Eigen::Vector3d halfOff({total_width/2, total_height/2, 0.0});
+		coord = _rotation*(coord - halfOff) + halfOff;
 		coord += _offset;
 		return coord;
 	}
@@ -147,8 +148,8 @@ public:
 
 	Eigen::Vector2d globalToPixelCoord(const Eigen::Vector3d& global) const
 	{
-		auto local = global - _offset;
-		// todo: un-rotate
+		static const Eigen::Vector3d halfOff({total_width/2, total_height/2, 0.0});
+		Eigen::Vector3d local = _invRotation*(global - _offset - halfOff) + halfOff;
 		const double bottom_scale = bottom_pixel_height / upper_pixel_height;
 		// scale the local coordinates to module coordinates ([0,1] range across sensor)
 		// and then apply the "virtual pixel count"
@@ -169,9 +170,12 @@ public:
 		return {pixel_x, pixel_y};
 	}
 
-	void setRotation(const double& tilt)
+	void setRotation(const Eigen::Vector3d& rot)
 	{
-		_rotation = Eigen::AngleAxis<double>(tilt, Eigen::Vector3d::UnitX());
+		_rotation = Eigen::AngleAxis<double>(rot(0), Eigen::Vector3d::UnitX()) *
+		            Eigen::AngleAxis<double>(rot(1), Eigen::Vector3d::UnitY()) *
+		            Eigen::AngleAxis<double>(rot(2), Eigen::Vector3d::UnitZ());
+		_invRotation = _rotation.inverse();
 		_normal = _rotation * Eigen::Vector3d::UnitZ();
 	}
 
@@ -196,6 +200,7 @@ public:
 
 private:
 	Eigen::Matrix3d _rotation;
+	Eigen::Matrix3d _invRotation;
 	Eigen::Vector3d _normal;
 	Eigen::Vector3d _offset;
 };
