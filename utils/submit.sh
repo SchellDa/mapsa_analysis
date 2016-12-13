@@ -24,10 +24,12 @@ rm -f ${CMDFILE}
 touch ${CMDFILE}
 for i in $SELECTORS; do
 	repl="s/%select/${i}/g"
-	if [ $SILENT -eq 2 ]; then
-		echo $COMMAND "> /dev/null 2>&1" | sed $repl >> "${CMDFILE}"
-	elif [ $SILENT ]; then
-		echo $COMMAND "> /dev/null" | sed $repl >> "${CMDFILE}"
+	if [ $SILENT ]; then
+		if [ $SILENT -eq 2 ]; then
+			echo $COMMAND "> /dev/null 2>&1" | sed $repl >> "${CMDFILE}"
+		else
+			echo $COMMAND "> /dev/null" | sed $repl >> "${CMDFILE}"
+		fi
 	else
 		echo $COMMAND | sed $repl >> "${CMDFILE}"
 	fi
