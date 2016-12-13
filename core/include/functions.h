@@ -30,6 +30,17 @@ double general_plateau_function(double* xx, double* par);
  */
 double symmetric_plateau_function(double* xx, double* par);
 
+/** \brief A simplified, symmetric 1D-plateau function with gaussian edges, with 5 parameters. Differs from symmetric_plateau_function() by parameter semantics.
+ *
+ * \param xx[0] Independent variable
+ * \param par[0] x_mid, mid-point of the plateau
+ * \param par[1] width, width of the plateau
+ * \param par[2] y_plat, height of the plateau on Y axis
+ * \param par[3] sigma, steepness of gaussian edges
+ * \param par[4] h_gaus, height of the gaussian edges
+ */
+double symmetric_plateau_function2(double* xx, double* par);
+
 }
 
 #endif
