@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <TCanvas.h>
 #include <TImage.h>
+#include <iostream>
 
 REGISTER_ANALYSIS_TYPE(Clusterize, "Textual analysis description here.")
 

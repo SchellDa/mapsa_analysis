@@ -3,6 +3,7 @@
 #include <TImage.h>
 #include <TText.h>
 #include <TGraph.h>
+#include <iostream>
 
 REGISTER_ANALYSIS_TYPE(MpaAlign, "Perform XYZ and angular alignment of MPA.")
 
