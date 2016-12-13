@@ -44,6 +44,7 @@ private:
 	size_t _correlatedCount;
 	bool _singularEventAnalysis;
 	bool _inactiveMask;
+	std::string _alignType;
 };
 
 #endif//MPA_EFFICIENCY_H

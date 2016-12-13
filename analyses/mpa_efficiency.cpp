@@ -26,6 +26,7 @@ MpaEfficiency::MpaEfficiency() :
 	getOptionsDescription().add_options()
 		("singular", "If set, only events with a single track and MPA hit are selected for analysis.")
 		("inactive-mask,i", "Exclude a 40µm wide region at the 'end' of each pixel. This corresponds to the implants, isolation and bias rail. It is expected that the pixels are in-sensitive there, so this flag should be used to find the efficiency of the active sensor area.")
+		("align-type,T", po::value<std::string>()->default_value("MpaAlign"), "")
 	;
 }
 
@@ -117,6 +118,7 @@ void MpaEfficiency::init(const po::variables_map& vm)
 	}
 	_singularEventAnalysis = vm.count("singular") > 0;
 	_inactiveMask = vm.count("inactive-mask") > 0;
+	_alignType = vm["align-type"].as<std::string>();
 }
 
 std::string MpaEfficiency::getUsage(const std::string& argv0) const
@@ -136,7 +138,9 @@ void MpaEfficiency::analyzeRunInit()
 	_nSigma = _config.get<double>("n_sigma_cut");
 	std::string alignfile (
 		_config.get<std::string>("output_dir") +
-		std::string("/MpaAlign_") +
+		std::string("/") +
+		_alignType +
+		std::string("_") +
 		getMpaIdPadded(runId) +
 		".align"
 	);
