@@ -103,6 +103,32 @@ public:
 		}
 	}
 
+	/**\brief Queries a config variable and returns multiple entries as vector.
+	 *
+	 * The function queries the variable using getVariable(), then uses an std::istringstream to get individual
+	 * entries from the string and casts them to the requessted type.
+	 *
+	 * \throw no_variable_error The requested variable name was not found or a substitution variable was not found
+	 * \throw recursion_error Substituting parts of the variable lead to infinite recursion
+	 * \throw bad_cast Variable cannot be casted into requested type.
+	 */
+	template<typename T>
+	std::vector<T> getVector(const std::string& var) const
+	{
+		std::istringstream is(getVariable(var));
+		std::vector<T> vec;
+		while(is.good()) {
+			std::string value;
+			is >> value;
+			try {
+				vec.push_back(boost::lexical_cast<T>(value));
+			} catch(boost::bad_lexical_cast& e) {
+				throw bad_cast(var, typeid(T).name(), value);
+			}
+		}
+		return vec;
+	}
+
 	/** \brief Return a vector with the names of all defined variables
 	 */
 	std::vector<std::string> getDefinedVariables() const;
