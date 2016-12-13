@@ -9,6 +9,8 @@
 #include <cassert>
 
 std::mutex mutex_cerr;
+std::mutex mutex_workercounter;
+size_t g_numWorkers = 0;
 
 class JobQueue
 {
@@ -65,9 +67,17 @@ void workerFunction(int workerId, JobQueue* jobQueue)
 			system(job.c_str());
 		}
 	} catch(const std::runtime_error& e) {
+		size_t workers = 0;
+		{
+			std::lock_guard<std::mutex> cl(mutex_workercounter);
+			--g_numWorkers;
+			workers = g_numWorkers;
+		}
 		std::lock_guard<std::mutex> cl(mutex_cerr);
 		std::cerr << "Worker " << workerId
-		          << " has no jobs left and exists." << std::endl;
+		          << " has no jobs left and exits. "
+			  << workers << " remain active."
+			  << std::endl;
 	}
 }
 
@@ -94,6 +104,7 @@ int main(int argc, char* argv[])
 	std::vector<std::thread> workers;
 	std::cerr << "Start " << num_threads
 	          << " worker threads." << std::endl;
+	g_numWorkers = num_threads;
 	for(size_t i = 0; i < num_threads; ++i) {
 		workers.push_back(std::thread(workerFunction, i+1, &jobQueue));
 	}
