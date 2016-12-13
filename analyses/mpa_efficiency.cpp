@@ -25,6 +25,7 @@ MpaEfficiency::MpaEfficiency() :
 	);
 	getOptionsDescription().add_options()
 		("singular", "If set, only events with a single track and MPA hit are selected for analysis.")
+		("inactive-mask,i", "Exclude a 40µm wide region at the 'end' of each pixel. This corresponds to the implants, isolation and bias rail. It is expected that the pixels are in-sensitive there, so this flag should be used to find the efficiency of the active sensor area.")
 	;
 }
 
@@ -115,6 +116,7 @@ void MpaEfficiency::init(const po::variables_map& vm)
 		std::cout << "No pixel_mask option set." << std::endl;
 	}
 	_singularEventAnalysis = vm.count("singular") > 0;
+	_inactiveMask = vm.count("inactive-mask") > 0;
 }
 
 std::string MpaEfficiency::getUsage(const std::string& argv0) const
@@ -182,20 +184,30 @@ bool MpaEfficiency::analyze(const core::TrackStreamReader::event_t& track_event,
 			}
 		}
 		hasTrackOnMpa = true;
+		// first, see if Track hits a masked region and then discard it.
 		bool is_masked = false;
 		static const double maskSigma = 0.5;
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
-			if(!_pixelMask[idx]) continue;
+			// (small, overzealous) optimization
+			if(!_pixelMask[idx] && !_inactiveMask) continue;
 			auto pixel_coord = _mpaTransform.transform(idx, true);
 			auto pixel_size = _mpaTransform.getPixelSize(idx);
 			if(((pixel_coord - t_global).head<2>().array().abs() < pixel_size.array()*maskSigma).all()) {
-				is_masked = true;
+				if(_pixelMask[idx]) {
+					is_masked = true;
+				} else {
+					double y_distance = std::abs(pixel_coord(1) - t_global(1));
+					if(y_distance > pixel_size(1)/2-0.1) {
+						is_masked = true;
+					}
+				}
 				break;
 			}
 		}
 		if(is_masked) {
 			continue;
 		}
+		// fill histograms and counters for actual analysis
 		hasNonmaskedTrackOnMpa = true;
 		for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
 			auto pixel_coord = _mpaTransform.transform(idx, true);

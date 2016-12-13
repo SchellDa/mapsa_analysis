@@ -43,6 +43,7 @@ private:
 	size_t _totalCount;
 	size_t _correlatedCount;
 	bool _singularEventAnalysis;
+	bool _inactiveMask;
 };
 
 #endif//MPA_EFFICIENCY_H
