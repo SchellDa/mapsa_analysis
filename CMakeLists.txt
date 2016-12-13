@@ -7,6 +7,15 @@ add_subdirectory(external)
 include_directories("${CMAKE_SOURCE_DIR}/external/eigen/include")
 include_directories("${CMAKE_SOURCE_DIR}/interface/include")
 
+find_package(PkgConfig)
+set(PKG_CONFIG_PATH "/scratch/vollmer/local/lib/pkgconfig" CACHE PATH "additional search paths for pkg-config .pc files")
+set(ENV{PKG_CONFIG_PATH} ${PKG_CONFIG_PATH})
+pkg_check_modules(LIBCMAES REQUIRED libcmaes)
+add_definitions(${LIBCMAES_DEFINITIONS})
+link_libraries(${LIBCMAES_LIBRARIES})
+include_directories(${LIBCMAES_INCLUDE_DIRS})
+link_directories(${LIBCMAES_LIBRARY_DIRS})
+
 find_package(ROOT REQUIRED)
 add_definitions("--std=c++11" ${ROOT_DEFINITIONS})
 link_libraries(${ROOT_LIBRARIES})
@@ -15,3 +24,10 @@ add_subdirectory(interface)
 add_subdirectory(core)
 add_subdirectory(analyses)
 add_subdirectory(utils)
+
+# For debugging: Print all accessible variables
+# http://stackoverflow.com/questions/9298278/cmake-print-out-all-accessible-variables-in-a-script
+#get_cmake_property(_variableNames VARIABLES)
+#foreach (_variableName ${_variableNames})
+#  message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()

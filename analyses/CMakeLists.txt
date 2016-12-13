@@ -9,4 +9,4 @@ add_definitions("--std=c++11")
 link_libraries(core ${Boost_LIBRARIES})
 include_directories("${CMAKE_SOURCE_DIR}/core/include" ${Boost_INCLUDE_DIR})
 
-add_executable(analyses main.cpp test.cpp efficiency_track.cpp data_skip.cpp clusterize.cpp mpa_align.cpp strip_efficiency.cpp strip_align.cpp mpa_efficiency.cpp)
+add_executable(analyses main.cpp test.cpp efficiency_track.cpp data_skip.cpp clusterize.cpp mpa_align.cpp strip_efficiency.cpp strip_align.cpp mpa_efficiency.cpp mpa_cmaes_align.cpp)
