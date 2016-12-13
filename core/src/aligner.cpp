@@ -65,17 +65,33 @@ void Aligner::writeHistogramImage(const std::string& filename)
 	delete img;
 }
 
-void Aligner::calculateAlignment()
+void Aligner::calculateAlignment(const bool& quiet)
 {
 	if(_calculated)
 		return;
 	assert(_alignX);
 	assert(_alignY);
 	_calculated = true;
-	auto xalign = alignGaussian(_alignX, 0.5, 0.1);
-	auto yalign = alignPlateau(_alignY, 1, 0.05);	
-	_offset = { xalign(0), (yalign(1) + yalign(0))/2, 0.0 };
-	_cuts = { xalign(1), (yalign(1) - yalign(0))/2 };
+	auto xalign = alignGaussian(_alignX, 0.5, 0.1, quiet);
+	auto yalign = alignPlateau(_alignY, 1, 0.05, quiet);	
+	_offset = { xalign(0), yalign(0), 0.0 };
+	_cuts = { xalign(1), yalign(1) };
+	if(_fixedMean) {
+		/*if(xalign(0) < xalign(1)) {
+			auto xalignfixed = alignGaussian(_alignX, 0.5, 0.1, quiet);
+			_cuts(0) = std::max(std::abs(xalign(0)), xalignfixed(1));
+		} else {
+			_cuts(0) = std::abs(xalign(0));
+		}
+		if(yalign(0) < yalign(1)) {
+			auto yalignfixed = alignPlateau(_alignY, 1, 0.05, quiet);
+			_cuts(1) = std::max(std::abs(yalign(0)), yalignfixed(1));
+		} else {
+			_cuts(1) = std::abs(yalign(0));
+		}*/
+		_cuts(0) = std::abs(xalign(0)) + std::abs(xalign(1));
+		_cuts(1) = std::abs(yalign(0)) + std::abs(yalign(1));
+	}
 }
 
 void Aligner::Fill(const double& xdiff, const double& ydiff)
@@ -84,6 +100,13 @@ void Aligner::Fill(const double& xdiff, const double& ydiff)
 	assert(_alignY);
 	_alignX->Fill(xdiff);
 	_alignY->Fill(ydiff);
+}
+
+void Aligner::clear()
+{
+	_calculated = false;
+	_alignX->Reset();
+	_alignY->Reset();
 }
 
 Eigen::Vector3d Aligner::getOffset() const
@@ -183,35 +206,55 @@ bool Aligner::rebinIfNeccessary(TH1D* cor, const double& nrms, const double& bin
 	return false;
 }
 
-Eigen::Vector2d Aligner::alignPlateau(TH1D* cor, const double& nrms, const double& binratio)
+Eigen::Vector2d Aligner::alignPlateau(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean)
 {
 	auto maxBin = cor->GetMaximumBin();
 	auto mean = cor->GetBinLowEdge(maxBin);
 	auto rms = cor->GetRMS();
 	auto rebinned = rebinIfNeccessary(cor, nrms, binratio);
-	auto piecewise = new TF1("piecewise", symmetric_plateau_function, mean-rms*nrms, mean+rms*nrms, 5);
-	piecewise->SetParameter(0, mean-rms);
-	piecewise->SetParameter(1, mean+rms);
+	if(fixedMean) {
+		mean = 0.0;
+	}
+	auto piecewise = new TF1("piecewise", symmetric_plateau_function2, mean-rms*nrms, mean+rms*nrms, 5);
+	if(fixedMean) {
+		piecewise->FixParameter(0, 0.0);
+	} else {
+		piecewise->SetParameter(0, mean);
+	}
+	piecewise->SetParameter(1, rms);
 	piecewise->SetParameter(2, cor->GetMaximum());
 	piecewise->SetParameter(3, 0.1);
 	piecewise->SetParameter(4, cor->GetMaximum());
-	auto result = cor->Fit(piecewise, "RMS+", "", mean-rms*nrms, mean+rms*nrms);
+	auto result = cor->Fit(piecewise, quiet?"RMSq+":"RMS+", "", mean-rms*nrms, mean+rms*nrms);
+	if(result.Get() == nullptr) {
+		return {0, 10000.0};
+	}
 	return {
-		result->Parameter(0) - result->Parameter(3),
+		result->Parameter(0),
 		result->Parameter(1) + result->Parameter(3)
 	};
 }
 
-Eigen::Vector2d Aligner::alignGaussian(TH1D* cor, const double& nrms, const double& binratio)
+Eigen::Vector2d Aligner::alignGaussian(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean)
 {
 	auto maxBin = cor->GetMaximumBin();
 	auto mean = cor->GetBinLowEdge(maxBin);
 	auto rms = cor->GetRMS();
 	auto rebinned = rebinIfNeccessary(cor, nrms, binratio);
-	auto result = cor->Fit("gaus", "RMS+", "", mean-rms*nrms, mean+rms*nrms);
+	if(fixedMean) {
+		mean = 0.0;
+	}
+	auto gaus = new TF1("newgaus", "gaus", mean-rms*nrms, mean+rms*nrms);
+	if(fixedMean) {
+		gaus->FixParameter(1, 0);
+	}
+	auto result = cor->Fit(gaus, quiet?"RMSq+":"RMS+", "", mean-rms*nrms, mean+rms*nrms);
+	if(result.Get() == nullptr) {
+		return {0, 10000.0};
+	}
 	return {
 		result->Parameter(1),
-		result->Parameter(2),
+		result->Parameter(2)
 	};
 }
 

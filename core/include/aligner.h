@@ -29,9 +29,10 @@ public:
 	void initHistograms(const std::string& xname="alignHistX", const std::string& yname="alignHistY");
 	void writeHistograms();
 	void writeHistogramImage(const std::string& filename);
-	void calculateAlignment();
+	void calculateAlignment(const bool& quiet=false);
 
 	void Fill(const double& xdiff, const double& ydiff);
+	void clear();
 
 	Eigen::Vector3d getOffset() const;
 	Eigen::Vector2d getCuts() const;
@@ -75,16 +76,19 @@ public:
 		_cuts = cuts;
 	}
 
+	void setFixedMean(const bool& fixed) { _fixedMean = fixed; }
+
 private:
 	bool rebinIfNeccessary(TH1D* cor, const double& nrms, const double& binratio);
-	Eigen::Vector2d alignPlateau(TH1D* cor, const double& nrms, const double& binratio);
-	Eigen::Vector2d alignGaussian(TH1D* cor, const double& nrms, const double& binratio);
+	Eigen::Vector2d alignPlateau(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean=false);
+	Eigen::Vector2d alignGaussian(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean=false);
 	double _nsigma;
 	TH1D* _alignX;
 	TH1D* _alignY;
 	bool _calculated;
 	Eigen::Vector3d _offset;
 	Eigen::Vector2d _cuts;
+	bool _fixedMean;
 };
 
 }//ns core
