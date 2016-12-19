@@ -100,6 +100,7 @@ void MpaEfficiency::init(const po::variables_map& vm)
 				     _mpaTransform.total_width);
 	_totalCount = 0;
 	_correlatedCount = 0;
+	_bunchCrossingId = new TH1D("bunchCrossingID", "Bunch crossing IDs per Event", 65536, 0, 65536);
 	try {
 		std::ifstream fmask(_config.getVariable("pixel_mask"));
 		_pixelMask.resize(_mpaTransform.num_pixels, false);
@@ -170,6 +171,11 @@ bool MpaEfficiency::analyze(const core::TrackStreamReader::event_t& track_event,
 	if((mpaHits != 1 || track_event.tracks.size() != 1) && _singularEventAnalysis) {
 		return true;
 	}
+
+	for(auto& bxId : mpa_event.bunchCrossing) {
+		_bunchCrossingId->Fill(bxId);
+	}
+
 	bool hasTrackOnMpa = false;
 	bool hasNonmaskedTrackOnMpa = false;
 	for(const auto& track: track_event.tracks) {

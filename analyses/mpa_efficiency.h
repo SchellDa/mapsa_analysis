@@ -38,6 +38,7 @@ private:
 	TH2D* _shitTracks;
 	TH1D* _correlationDistance;
 	TH1D* _fiducialResidual;
+	TH1D* _bunchCrossingId;
 	std::vector<bool> _pixelMask;
 	double _nSigma;
 	size_t _totalCount;
