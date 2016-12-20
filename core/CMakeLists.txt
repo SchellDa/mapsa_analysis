@@ -39,6 +39,7 @@ endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/coreconfig.in ${CMAKE_BINARY_DIR}/coreconfig.h)
 include_directories(${CMAKE_BINARY_DIR})
 
+add_definitions("-fPIC")
 add_library(core STATIC ${SOURCE})
 target_link_libraries(core interface)
 if(BUILD_TESTING)
