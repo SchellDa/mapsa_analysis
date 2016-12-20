@@ -80,7 +80,7 @@ void Analysis::run(const po::variables_map& vm)
 			std::cout << "The specified pixel_reader_type " << reader_type << " is unknown!" << std::endl;
 			throw;
 		}
-		auto reader = BaseSensorStreamReader::Factory::Instance()->create(reader_type);
+		auto reader = BaseSensorStreamReader::Factory::Instance()->createShared(reader_type);
 		reader->setFilename(_config.getVariable("mapsa_data"));
 		run_read_pair_t r {
 			runId,

@@ -8,6 +8,7 @@
 #include <typeinfo>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/cat.hpp>
+#include "util.h"
 
 namespace core {
 
@@ -30,7 +31,7 @@ class AbstractFactory
 {
 public:
 	/// A functor returning an object of type T
-	typedef std::function<std::shared_ptr<T>()> creator_t;
+	typedef std::function<std::unique_ptr<T>()> creator_t;
 
 	/// Get the AbstractFactory singleton object
 	static AbstractFactory<T>* Instance()
@@ -100,7 +101,7 @@ public:
 	 * \return Shared pointer to new object of specified type
 	 * \throw std::out_of_range The requested type was not registered.
 	 */
-	std::shared_ptr<T> create(const std::string& type) const
+	std::unique_ptr<T> create(const std::string& type) const
 	{
 		try {
 			return _creators.at(type)();
@@ -112,6 +113,11 @@ public:
 			message += "\"): specific class unknown!";
 			throw std::out_of_range(message);
 		}
+	}
+
+	std::shared_ptr<T> createShared(const std::string& type) const
+	{
+		return std::shared_ptr<T>(std::move(create(type)));
 	}
 
 private:
@@ -126,16 +132,16 @@ AbstractFactory<T, description_T>* AbstractFactory<T, description_T>::s_instance
 /** \brief Register new type to specific factory
  *
  * Adds a new type to the AbstractFactory<base> by invoking RegisterCreator() and passing a functor to
- * std::make_shared<type>. The type name is the C++ identifier passed as type.
+ * core::make_unique<type>. The type name is the C++ identifier passed as type.
  * \param type C++ class identifier of new type class
  * \param base Base class identifier to identify the correct factory
  */
-#define REGISTER_FACTORY_TYPE(base, type) static bool BOOST_PP_CAT(type, __regged) = core::AbstractFactory<base>::Instance()->RegisterCreator(BOOST_PP_STRINGIZE(type), std::bind(&std::make_shared<type>));
+#define REGISTER_FACTORY_TYPE(base, type) static bool BOOST_PP_CAT(type, __regged) = core::AbstractFactory<base>::Instance()->RegisterCreator(BOOST_PP_STRINGIZE(type), std::bind(&core::make_unique<type>));
 
 /** \brief Register new type to specific factory
  *
  * Adds a new type to the AbstractFactory<base> by invoking RegisterCreator() and passing a functor to
- * std::make_shared<type>. The type name is the C++ identifier passed as type.
+ * core::make_unique<type>. The type name is the C++ identifier passed as type.
  *
  * Additionaly, a descriptive object descr is passed.
  *
@@ -143,7 +149,7 @@ AbstractFactory<T, description_T>* AbstractFactory<T, description_T>::s_instance
  * \param base Base class identifier to identify the correct factory
  * \param descr Descriptive object of the type specified for the AbstractFactory
  */
-#define REGISTER_FACTORY_TYPE_WITH_DESCR(base, type, descr) static bool BOOST_PP_CAT(type, __regged) = core::AbstractFactory<base>::Instance()->RegisterCreator(BOOST_PP_STRINGIZE(type), std::bind(&std::make_shared<type>), descr);
+#define REGISTER_FACTORY_TYPE_WITH_DESCR(base, type, descr) static bool BOOST_PP_CAT(type, __regged) = core::AbstractFactory<base>::Instance()->RegisterCreator(BOOST_PP_STRINGIZE(type), std::bind(&core::make_unique<type>), descr);
 
 }//namespace core
 
