@@ -13,6 +13,7 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/aligner.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/functions.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/mpatransform.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/histogramfit.cpp
 )
 
 add_definitions("-Wall")
