@@ -107,17 +107,18 @@ public:
 		// We now have the "module coordinates" x and y in a [0:1] range
 		Eigen::Vector3d coord(x*total_width, y*total_height, 0.0);
 		static const Eigen::Vector3d halfOff({total_width/2, total_height/2, 0.0});
-		coord = _rotation*(coord - halfOff) + halfOff;
+		// coord = _rotation*(coord - halfOff) + halfOff;
+		coord = _rotation*coord;
 		coord += _offset;
 		return coord;
 	}
 
 	Eigen::Vector3d mpaPlaneTrackIntersect(const Track& track, const size_t& a=0, const size_t& b=1) const
 	{
-		Eigen::Hyperplane<double, 3> plane(_normal, _offset);
+		// Eigen::Hyperplane<double, 3> plane(_normal, _offset);
 		Eigen::ParametrizedLine<double, 3> line(track.points.at(a),
 		                                     track.points.at(b) - track.points.at(a));
-		auto t = line.intersectionParameter(plane);
+		auto t = line.intersectionParameter(_plane);
 		return line.pointAt(t);
 	}
 
@@ -149,7 +150,8 @@ public:
 	Eigen::Vector2d globalToPixelCoord(const Eigen::Vector3d& global) const
 	{
 		static const Eigen::Vector3d halfOff({total_width/2, total_height/2, 0.0});
-		Eigen::Vector3d local = _invRotation*(global - _offset - halfOff) + halfOff;
+		// Eigen::Vector3d local = _invRotation*(global - _offset - halfOff) + halfOff;
+		Eigen::Vector3d local = _invRotation*(global - _offset);
 		const double bottom_scale = bottom_pixel_height / upper_pixel_height;
 		// scale the local coordinates to module coordinates ([0,1] range across sensor)
 		// and then apply the "virtual pixel count"
@@ -172,11 +174,18 @@ public:
 
 	void setRotation(const Eigen::Vector3d& rot)
 	{
-		_rotation = Eigen::AngleAxis<double>(rot(0), Eigen::Vector3d::UnitX()) *
+		_rotation = Eigen::AngleAxis<double>(rot(0), Eigen::Vector3d::UnitZ()) *
 		            Eigen::AngleAxis<double>(rot(1), Eigen::Vector3d::UnitY()) *
 		            Eigen::AngleAxis<double>(rot(2), Eigen::Vector3d::UnitZ());
 		_invRotation = _rotation.inverse();
 		_normal = _rotation * Eigen::Vector3d::UnitZ();
+		// Boy this is hacky AF but it works…
+		/*auto a = transform(0);
+		auto b = transform(40);
+		auto c = transform(20);
+		_plane = Eigen::Hyperplane<double, 3>::Through(a, b, c);
+		_normal = _plane.normal();*/
+		_plane = Eigen::Hyperplane<double, 3>(_normal, _offset);
 	}
 
 	void setOffset(const Eigen::Vector3d& offset)
@@ -184,6 +193,7 @@ public:
 		_offset = offset;
 	}
 	Eigen::Vector3d getOffset() const { return _offset; }
+	Eigen::Vector3d getNormal() const { return _normal; }
 
 	Eigen::Vector2d getPixelSize(const size_t& idx) const { return getPixelSize(translatePixelIndex(idx)); }
 	Eigen::Vector2d getPixelSize(const Eigen::Vector2i& pixel_coord) const
@@ -202,6 +212,7 @@ private:
 	Eigen::Matrix3d _rotation;
 	Eigen::Matrix3d _invRotation;
 	Eigen::Vector3d _normal;
+	Eigen::Hyperplane<double, 3> _plane;
 	Eigen::Vector3d _offset;
 };
 

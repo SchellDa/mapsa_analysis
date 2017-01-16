@@ -5,6 +5,7 @@
 #include <TGraph.h>
 #include <cmaes.h>
 #include <iomanip>
+#include <cstdio>
 
 using namespace libcmaes;
 
@@ -42,6 +43,13 @@ void MpaCmaesAlign::init(const po::variables_map& vm)
 	_aligner.initHistograms();
 	_sampleSize = vm["sample-size"].as<int>();
 	_eventCache.reserve(_sampleSize);
+	_cacheFull = false;
+	_forceStatus = _config.get<int>("cmaes_force_status") > 0;
+	_allowedExitStatus = _config.getVector<int>("cmaes_allowed_exit_status");
+	_maxForceStatusRuns = _config.get<int>("cmaes_max_force_status_runs");
+	std::remove(getFilename(".status").c_str());
+	std::ofstream statusFile(getFilename(".status"));
+	statusFile << "# Rerun\tStatus" << std::endl;
 	/*int num_plots = _numSteps + 4;
 	int n_x = std::sqrt(num_plots);
 	int n_y = std::sqrt(num_plots);
@@ -81,6 +89,9 @@ void MpaCmaesAlign::scanInit()
 bool MpaCmaesAlign::scanRun(const core::TrackStreamReader::event_t& track_event,
                       const core::BaseSensorStreamReader::event_t& mpa_event)
 {
+	if(_cacheFull) {
+		return false;
+	}
 	size_t nhits = 0;
 	size_t mpa_index = 0;
 	for(size_t i=0; i < mpa_event.data.size(); ++i) {
@@ -97,9 +108,12 @@ bool MpaCmaesAlign::scanRun(const core::TrackStreamReader::event_t& track_event,
 
 void MpaCmaesAlign::scanFinish()
 {
+	_cacheFull = true;
 	std::ofstream func_file(getFilename("_space.csv"));
+//	std::ofstream hitpoints_file(getFilename("_hitpoints.csv"));
+//	std::ofstream misspoints_file(getFilename("_misspoints.csv"));
 	std::ofstream path_file(getFilename("_path.csv"));
-	FitFunc chi2 = [this, &func_file](const double* param, const int N) mutable
+	FitFunc chi2 = [this, &func_file/*, &hitpoints_file, &misspoints_file*/](const double* param, const int N) mutable
 	{
 		core::MpaTransform trans;
 		trans.setOffset({param[0], param[1], param[2]});
@@ -115,8 +129,23 @@ void MpaCmaesAlign::scanFinish()
 			if(sqrdist < 1) {
 				chi2val += sqrdist;
 				++num_entries;
+		/*		hitpoints_file << a(0) << " "
+				               << a(1) << " "
+				               << a(2) << "\t"
+				               << b(0) << " "
+				               << b(1) << " "
+				               << b(2) << "\n";*/
+			} else {
+/*				misspoints_file << a(0) << " "
+				                << a(1) << " "
+				                << a(2) << "\t"
+				                << b(0) << " "
+				                << b(1) << " "
+				                << b(2) << "\n";*/
 			}
 		}
+//		hitpoints_file << "\n\n";
+//		misspoints_file << "\n\n";
 		double fitness = 1000;
 		if(num_entries > total_entries/100) {
 			fitness = chi2val / num_entries;
@@ -127,7 +156,9 @@ void MpaCmaesAlign::scanFinish()
 		          << param[2] << "\t"
 		          << param[3] << "\t"
 		          << param[4] << "\t"
-		          << param[5] << "\n";
+		          << param[5] << "\t"
+			  << num_entries << "\t"
+		          << _eventCache.size() << "\n";
 		return fitness;
 	};
 	ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>, CMASolutions> select_time =
@@ -177,6 +208,10 @@ void MpaCmaesAlign::scanFinish()
 	of.flush();
 	of.close();
 
+	std::ofstream statusfile(getFilename("_status.csv"));
+	statusfile << cmasols.run_status() << std::endl;
+	statusfile.close();
+
 	/*std::ofstream df(getFilename("_solution_zscan.csv"));
 	df << "# x=" << cand.get_x()[2] << ", chi2=" << cand.get_fvalue() << "\n";
 	for(size_t i=0; i < initial_parameters.size(); ++i) {
@@ -204,6 +239,21 @@ void MpaCmaesAlign::scanFinish()
 	_aligner.writeHistogramImage(getFilename("_aligntest.png"));
 
 	_file->Write();
+
+	std::ofstream statusFile(getFilename(".status"), std::ios_base::app);
+	statusFile << getRerunNumber() << "\t" << cmasols.run_status() << std::endl;
+	auto acceptable = std::find(_allowedExitStatus.begin(), _allowedExitStatus.end(), cmasols.run_status());
+	if(acceptable == _allowedExitStatus.end() && _forceStatus) {
+		if(getRerunNumber() < _maxForceStatusRuns) {
+			rerun();
+		} else {
+			std::cerr << "Did not find acceptable solution in required time." << std::endl;
+			statusFile << "# not acceptable!" << std::endl;
+		}
+	} else if(_forceStatus){
+		std::cerr << "Found acceptable solution after " << getRerunNumber() << " optimization candidates." << std::endl;
+		statusFile << "# acceptable!" << std::endl;
+	}
 }
 
 libcmaes::CMAParameters<GenoPheno<pwqBoundStrategy>> MpaCmaesAlign::getParametersFromConfig() const

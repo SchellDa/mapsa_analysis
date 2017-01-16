@@ -37,10 +37,14 @@ private:
 		size_t mpa_index;
 	};
 	std::vector<event_t> _eventCache;
+	bool _cacheFull;
 
 	TFile* _file;
 	core::Aligner _aligner;
 	size_t _sampleSize;
+	std::vector<int> _allowedExitStatus;
+	bool _forceStatus;
+	size_t _maxForceStatusRuns;
 };
 
 #endif//MPA_CMAES_ALIGN_H

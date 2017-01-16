@@ -31,6 +31,23 @@ void angularPoints()
 	of.close();
 }
 
+void planeOffsetTest()
+{
+	core::MpaTransform transform;
+	transform.setOffset({-4, -6, 900});
+	transform.setRotation({0.4, -0.2, 0.1});
+	std::ofstream of("planeoffset.csv");
+	of << "# Index\tWorld X\tWorld Y\tWorld Z\n";
+	auto o = transform.getOffset();
+	of << o(0) << " " << o(1) << " " << o(2) << "\n";
+	for(size_t i = 0; i < 48; ++i) {
+		auto a = transform.transform(i);
+		of << a(0) << " " << a(1) << " " << a(2) << "\n";
+	}
+	of << "\n\n";
+	of.close();
+}
+
 int main(int argc, char* argv[]) {
 	core::MpaTransform transform;
 	std::ofstream pixel_grid_file("pixel_grid.csv");
@@ -84,5 +101,6 @@ int main(int argc, char* argv[]) {
 	}
 	pixel_index_file.close();
 	angularPoints();
+	planeOffsetTest();
 	return 0;
 }
