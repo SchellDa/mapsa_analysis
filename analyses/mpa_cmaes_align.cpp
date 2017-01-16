@@ -281,6 +281,7 @@ libcmaes::CMAParameters<GenoPheno<pwqBoundStrategy>> MpaCmaesAlign::getParameter
 	}
 	double sigma = 2.0;
 	int lambda = -1;
+	int max_iter = -1;
 	try {
 		sigma = _config.get<double>("cmaes_initial_sigma");
 	} catch(core::CfgParse::no_variable_error) {
@@ -290,9 +291,11 @@ libcmaes::CMAParameters<GenoPheno<pwqBoundStrategy>> MpaCmaesAlign::getParameter
 		lambda = _config.get<int>("cmaes_lambda");
 	} catch(core::CfgParse::no_variable_error) {
 	}
+	max_iter = _config.get<int>("cmaes_max_iterations");
 	GenoPheno<pwqBoundStrategy> gp(&low.front(), &high.front(), dim);
 	CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(init, sigma, lambda, 0, gp);
 	cmaparams.set_max_fevals(100000);
+	cmaparams.set_max_iter(max_iter);
 	cmaparams.set_ftarget(0.1);
 	cmaparams.set_fplot(getFilename("_cmaes.dat"));
 	cmaparams.set_elitism(elitism);
