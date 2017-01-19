@@ -6,6 +6,9 @@
 #include <cmaes.h>
 #include <iomanip>
 #include <cstdio>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 
 using namespace libcmaes;
 
@@ -19,6 +22,8 @@ MpaCmaesAlign::MpaCmaesAlign() :
 		("high-z", po::value<double>()->default_value(860), "Upper bound of Z align scan")
 		("num-steps,s", po::value<int>()->default_value(10), "Number of steps in the range (low,high)")
 		("sample-size,n", po::value<int>()->default_value(10000), "Number of data points to include in alignment histogram")
+		("multirun-paths,M", po::value<std::string>(), "Put results in directory specialized for multiple alignment execution. Useful for analyzing the alignment with further postprocessing.")
+		("write-cache,C", "If set, up to 1000 hits from the cache are written to disk. Useful for debugging.")
 	;
 	addProcess("load", /* CS_ALWAYS */ CS_TRACK,
 	           core::Analysis::init_callback_t {},
@@ -39,9 +44,27 @@ MpaCmaesAlign::~MpaCmaesAlign()
 
 void MpaCmaesAlign::init(const po::variables_map& vm)
 {
+	if(vm.count("multirun-paths") > 0) {
+		auto path_prefix = vm["multirun-paths"].as<std::string>();
+		auto output_dir = _config.getVariable("output_dir");
+		output_dir += "/MpaCmaesAlign/";
+		mkdir(output_dir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+		output_dir += path_prefix;
+		mkdir(output_dir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+		output_dir += "/run";
+		output_dir += std::to_string(getAllRunIds()[0]);
+		int status = mkdir(output_dir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+		if(status == -1 && errno != EEXIST) {
+			std::cerr << "Cannot create output directory" << std::endl;
+			throw std::exception();
+		}
+		_config.setVariable("output_dir", output_dir);
+	}
+
 	_file = new TFile(getFilename(".root").c_str(), "RECREATE");
 	_aligner.initHistograms();
 	_sampleSize = vm["sample-size"].as<int>();
+	_writeCache = vm.count("write-cache") > 0;
 	_eventCache.reserve(_sampleSize);
 	_cacheFull = false;
 	_forceStatus = _config.get<int>("cmaes_force_status") > 0;
@@ -50,26 +73,7 @@ void MpaCmaesAlign::init(const po::variables_map& vm)
 	std::remove(getFilename(".status").c_str());
 	std::ofstream statusFile(getFilename(".status"));
 	statusFile << "# Rerun\tStatus" << std::endl;
-	/*int num_plots = _numSteps + 4;
-	int n_x = std::sqrt(num_plots);
-	int n_y = std::sqrt(num_plots);
-	while(n_x*n_y < num_plots) {
-		++n_y;
-	}
-	int width = n_x * 400;
-	int height = n_y * 300;
-	assert(n_x > 0);
-	assert(n_y > 0);
-	assert(n_x*n_y >= num_plots);
-	_xCanvas = new TCanvas("xCanvas", "xCanvas", width, height);
-	_xCanvas->Divide(n_x, n_y);
-	_xCanvas->cd(1);
-	auto txt = new TText(.5, .5, "Hallo Welt!");
-	txt->SetTextAlign(22);
-	txt->SetTextSize(0.2);
-	txt->Draw();
-	_yCanvas = new TCanvas("yCanvas", "yCanvas", width, height);
-	_yCanvas->Divide(n_x, n_y);*/
+	std::ofstream configFile(getFilename(".config"));
 }
 
 std::string MpaCmaesAlign::getUsage(const std::string& argv0) const
@@ -108,6 +112,24 @@ bool MpaCmaesAlign::scanRun(const core::TrackStreamReader::event_t& track_event,
 
 void MpaCmaesAlign::scanFinish()
 {
+	if(!_cacheFull && _writeCache) {
+		std::ofstream fout(getFilename(".cache"));
+		fout << "# MPA Index\tax ay az\tbx by bz\n";
+		size_t numEventsWritten = 0;
+		for(const auto& evt: _eventCache) {
+			++numEventsWritten;
+			fout << evt.mpa_index << "\t"
+			     << evt.track.points[3](0) << "\t"
+			     << evt.track.points[3](1) << "\t"
+			     << evt.track.points[3](2) << "\t"
+			     << evt.track.points[5](0) << "\t"
+			     << evt.track.points[5](1) << "\t"
+			     << evt.track.points[5](2) << "\n";
+			if(numEventsWritten >= 1000) {
+				break;
+			}
+		}
+	}
 	_cacheFull = true;
 	std::ofstream func_file(getFilename("_space.csv"));
 //	std::ofstream hitpoints_file(getFilename("_hitpoints.csv"));
@@ -122,7 +144,7 @@ void MpaCmaesAlign::scanFinish()
 		size_t total_entries = 0;
 		size_t num_entries = 0;
 		for(const auto& evt: _eventCache) {
-			auto b = trans.mpaPlaneTrackIntersect(evt.track, 0, 5);
+			auto b = trans.mpaPlaneTrackIntersect(evt.track, 3, 5);
 			++total_entries;
 			auto a = trans.transform(evt.mpa_index);
 			auto sqrdist = (b-a).squaredNorm();
@@ -299,5 +321,18 @@ libcmaes::CMAParameters<GenoPheno<pwqBoundStrategy>> MpaCmaesAlign::getParameter
 	cmaparams.set_ftarget(0.1);
 	cmaparams.set_fplot(getFilename("_cmaes.dat"));
 	cmaparams.set_elitism(elitism);
+	
+	std::ofstream fout(getFilename(".config"));
+	auto run = _runlist.getByMpaRun(getCurrentRunId());
+	fout << "int lambda " << lambda << "\n";
+	fout << "int elitism " << elitism << "\n";
+	fout << "int sampleSize " << _sampleSize << "\n";
+	fout << "float sigma0 " << sigma << "\n";
+	fout << "float angle " << run.angle << "\n";
+	fout << "float bias_voltage " << run.bias_voltage << "\n";
+	fout << "float bias_current " << run.bias_current << "\n";
+	fout << "float threshold " << run.threshold << "\n";
+	fout << "int telescope_run " << run.telescope_run << "\n";
+
 	return cmaparams;
 }

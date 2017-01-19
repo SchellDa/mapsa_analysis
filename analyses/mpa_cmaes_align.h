@@ -45,6 +45,8 @@ private:
 	std::vector<int> _allowedExitStatus;
 	bool _forceStatus;
 	size_t _maxForceStatusRuns;
+
+	bool _writeCache;
 };
 
 #endif//MPA_CMAES_ALIGN_H
