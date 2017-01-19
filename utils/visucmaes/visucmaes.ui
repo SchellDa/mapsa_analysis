@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>VisuCMAES</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="icons.qrc">
+    <normaloff>:/icons/icons/chart_bar.png</normaloff>:/icons/icons/chart_bar.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QMdiArea" name="mdiArea">
+      <property name="documentMode">
+       <bool>true</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>false</bool>
+      </property>
+      <property name="tabsMovable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>Fi&amp;le</string>
+    </property>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSaveAs"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuDatabase">
+    <property name="title">
+     <string>&amp;Database</string>
+    </property>
+    <addaction name="actionOpenDatabase"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuDatabase"/>
+   <addaction name="menuAbout"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>Chart Tools</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+   <addaction name="separator"/>
+   <addaction name="actionPlotAdd"/>
+   <addaction name="actionPlotEdit"/>
+   <addaction name="actionPlotDelete"/>
+   <addaction name="actionGlobalJobQueryEdit"/>
+   <addaction name="separator"/>
+   <addaction name="actionExportPlot"/>
+   <addaction name="actionExportAllPlots"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar_2">
+   <property name="windowTitle">
+    <string>Curve Tools</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionCurveAdd"/>
+   <addaction name="actionCurveEdit"/>
+   <addaction name="actionCurveDelete"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar_3">
+   <property name="windowTitle">
+    <string>Window Tools</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionWindowsCascade"/>
+   <addaction name="actionWindowsTile"/>
+   <addaction name="actionWindowsTabbed"/>
+  </widget>
+  <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/folder.png</normaloff>:/icons/icons/folder.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Open Plot Config</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>&amp;Exit</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/disk.png</normaloff>:/icons/icons/disk.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Save Plot Config</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionOpenDatabase">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/database_add.png</normaloff>:/icons/icons/database_add.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Open Database</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
+   </property>
+  </action>
+  <action name="actionPlotDelete">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/chart_curve_delete.png</normaloff>:/icons/icons/chart_curve_delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete Plot</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete currently open plot</string>
+   </property>
+  </action>
+  <action name="actionPlotAdd">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/chart_curve_add.png</normaloff>:/icons/icons/chart_curve_add.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Plot</string>
+   </property>
+   <property name="toolTip">
+    <string>Add new plot</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionCurveAdd">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/chart_line_add.png</normaloff>:/icons/icons/chart_line_add.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Curve</string>
+   </property>
+   <property name="toolTip">
+    <string>Add new curve to current plot</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionCurveDelete">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/chart_line_delete.png</normaloff>:/icons/icons/chart_line_delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete Curve</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete currently selected curve</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
+  </action>
+  <action name="actionCurveEdit">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/chart_line_edit.png</normaloff>:/icons/icons/chart_line_edit.png</iconset>
+   </property>
+   <property name="text">
+    <string>Edit Curve</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit currently selected curve</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionPlotEdit">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/chart_curve_edit.png</normaloff>:/icons/icons/chart_curve_edit.png</iconset>
+   </property>
+   <property name="text">
+    <string>Edit Plot</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit general plot settings, e.g. title and labels</string>
+   </property>
+  </action>
+  <action name="actionWindowsCascade">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/application_cascade.png</normaloff>:/icons/icons/application_cascade.png</iconset>
+   </property>
+   <property name="text">
+    <string>Cascade</string>
+   </property>
+  </action>
+  <action name="actionWindowsTile">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/application_tile_horizontal.png</normaloff>:/icons/icons/application_tile_horizontal.png</iconset>
+   </property>
+   <property name="text">
+    <string>Tile</string>
+   </property>
+   <property name="toolTip">
+    <string>Tile</string>
+   </property>
+  </action>
+  <action name="actionGlobalJobQueryEdit">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/cog_edit.png</normaloff>:/icons/icons/cog_edit.png</iconset>
+   </property>
+   <property name="text">
+    <string>Edit Global Job Query</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit the default job query used for plots.</string>
+   </property>
+  </action>
+  <action name="actionSaveAs">
+   <property name="text">
+    <string>Save &amp;Plot Config As...</string>
+   </property>
+   <property name="toolTip">
+    <string>Save current plot settings under different name.</string>
+   </property>
+  </action>
+  <action name="actionExportPlot">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/image.png</normaloff>:/icons/icons/image.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export Plot</string>
+   </property>
+   <property name="toolTip">
+    <string>Write Plot as image to disk</string>
+   </property>
+  </action>
+  <action name="actionExportAllPlots">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/images.png</normaloff>:/icons/icons/images.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export All Plots</string>
+   </property>
+   <property name="toolTip">
+    <string>Export all plots to disk</string>
+   </property>
+  </action>
+  <action name="actionWindowsTabbed">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/application_side_list.png</normaloff>:/icons/icons/application_side_list.png</iconset>
+   </property>
+   <property name="text">
+    <string>Tabbed</string>
+   </property>
+   <property name="toolTip">
+    <string>Tabbed windows</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/page_white.png</normaloff>:/icons/icons/page_white.png</iconset>
+   </property>
+   <property name="text">
+    <string>New Plot Config</string>
+   </property>
+   <property name="toolTip">
+    <string>Start new plot configuration</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionWindowsCascade</sender>
+   <signal>triggered()</signal>
+   <receiver>mdiArea</receiver>
+   <slot>cascadeSubWindows()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>317</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionWindowsTile</sender>
+   <signal>triggered()</signal>
+   <receiver>mdiArea</receiver>
+   <slot>tileSubWindows()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>317</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionExit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPlotAdd</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>createPlot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>createPlot()</slot>
+  <slot>deletePlot()</slot>
+ </slots>
+</ui>

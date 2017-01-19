@@ -1,0 +1,30 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>icons/page_white.png</file>
+    <file>icons/chart_curve_edit.png</file>
+    <file>icons/tux.png</file>
+    <file>icons/image.png</file>
+    <file>icons/images.png</file>
+    <file>icons/application_edit.png</file>
+    <file>icons/application_cascade.png</file>
+    <file>icons/application_tile_horizontal.png</file>
+    <file>icons/application.png</file>
+    <file>icons/application_side_list.png</file>
+    <file>icons/delete.png</file>
+    <file>icons/chart_line_add.png</file>
+    <file>icons/chart_line_delete.png</file>
+    <file>icons/chart_line_edit.png</file>
+    <file>icons/chart_line.png</file>
+    <file>icons/chart_bar_add.png</file>
+    <file>icons/chart_bar_edit.png</file>
+    <file>icons/chart_bar_delete.png</file>
+    <file>icons/chart_bar.png</file>
+    <file>icons/chart_curve_add.png</file>
+    <file>icons/chart_curve_delete.png</file>
+    <file>icons/database_add.png</file>
+    <file>icons/cog_edit.png</file>
+    <file>icons/cross.png</file>
+    <file>icons/disk.png</file>
+    <file>icons/folder.png</file>
+  </qresource>
+</RCC>
