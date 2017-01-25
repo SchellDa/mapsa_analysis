@@ -1,0 +1,7 @@
+
+#ifndef UTILS_CONFIG_H
+#define UTILS_CONFIG_H
+
+#cmakedefine BELPHEGOR_SOCKET "${BELPHEGOR_SOCKET}"
+
+#endif//UTILS_CONFIG_H
