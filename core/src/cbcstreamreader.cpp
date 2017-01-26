@@ -1,4 +1,5 @@
 #include "cbcstreamreader.h"
+#ifdef ENABLE_CBC_ANALSIS
 #include <cassert>
 #include <regex.h>
 #include <TFile.h>
@@ -108,3 +109,4 @@ BaseSensorStreamReader::reader* CBCStreamReader::getReader(const std::string& fi
 {
 	return new cbcreader(filename);
 }
+#endif//ENABLE_CBC_ANALYSIS

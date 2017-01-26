@@ -1,3 +1,5 @@
+#include "coreconfig.h"
+#ifdef ENABLE_CBC_ANALYSIS
 #ifndef CBC_STREAM_READER_H
 #define CBC_STREAM_READER_H
 
@@ -49,3 +51,4 @@ protected:
 } // namespace core
 
 #endif//CBC_STREAM_READER_H
+#endif//ENABLE_CBC_ANALYSIS
