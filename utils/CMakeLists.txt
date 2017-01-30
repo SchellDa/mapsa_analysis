@@ -20,3 +20,5 @@ add_executable(belphegor belphegor.cpp)
 add_executable(sacrifice sacrifice.cpp)
 add_executable(testfit testfit.cpp)
 target_link_libraries(belphegor AnalysisClasses)
+
+add_subdirectory(visucmaes)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PlotSettingsDialog</class>
- <widget class="QDialog" name="PlotSettingsDialog">
+ <class>PlotSettings</class>
+ <widget class="QDialog" name="PlotSettings">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -87,7 +87,14 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="xmin"/>
+         <widget class="QDoubleSpinBox" name="xmin">
+          <property name="minimum">
+           <double>-100000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100000.000000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="2" column="0">
          <widget class="QCheckBox" name="use_xmax">
@@ -97,7 +104,60 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="xmax"/>
+         <widget class="QDoubleSpinBox" name="xmax">
+          <property name="minimum">
+           <double>-100000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QComboBox" name="selection_x">
+          <item>
+           <property name="text">
+            <string>None</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>x</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>y</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>z</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>phi</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Theta</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Omega</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="selection_label_x">
+          <property name="text">
+           <string>Selection</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -126,7 +186,14 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="ymin"/>
+         <widget class="QDoubleSpinBox" name="ymin">
+          <property name="minimum">
+           <double>-100000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100000.000000000000000</double>
+          </property>
+         </widget>
         </item>
         <item row="2" column="0">
          <widget class="QCheckBox" name="use_ymax">
@@ -136,7 +203,60 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="ymax"/>
+         <widget class="QDoubleSpinBox" name="ymax">
+          <property name="minimum">
+           <double>-100000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="selection_label_y">
+          <property name="text">
+           <string>Selection</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QComboBox" name="selection_y">
+          <item>
+           <property name="text">
+            <string>None</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>x</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>y</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>z</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>phi</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Theta</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Omega</string>
+           </property>
+          </item>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -154,7 +274,7 @@
         <item>
          <widget class="QLabel" name="label_9">
           <property name="text">
-           <string>Note: If left empty, global job query is used.</string>
+           <string>Note: If left empty, global job query is passed to curves.</string>
           </property>
          </widget>
         </item>
@@ -213,7 +333,7 @@
         <item>
          <widget class="QLabel" name="label_4">
           <property name="text">
-           <string>SQL Errors</string>
+           <string>Test Result</string>
           </property>
          </widget>
         </item>
@@ -271,5 +391,38 @@
  <resources>
   <include location="icons.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox_2</sender>
+   <signal>accepted()</signal>
+   <receiver>PlotSettings</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>573</x>
+     <y>525</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>564</x>
+     <y>497</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox_2</sender>
+   <signal>rejected()</signal>
+   <receiver>PlotSettings</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>609</x>
+     <y>528</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>608</x>
+     <y>484</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

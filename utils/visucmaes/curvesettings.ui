@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CurveSettingsDialog</class>
- <widget class="QDialog" name="CurveSettingsDialog">
+ <class>CurveSettings</class>
+ <widget class="QDialog" name="CurveSettings">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -85,6 +85,9 @@
         </item>
         <item row="1" column="1">
          <widget class="QComboBox" name="shape">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
           <item>
            <property name="text">
             <string>None</string>
@@ -174,13 +177,6 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="label_10">
-          <property name="text">
-           <string>Color</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="1">
          <widget class="QComboBox" name="dashes">
           <property name="enabled">
@@ -198,10 +194,23 @@
           </item>
          </widget>
         </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Color</string>
+          </property>
+         </widget>
+        </item>
         <item row="3" column="1">
          <widget class="QPushButton" name="color">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
           <property name="text">
            <string>Pick Color</string>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -307,27 +316,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>SELECTing</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="n_results">
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>points</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <spacer name="horizontalSpacer">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -345,7 +333,7 @@
         <item>
          <widget class="QLabel" name="label_4">
           <property name="text">
-           <string>SQL Errors</string>
+           <string>Test Result</string>
           </property>
          </widget>
         </item>
@@ -394,12 +382,12 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>CurveSettingsDialog</receiver>
+   <receiver>CurveSettings</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>518</x>
-     <y>364</y>
+     <x>527</x>
+     <y>510</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -410,12 +398,12 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>CurveSettingsDialog</receiver>
+   <receiver>CurveSettings</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>586</x>
-     <y>370</y>
+     <x>595</x>
+     <y>510</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

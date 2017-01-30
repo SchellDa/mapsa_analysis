@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>601</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -59,13 +59,20 @@
      <string>&amp;Database</string>
     </property>
     <addaction name="actionOpenDatabase"/>
+    <addaction name="actionDatabaseInfo"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
     </property>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuDatabase"/>
    <addaction name="menuAbout"/>
   </widget>
@@ -80,9 +87,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionOpen"/>
-   <addaction name="actionSave"/>
-   <addaction name="separator"/>
    <addaction name="actionPlotAdd"/>
    <addaction name="actionPlotEdit"/>
    <addaction name="actionPlotDelete"/>
@@ -118,6 +122,22 @@
    <addaction name="actionWindowsCascade"/>
    <addaction name="actionWindowsTile"/>
    <addaction name="actionWindowsTabbed"/>
+   <addaction name="actionView3D"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar_4">
+   <property name="windowTitle">
+    <string>File</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNew"/>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+   <addaction name="actionOpenDatabase"/>
   </widget>
   <action name="actionOpen">
    <property name="icon">
@@ -157,7 +177,7 @@
     <string>&amp;Open Database</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Shift+O</string>
+    <string>Ctrl+D</string>
    </property>
   </action>
   <action name="actionPlotDelete">
@@ -170,6 +190,9 @@
    </property>
    <property name="toolTip">
     <string>Delete currently open plot</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Del</string>
    </property>
   </action>
   <action name="actionPlotAdd">
@@ -184,7 +207,7 @@
     <string>Add new plot</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+P</string>
+    <string>Alt+A</string>
    </property>
   </action>
   <action name="actionCurveAdd">
@@ -243,6 +266,9 @@
    <property name="toolTip">
     <string>Edit general plot settings, e.g. title and labels</string>
    </property>
+   <property name="shortcut">
+    <string>Alt+E</string>
+   </property>
   </action>
   <action name="actionWindowsCascade">
    <property name="icon">
@@ -275,6 +301,9 @@
    </property>
    <property name="toolTip">
     <string>Edit the default job query used for plots.</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
    </property>
   </action>
   <action name="actionSaveAs">
@@ -310,6 +339,9 @@
    </property>
   </action>
   <action name="actionWindowsTabbed">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/icons/icons/application_side_list.png</normaloff>:/icons/icons/application_side_list.png</iconset>
@@ -327,10 +359,42 @@
      <normaloff>:/icons/icons/page_white.png</normaloff>:/icons/icons/page_white.png</iconset>
    </property>
    <property name="text">
-    <string>New Plot Config</string>
+    <string>&amp;New Plot Config</string>
    </property>
    <property name="toolTip">
     <string>Start new plot configuration</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionDatabaseInfo">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Show Database Info</string>
+   </property>
+   <property name="toolTip">
+    <string>Show dialog with information about the opened database.</string>
+   </property>
+  </action>
+  <action name="actionView3D">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/package.png</normaloff>:/icons/icons/package.png</iconset>
+   </property>
+   <property name="text">
+    <string>3D View</string>
+   </property>
+   <property name="toolTip">
+    <string>Show 3D view of MaPSA with telescope data.</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+3</string>
    </property>
   </action>
  </widget>
@@ -387,14 +451,14 @@
    </hints>
   </connection>
   <connection>
-   <sender>actionPlotAdd</sender>
+   <sender>actionNew</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
-   <slot>createPlot()</slot>
+   <slot>newDocument()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>399</x>
-     <y>299</y>
+     <x>-1</x>
+     <y>-1</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -402,9 +466,143 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionOpen</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>open()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSave</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>save()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSaveAs</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>saveAs()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOpenDatabase</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>openDatabase()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>mdiArea</sender>
+   <signal>subWindowActivated(QMdiSubWindow*)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>changeSubwindowSelection(QMdiSubWindow*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>317</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionWindowsTabbed</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>setTabbed(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>300</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionWindowsCascade</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>untabMdiArea()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>300</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionWindowsTile</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>untabMdiArea()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>300</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
-  <slot>createPlot()</slot>
-  <slot>deletePlot()</slot>
+  <slot>newDocument()</slot>
+  <slot>open()</slot>
+  <slot>save()</slot>
+  <slot>saveAs()</slot>
+  <slot>openDatabase()</slot>
+  <slot>changeSubwindowSelection(QMdiSubWindow*)</slot>
+  <slot>setTabbed(bool)</slot>
+  <slot>untabMdiArea()</slot>
  </slots>
 </ui>

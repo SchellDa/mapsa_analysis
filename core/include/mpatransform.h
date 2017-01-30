@@ -191,6 +191,7 @@ public:
 	void setOffset(const Eigen::Vector3d& offset)
 	{
 		_offset = offset;
+		_plane = Eigen::Hyperplane<double, 3>(_normal, _offset);
 	}
 	Eigen::Vector3d getOffset() const { return _offset; }
 	Eigen::Vector3d getNormal() const { return _normal; }
