@@ -47,7 +47,7 @@ def createDatabase(database_file):
     
     c.execute("""
 CREATE TABLE path (
- ind INTEGER PRIMARY KEY,
+ id INTEGER PRIMARY KEY,
  job_id INTEGER,
  generation int,
  x float,
@@ -100,6 +100,22 @@ CREATE TABLE hitpairs (
  bz float
 );
 """)
+    
+    c.execute("""
+CREATE TABLE finals (
+ id INTEGER PRIMARY KEY,
+ job_id INTEGER,
+ generation int,
+ x float,
+ y float,
+ z float,
+ phi float,
+ theta float,
+ omega float,
+ fitness float,
+ sigma float
+);
+""")
     conn.commit();
     return conn
 
@@ -116,6 +132,7 @@ def createIndex(conn):
     c.execute("CREATE INDEX index_intermediate_status_job_id ON "
               "intermediate_status(job_id);")
     c.execute("CREATE INDEX index_hitpairs_run_id ON hitpairs(run_id);")
+    c.execute("CREATE INDEX index_finals_job_id ON finals(job_id);")
     print "Commit changes..."
     conn.commit();
     print "... done!"
@@ -176,6 +193,11 @@ used_tracks, job_id, feval_no ) VALUES (?,?,?,?,?,?,?,?,?,?,?);
     INSERT INTO hitpairs ( mpa_index, ax, ay, az, bx, by, bz, run_id ) VALUES
     (?,?,?,?,?,?,?,?)
     """, cache_list)
+    finals_list = path_list[-1]
+    finals_list.pop()
+    c.execute("""
+INSERT INTO finals ( fitness, x, y, z, phi, theta, omega, sigma, job_id ) VALUES (?,?,?,?,?,?,?,?,?);
+""", finals_list)
 
 def main():
     if len(sys.argv) != 3:
