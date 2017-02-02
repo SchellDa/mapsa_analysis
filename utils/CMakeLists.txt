@@ -21,4 +21,7 @@ add_executable(sacrifice sacrifice.cpp)
 add_executable(testfit testfit.cpp)
 target_link_libraries(belphegor AnalysisClasses)
 
+set(BUILD_VISUCMAES false CACHE "BOOL" "Build VisuCMAES utility. Requires Qt5")
+if(${BUILD_VISUCMAES})
 add_subdirectory(visucmaes)
+endif(${BUILD_VISUCMAES})
