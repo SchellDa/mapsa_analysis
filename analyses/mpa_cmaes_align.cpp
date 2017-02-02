@@ -249,7 +249,7 @@ void MpaCmaesAlign::scanFinish()
 
 	_mpaTransform.setOffset(bestparam.head<3>());
 	_mpaTransform.setRotation(bestparam.tail<3>());
-	_aligner.initHistograms("test_x", "test_y");
+/*	_aligner.initHistograms("test_x", "test_y");
 	for(const auto& evt: _eventCache) {
 		// auto b = track.extrapolateOnPlane(0, 5, cand.get_x()[2], 2);
 		auto b = _mpaTransform.mpaPlaneTrackIntersect(evt.track, 0, 5);
@@ -258,7 +258,7 @@ void MpaCmaesAlign::scanFinish()
 	}
 	_aligner.calculateAlignment();
 	_aligner.writeHistograms();
-	_aligner.writeHistogramImage(getFilename("_aligntest.png"));
+	_aligner.writeHistogramImage(getFilename("_aligntest.png"));*/
 
 	_file->Write();
 
