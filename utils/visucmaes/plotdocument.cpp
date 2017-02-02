@@ -104,6 +104,8 @@ void PlotDocument::open(QString filename)
 		pcfg.use_ymax = plot.value("use_ymax").toBool();
 		pcfg.legend = plot.value("legend").toBool();
 		pcfg.job_query = plot.value("job_query").toString();
+		pcfg.xlog = plot.value("xlog").toBool();
+		pcfg.ylog = plot.value("xlog").toBool();
 		pcfg.selection_x = static_cast<axis_parameter_t>(plot.value("selection_x").toInt());
 		pcfg.selection_y = static_cast<axis_parameter_t>(plot.value("selection_y").toInt());
 		for(const auto& curveref: plot.value("curves").toArray()) {
@@ -156,6 +158,8 @@ void PlotDocument::save()
 		plot_config.insert("use_ymax", QJsonValue(plot.use_ymax));
 		plot_config.insert("legend", QJsonValue(plot.legend));
 		plot_config.insert("job_query", QJsonValue(plot.job_query));
+		plot_config.insert("xlog", plot.xlog);
+		plot_config.insert("ylog", plot.ylog);
 		plot_config.insert("selection_x", static_cast<int>(plot.selection_x));
 		plot_config.insert("selection_y", static_cast<int>(plot.selection_y));
 		QJsonArray curves;
@@ -209,6 +213,8 @@ void PlotDocument::addPlot()
 	cfg.use_xmin = cfg.use_ymin = cfg.use_xmax = cfg.use_ymax = false;
 	cfg.legend = true;
 	cfg.job_query = "";
+	cfg.xlog = false;
+	cfg.ylog = false;
 	cfg.selection_x = apNone;
 	cfg.selection_y = apNone;
 	config.plots.push_back(cfg);
@@ -222,6 +228,24 @@ void PlotDocument::editPlot(plot_config_t cfg)
 		if(config.plots[i].id == cfg.id) {
 			config.plots[i] = cfg;
 			applyConfig(config, tr("edit plot settings", "undo/redo X"));
+			return;
+		}
+	}
+	assert(false);
+}
+
+void PlotDocument::clonePlot(size_t plotId)
+{
+	global_config_t config(_config);
+	for(size_t i = 0; i < config.plots.size(); ++i) {
+		if(config.plots[i].id == plotId) {
+			plot_config_t plot = config.plots[i];
+			plot.id = ++config.max_plot_id;
+			for(auto& curve: plot.curves) {
+				curve.plot_id = plot.id;
+			}
+			config.plots.push_back(plot);
+			applyConfig(config, tr("clone plot", "undo/redo X"));
 			return;
 		}
 	}
@@ -267,6 +291,23 @@ void PlotDocument::editCurve(curve_config_t cfg)
 	global_config_t config(_config);
 	curveById(config, cfg.plot_id, cfg.id) = cfg;
 	applyConfig(config, tr("edit curve settings", "undo/redo X"));
+}
+
+void PlotDocument::cloneCurve(size_t plotId, size_t curveId)
+{
+	global_config_t config(_config);
+	auto& plot = plotById(config, plotId);
+	curve_config_t newCurve;
+	for(size_t i=0; i < plot.curves.size(); ++i) {
+		if(plot.curves[i].id == curveId) {
+			newCurve = plot.curves[i];
+			newCurve.id = ++plot.max_curve_id;
+			newCurve.color = QColor::fromHsv((newCurve.id*25)%255, 255, 255),
+			plot.curves.push_back(newCurve);
+			break;
+		}
+	}
+	applyConfig(config, tr("clone curve", "undo/redo X"));
 }
 
 void PlotDocument::deleteCurve(size_t plotId, size_t curveId)

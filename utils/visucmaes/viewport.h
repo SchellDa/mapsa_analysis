@@ -12,6 +12,11 @@ class Viewport : public QOpenGLWidget
 {
 	Q_OBJECT
 public:
+	enum event_filter_t {
+		efAllEvents,
+		efFiducialHit,
+		efFiducialMiss
+	};
 	explicit Viewport(QWidget* parent=nullptr);
 	virtual ~Viewport();
 
@@ -30,6 +35,10 @@ public slots:
 	void setCache(const Database::run_cache_t* cache);
 	void setRunId(int run_id);
 	void setEventIndex(int idx);
+	void setEventFilter(event_filter_t filter);
+
+signals:
+	void numEventsChanged(int);
 
 protected:
 	virtual void mouseMoveEvent(QMouseEvent* event);
@@ -41,6 +50,7 @@ private:
 	void drawCoordinateSystem();
 	void drawMpa();
 	void drawTrack();
+	void filterDataset();
 
 	Eigen::Vector2d _prevMousePos;
 	core::MpaTransform _transform;
@@ -53,7 +63,9 @@ private:
 	double _camDist;
 	const Database::run_cache_t* _cache;
 	QVector<Database::cache_entry_t> _dataset;
+	int _runId;
 	int _eventIndex;
+	event_filter_t _filter;
 };
 
 #endif//VIEWPORT_H

@@ -30,6 +30,7 @@ public:
 	virtual QSize minimumSizeHint() const;
 
 	virtual void mousePressEvent(QMouseEvent* event);
+	virtual void mouseMoveEvent(QMouseEvent* event);
 
 public slots:
 	void refresh();
@@ -66,6 +67,7 @@ private:
 	void invalidateAllCaches();
 	void invalidateCache(size_t curve_id);
 	void updateSelectionLines();
+	void applyGraph(Database::data_t data, const PlotDocument::curve_config_t* config, QCPGraph* graph);
 	size_t _id;
 	PlotDocument* _doc;
 	const PlotDocument::plot_config_t* _config;

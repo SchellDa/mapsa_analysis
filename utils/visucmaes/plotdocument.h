@@ -62,6 +62,8 @@ public:
 		QString job_query;
 		axis_parameter_t selection_x;
 		axis_parameter_t selection_y;
+		double xlog;
+		double ylog;
 		QVector<curve_config_t> curves;
 	};
 	struct global_config_t
@@ -123,10 +125,12 @@ public slots:
 
 	void addPlot();
 	void editPlot(plot_config_t cfg);
+	void clonePlot(size_t plotId);
 	void deletePlot(size_t plotId);
 
 	void addCurve(size_t plotId);
 	void editCurve(curve_config_t cfg);
+	void cloneCurve(size_t plotId, size_t curveId);
 	void deleteCurve(size_t plotId, size_t curveId);
 
 	void editGlobalQuery(QString query);

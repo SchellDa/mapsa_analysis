@@ -21,6 +21,7 @@ public:
 public slots:
 	void setCache(const Database::run_cache_t* cache);
 	void selectRunIndex(QString index);
+	void setNumEvents(int numEvents);
 
 signals:
 	void visibleChanged(bool);

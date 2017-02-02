@@ -148,9 +148,11 @@ void Visucmaes::changeSubwindowSelection(QMdiSubWindow* win)
 {
 	bool enable = win != nullptr;
 	ui->actionPlotEdit->setEnabled(enable);
+	ui->actionPlotClone->setEnabled(enable);
 	ui->actionPlotDelete->setEnabled(enable);
 	ui->actionCurveAdd->setEnabled(enable);
 	ui->actionCurveEdit->setEnabled(false);
+	ui->actionCurveClone->setEnabled(false);
 	ui->actionCurveDelete->setEnabled(false);
 	ui->actionExportPlot->setEnabled(enable);
 	if(win != nullptr) {
@@ -239,6 +241,11 @@ void Visucmaes::connectPlotActions()
 		PlotSettings dialog(this, _doc, currentPlot()->id());
 		dialog.exec();
 	});
+	connect(ui->actionPlotClone, &QAction::triggered, [this](){
+		assert(currentPlot() != nullptr);
+		assert(_doc != nullptr);
+		_doc->clonePlot(currentPlot()->id());
+	});
 	connect(ui->actionPlotDelete, &QAction::triggered, [this](){
 		assert(currentPlot() != nullptr);
 		assert(_doc != nullptr);
@@ -254,6 +261,10 @@ void Visucmaes::connectPlotActions()
 		assert(config);
 		CurveSettings dialog(this, _doc, config->plot_id, config->id);
 		dialog.exec();
+	});
+	connect(ui->actionCurveClone, &QAction::triggered, [this](){
+		const auto config = currentPlot()->selectedCurve()->config;
+		_doc->cloneCurve(config->plot_id, config->id);
 	});
 	connect(ui->actionCurveDelete, &QAction::triggered, [this](){
 		const auto config = currentPlot()->selectedCurve()->config;
@@ -307,6 +318,7 @@ void Visucmaes::createAndDeletePlots()
 			connect(win, &Plot::selectedParameterOmega, this, &Visucmaes::setParameterSelectionOmega);
 			connect(win, &Plot::selectionChanged, ui->actionCurveEdit, &QAction::setEnabled);
 			connect(win, &Plot::selectionChanged, ui->actionCurveDelete, &QAction::setEnabled);
+			connect(win, &Plot::selectionChanged, ui->actionCurveClone, &QAction::setEnabled);
 			connect(win, &Plot::curveProcessed, [this]() {
 				_progress->setValue(_progress->value()+1);
 				repaint();

@@ -9,7 +9,7 @@
 
 Viewport::Viewport(QWidget* parent) :
  QOpenGLWidget(parent), _rotation({0, 0, 0}), _mpaIndex(0), _trackStart({0, 0, 0}), _trackEnd({0, 0, 1}),
- _camYaw(45*3.141/180), _camPitch(-20*3.141/180.0), _camDist(std::log(10)), _cache(nullptr)
+ _camYaw(45*3.141/180), _camPitch(-20*3.141/180.0), _camDist(std::log(10)), _cache(nullptr), _filter(efAllEvents)
 {
 	setParameterOmega(0.0);
 }
@@ -61,6 +61,7 @@ void Viewport::setParameterX(double par)
 	Eigen::Vector3d offset = _transform.getOffset();
 	offset(0) = par;
 	_transform.setOffset(offset);
+	setRunId(_runId);
 	update();
 }
 
@@ -69,6 +70,7 @@ void Viewport::setParameterY(double par)
 	Eigen::Vector3d offset = _transform.getOffset();
 	offset(1) = par;
 	_transform.setOffset(offset);
+	setRunId(_runId);
 	update();
 }
 
@@ -77,6 +79,7 @@ void Viewport::setParameterZ(double par)
 	Eigen::Vector3d offset = _transform.getOffset();
 	offset(2) = par;
 	_transform.setOffset(offset);
+	setRunId(_runId);
 	update();
 }
 
@@ -84,6 +87,7 @@ void Viewport::setParameterPhi(double par)
 {
 	_rotation(0) = par;
 	_transform.setRotation(_rotation);
+	setRunId(_runId);
 	update();
 }
 
@@ -91,6 +95,7 @@ void Viewport::setParameterTheta(double par)
 {
 	_rotation(1) = par;
 	_transform.setRotation(_rotation);
+	setRunId(_runId);
 	update();
 }
 
@@ -98,6 +103,7 @@ void Viewport::setParameterOmega(double par)
 {
 	_rotation(2) = par;
 	_transform.setRotation(_rotation);
+	setRunId(_runId);
 	update();
 }
 
@@ -116,18 +122,31 @@ void Viewport::setCache(const Database::run_cache_t* cache)
 
 void Viewport::setRunId(int run_id)
 {
+	if(_cache == nullptr) {
+		return;
+	}
 	qDebug() << "Viewport::setRunId(" << run_id << ")";
-	_dataset = (*_cache)[run_id];
-	setEventIndex(1);
+	try {
+		_runId = run_id;
+		_dataset = (*_cache)[run_id];
+		filterDataset();
+		setEventIndex(1);
+	} catch(std::exception& e) {
+		_dataset.clear();
+	}
+	emit numEventsChanged(_dataset.size());
 }
 
 void Viewport::setEventIndex(int idx)
 {
+	if(_dataset.empty()) {
+		return;
+	}
 	qDebug() << "Viewport::setEventIndex(" << idx << ")";
 	_eventIndex = idx - 1;
-	_mpaIndex = _dataset[_eventIndex].mpa_idx;
-	_trackStart = _dataset[_eventIndex].a;
-	_trackEnd = _dataset[_eventIndex].b;
+	_mpaIndex = _dataset.at(_eventIndex).mpa_idx;
+	_trackStart = _dataset.at(_eventIndex).a;
+	_trackEnd = _dataset.at(_eventIndex).b;
 	qDebug() << " -> cache entry" << _mpaIndex
 	         << _trackStart(0)
 	         << _trackStart(1)
@@ -136,6 +155,12 @@ void Viewport::setEventIndex(int idx)
 	         << _trackEnd(1)
 	         << _trackEnd(2);
 	update();
+}
+
+void Viewport::setEventFilter(event_filter_t filter)
+{
+	_filter = filter;
+	setRunId(_runId);
 }
 
 void Viewport::mouseMoveEvent(QMouseEvent* event)
@@ -238,8 +263,18 @@ void Viewport::drawMpa()
 	glEnd();
 
 	Eigen::Vector2d pc = _transform.translatePixelIndex(_mpaIndex).cast<double>();
+	bool mpaHit = false;
+	size_t extrapIdx = 0;
+	Eigen::Vector2d epc;
+	try {
+		Eigen::Vector3d extrapPoint = _transform.mpaPlaneTrackIntersect({{0, 1}, {_trackStart, _trackEnd}});
+		extrapIdx = _transform.getPixelIndex(extrapPoint);
+		mpaHit = true;
+		epc = _transform.translatePixelIndex(extrapIdx).cast<double>();
+	} catch (std::out_of_range& e) {
+	}
 	Eigen::Vector3d pos;
-	glColor3f(0.7, 0.7, 0.7);
+	glColor3f(0.7, 0.7, 0.0);
 	glBegin(GL_QUADS);
 	pos = _transform.pixelCoordToGlobal(Eigen::Vector2d{pc + Eigen::Vector2d{0., 0.}});
 	glVertex3f(pos(0), pos(1), pos(2));
@@ -250,15 +285,25 @@ void Viewport::drawMpa()
 	pos = _transform.pixelCoordToGlobal(Eigen::Vector2d{pc + Eigen::Vector2d{0., 0.99}});
 	glVertex3f(pos(0), pos(1), pos(2));
 	glEnd();
+	if(mpaHit && extrapIdx != _mpaIndex) {
+		glColor3f(0.7, 0.7, 0.7);
+		glBegin(GL_QUADS);
+		pos = _transform.pixelCoordToGlobal(Eigen::Vector2d{epc + Eigen::Vector2d{0., 0.}});
+		glVertex3f(pos(0), pos(1), pos(2));
+		pos = _transform.pixelCoordToGlobal(Eigen::Vector2d{epc + Eigen::Vector2d{0.99, 0.}});
+		glVertex3f(pos(0), pos(1), pos(2));
+		pos = _transform.pixelCoordToGlobal(Eigen::Vector2d{epc + Eigen::Vector2d{0.99, 0.99}});
+		glVertex3f(pos(0), pos(1), pos(2));
+		pos = _transform.pixelCoordToGlobal(Eigen::Vector2d{epc + Eigen::Vector2d{0., 0.99}});
+		glVertex3f(pos(0), pos(1), pos(2));
+		glEnd();
+	}
 }
 
 void Viewport::drawTrack()
 {
 	glLineWidth(2);
-	core::Track track;
-	track.points.push_back(_trackStart);
-	track.points.push_back(_trackEnd);
-	Eigen::Vector3d b = _transform.mpaPlaneTrackIntersect(track, 0, 1);
+	Eigen::Vector3d b = _transform.mpaPlaneTrackIntersect({{0, 1}, {_trackStart, _trackEnd}});
 	glBegin(GL_LINES);
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glVertex3d(_trackStart(0), _trackStart(1), _trackStart(2));
@@ -268,4 +313,28 @@ void Viewport::drawTrack()
 	glVertex3d(b(0), b(1),  b(2));
 	glEnd();
 	qDebug() << "Track Z positions" << _trackStart(2) << _trackEnd(2) << b(2) << _transform.getOffset()(2);
+}
+
+void Viewport::filterDataset()
+{
+	if(_filter == efAllEvents) {
+		return;
+	}
+	for(size_t i = 0; i < _dataset.size(); ++i) {
+		qDebug() << "Test idx" << i;
+		const auto& entry = _dataset[i];
+		try {
+			Eigen::Vector3d extrapPoint = _transform.mpaPlaneTrackIntersect({{0, 1}, {entry.a, entry.b}});
+			_transform.getPixelIndex(extrapPoint);
+			if(_filter == efFiducialMiss) {
+				_dataset.remove(i);
+				--i;
+			}
+		} catch (std::out_of_range& e) {
+			if(_filter == efFiducialHit) {
+				_dataset.remove(i);
+				--i;
+			}
+		}
+	}
 }

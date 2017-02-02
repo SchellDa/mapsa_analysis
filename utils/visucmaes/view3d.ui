@@ -184,7 +184,7 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
-            <widget class="QComboBox" name="comboBox">
+            <widget class="QComboBox" name="eventFilter">
              <item>
               <property name="text">
                <string>All Events</string>
@@ -293,6 +293,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="numEvents">
+        <property name="text">
+         <string>000</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="closeButton">
         <property name="text">
          <string>Close</string>
@@ -310,6 +317,7 @@
    <extends>QOpenGLWidget</extends>
    <header>viewport.h</header>
    <slots>
+    <signal>numEventsChanged(int)</signal>
     <slot>setParameterX(double)</slot>
     <slot>setParameterY(double)</slot>
     <slot>setParameterZ(double)</slot>
@@ -514,8 +522,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>view</sender>
+   <signal>numEventsChanged(int)</signal>
+   <receiver>View3D</receiver>
+   <slot>setNumEvents(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>486</x>
+     <y>63</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>449</x>
+     <y>4</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>selectRunIndex(QString)</slot>
+  <slot>setNumEvents(int)</slot>
  </slots>
 </ui>

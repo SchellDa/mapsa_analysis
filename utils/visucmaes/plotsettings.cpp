@@ -21,6 +21,8 @@ PlotSettings::PlotSettings(QWidget* parent, PlotDocument* doc, size_t plotId) :
 	ui->use_ymax->setCheckState(cfg.use_ymax? Qt::Checked : Qt::Unchecked);
 	ui->show_legend->setCheckState(cfg.legend? Qt::Checked : Qt::Unchecked);
 	ui->query->setPlainText(cfg.job_query);
+	ui->xlog->setCheckState(cfg.xlog? Qt::Checked : Qt::Unchecked);
+	ui->ylog->setCheckState(cfg.ylog? Qt::Checked : Qt::Unchecked);
 	ui->selection_x->setCurrentIndex(static_cast<int>(cfg.selection_x));
 	ui->selection_y->setCurrentIndex(static_cast<int>(cfg.selection_y));
 	connect(ui->test, &QPushButton::clicked, this, &PlotSettings::test);
@@ -54,6 +56,8 @@ void PlotSettings::apply()
 	cfg.use_ymax = ui->use_ymax->checkState() == Qt::Checked;
 	cfg.legend = ui->show_legend->checkState() == Qt::Checked;
 	cfg.job_query = ui->query->toPlainText();
+	cfg.xlog = ui->xlog->checkState() == Qt::Checked;
+	cfg.ylog = ui->ylog->checkState() == Qt::Checked;
 	cfg.selection_x = static_cast<PlotDocument::axis_parameter_t>(ui->selection_x->currentIndex()); 
 	cfg.selection_y = static_cast<PlotDocument::axis_parameter_t>(ui->selection_y->currentIndex()); 
 	_doc->editPlot(cfg);

@@ -113,7 +113,7 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
+        <item row="4" column="1">
          <widget class="QComboBox" name="selection_x">
           <item>
            <property name="text">
@@ -152,10 +152,17 @@
           </item>
          </widget>
         </item>
-        <item row="3" column="0">
+        <item row="4" column="0">
          <widget class="QLabel" name="selection_label_x">
           <property name="text">
            <string>Selection</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="xlog">
+          <property name="text">
+           <string>Log</string>
           </property>
          </widget>
         </item>
@@ -212,14 +219,14 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
+        <item row="4" column="0">
          <widget class="QLabel" name="selection_label_y">
           <property name="text">
            <string>Selection</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
+        <item row="4" column="1">
          <widget class="QComboBox" name="selection_y">
           <item>
            <property name="text">
@@ -256,6 +263,13 @@
             <string>Omega</string>
            </property>
           </item>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="ylog">
+          <property name="text">
+           <string>Log</string>
+          </property>
          </widget>
         </item>
        </layout>
@@ -375,15 +389,17 @@
   <tabstop>title</tabstop>
   <tabstop>show_legend</tabstop>
   <tabstop>xlabel</tabstop>
+  <tabstop>ylabel</tabstop>
   <tabstop>use_xmin</tabstop>
   <tabstop>xmin</tabstop>
-  <tabstop>use_xmax</tabstop>
-  <tabstop>xmax</tabstop>
-  <tabstop>ylabel</tabstop>
   <tabstop>use_ymin</tabstop>
   <tabstop>ymin</tabstop>
+  <tabstop>use_xmax</tabstop>
+  <tabstop>xmax</tabstop>
   <tabstop>use_ymax</tabstop>
   <tabstop>ymax</tabstop>
+  <tabstop>selection_x</tabstop>
+  <tabstop>selection_y</tabstop>
   <tabstop>query</tabstop>
   <tabstop>test</tabstop>
   <tabstop>query_results</tabstop>

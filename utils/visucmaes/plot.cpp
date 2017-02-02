@@ -40,6 +40,15 @@ bool Plot::setConfig(const PlotDocument::global_config_t global_config)
 	setWindowTitle(_config->title);
 	xAxis->setLabel(_config->xlabel);
 	yAxis->setLabel(_config->ylabel);
+	QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+	if(_config->xlog) {
+		xAxis->setScaleType(QCPAxis::stLogarithmic);
+		xAxis->setTicker(logTicker);
+	}
+	if(_config->ylog) {
+		yAxis->setScaleType(QCPAxis::stLogarithmic);
+		yAxis->setTicker(logTicker);
+	}
 	legend->setVisible(_config->legend);
 	for(const auto& curve_cfg: _config->curves) {
 		curve_t curve { nullptr, nullptr, &curve_cfg };
@@ -62,9 +71,11 @@ bool Plot::setConfig(const PlotDocument::global_config_t global_config)
 			curve.statbox->setName(curve.config->title);
 		} else {
 			curve.graph = new QCPGraph(xAxis, yAxis);
-			if(curve.config->mode == PlotDocument::cmStatisticalBox) {
+			if(curve.config->mode == PlotDocument::cmHistogram) {
 				curve.graph->setAntialiased(false);
 				curve.graph->setLineStyle(QCPGraph::lsStepLeft);
+				curve.graph->setPen(pen);
+				curve.graph->setScatterStyle(QCPScatterStyle::ssNone);
 			} else {
 				if(curve.config->draw_lines) {
 					curve.graph->setLineStyle(QCPGraph::lsLine);
@@ -72,8 +83,8 @@ bool Plot::setConfig(const PlotDocument::global_config_t global_config)
 				} else {
 					curve.graph->setLineStyle(QCPGraph::lsNone);
 				}
+				curve.graph->setScatterStyle(sstyle);
 			}
-			curve.graph->setScatterStyle(sstyle);
 			// curve.graph->setSelectedStyle(selectstyle);
 			curve.graph->setName(curve.config->title);
 		}
@@ -108,6 +119,20 @@ void Plot::mousePressEvent(QMouseEvent* event)
 	}
 }
 
+void Plot::mouseMoveEvent(QMouseEvent* event)
+{
+	if(event->buttons() & Qt::RightButton) {
+		double ax = xAxis->pixelToCoord(event->x());
+		double ay = yAxis->pixelToCoord(event->y());
+		setParameterSelection(ax, _config->selection_x);
+		emitParameterSelection(ax, _config->selection_x);
+		setParameterSelection(ay, _config->selection_y);
+		emitParameterSelection(ay, _config->selection_y);
+	} else {
+		QCustomPlot::mouseMoveEvent(event);
+	}
+}
+
 void Plot::refresh()
 {
 	// Execute query and get write data to plots
@@ -116,9 +141,7 @@ void Plot::refresh()
 			qDebug() << "getData";
 			try {
 				auto data = getData(curve.config->id);
-				if(curve.graph) {
-					curve.graph->setData(data.x, data.y);
-				}
+				applyGraph(data, curve.config, curve.graph);
 				qDebug() << "processed";
 			} catch(std::exception& e) {
 				emit curveProcessed();
@@ -358,5 +381,39 @@ void Plot::updateSelectionLines()
 		_ySelectionLine->end->setCoords(xAxis->range().upper, y);
 	} else {
 		_ySelectionLine->setVisible(false);
+	}
+}
+
+void Plot::applyGraph(Database::data_t data, const PlotDocument::curve_config_t* config, QCPGraph* graph)
+{
+	if(!graph) {
+		return;
+	}
+	if(config->mode == PlotDocument::cmPoints) {
+		graph->setData(data.x, data.y);
+	} else if(config->mode == PlotDocument::cmHistogram) {
+		QVector<double> bin_x(config->hist_nbins+1);
+		QVector<double> count(config->hist_nbins+1);
+		for(size_t i = 0; i < config->hist_nbins+1; ++i) {
+			bin_x[i] = (config->hist_high - config->hist_low) / (config->hist_nbins+1) *i + config->hist_low;
+		}
+		for(size_t i = 0; i < data.x.size(); ++i) {
+			if(data.x[i] < bin_x[0]) {
+				continue;
+			}
+			if(data.x[i] > bin_x[config->hist_nbins]) {
+				continue;
+			}
+			for(int idx = config->hist_nbins; idx >= 0; --idx) {
+				if(data.x[i] > bin_x[idx]) {
+					count[idx] += 1;
+					break;
+				}
+			}
+		}
+		qDebug() << "Histogram size x/y" << bin_x.size() << count.size();
+		qDebug() << bin_x;
+		qDebug() << count;
+		graph->setData(bin_x, count);
 	}
 }

@@ -89,6 +89,7 @@
    </attribute>
    <addaction name="actionPlotAdd"/>
    <addaction name="actionPlotEdit"/>
+   <addaction name="actionPlotClone"/>
    <addaction name="actionPlotDelete"/>
    <addaction name="actionGlobalJobQueryEdit"/>
    <addaction name="separator"/>
@@ -107,6 +108,7 @@
    </attribute>
    <addaction name="actionCurveAdd"/>
    <addaction name="actionCurveEdit"/>
+   <addaction name="actionCurveClone"/>
    <addaction name="actionCurveDelete"/>
   </widget>
   <widget class="QToolBar" name="toolBar_3">
@@ -395,6 +397,30 @@
    </property>
    <property name="shortcut">
     <string>Alt+3</string>
+   </property>
+  </action>
+  <action name="actionPlotClone">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/chart_curve_link.png</normaloff>:/icons/icons/chart_curve_link.png</iconset>
+   </property>
+   <property name="text">
+    <string>Clone Plot</string>
+   </property>
+   <property name="toolTip">
+    <string>Create a clone of the currently selected plot.</string>
+   </property>
+  </action>
+  <action name="actionCurveClone">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/icons/chart_line_link.png</normaloff>:/icons/icons/chart_line_link.png</iconset>
+   </property>
+   <property name="text">
+    <string>Clone Curve</string>
+   </property>
+   <property name="toolTip">
+    <string>Clone the currently selected curve.</string>
    </property>
   </action>
  </widget>
