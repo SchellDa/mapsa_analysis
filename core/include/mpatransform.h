@@ -153,6 +153,9 @@ public:
 		// Eigen::Vector3d local = _invRotation*(global - _offset - halfOff) + halfOff;
 		Eigen::Vector3d local = _invRotation*(global - _offset);
 		const double bottom_scale = bottom_pixel_height / upper_pixel_height;
+		if((local.array().head(2) < 0 || local.array().head(2) > Eigen::Array2d(total_width, total_height)).any()) {
+			throw std::out_of_range("Hit is not in pixel plane");
+		}
 		// scale the local coordinates to module coordinates ([0,1] range across sensor)
 		// and then apply the "virtual pixel count"
 		//  * 18 in X directoin (outer pixel double counted)
