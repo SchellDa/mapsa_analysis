@@ -78,5 +78,7 @@ time ${MPA_UTIL_BIN_PATH}/batchsubmit < ${CMD_FILE}
 pkill analyses
 
 # Merge data in sqlite3 database
-python ${MPA_UTIL_SCRIPT_PATH}/cmaes2sqlite.py ${DATA_PATH} ${OUTPUT_PATH}/multirun_${MULTI_PREFIX}.dat
+python ${MPA_UTIL_SCRIPT_PATH}/cmaes2sqlite.py ${DATA_PATH} ${OUTPUT_PATH}/multirun_${MULTI_PREFIX}.sqldat
+echo "Output written to ${OUTPUT_PATH}/multirun_${MULTI_PREFIX}.sqldat"
+echo "Done."
 
