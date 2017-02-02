@@ -177,7 +177,7 @@ public:
 
 	void setRotation(const Eigen::Vector3d& rot)
 	{
-		_rotation = Eigen::AngleAxis<double>(rot(0), Eigen::Vector3d::UnitZ()) *
+		_rotation = Eigen::AngleAxis<double>(rot(0), Eigen::Vector3d::UnitX()) *
 		            Eigen::AngleAxis<double>(rot(1), Eigen::Vector3d::UnitY()) *
 		            Eigen::AngleAxis<double>(rot(2), Eigen::Vector3d::UnitZ());
 		_invRotation = _rotation.inverse();
