@@ -10,6 +10,7 @@
 ##  NUM_SAMPLES
 ##  MPA_UTIL_SCRIPT_PATH
 ##  MPA_UTIL_BIN_PATH
+##  MPAOUT
 ####################
 
 if [ -z ${MPA_UTIL_SCRIPT_PATH} ]; then
@@ -22,8 +23,10 @@ if [ -z ${MPA_UTIL_BIN_PATH} ]; then
 	exit 1
 fi
 
-# only hard-coded config. Path were MpaCmaesAlign stores data.
-OUTPUT_PATH="/scratch/vollmer/mpaAnalysisOutput"
+if [ -z ${MPAOUT} ]; then
+	echo "Please point MPAOut to data output directory."
+	exit 1
+fi
 
 # Apply default values if env is unset
 if [ -z "${RUNS}" ]; then
@@ -58,7 +61,7 @@ fi
 CMD_FILE=".cmds"
 MULTI_PREFIX=`date "+%Y-%m-%d__%H-%M-%S"`
 
-DATA_PATH="${OUTPUT_PATH}/MpaCmaesAlign/${MULTI_PREFIX}"
+DATA_PATH="${MPAOUT}/MpaCmaesAlign/${MULTI_PREFIX}"
 
 # Generate job file
 rm -f ${CMD_FILE}
@@ -78,7 +81,9 @@ time ${MPA_UTIL_BIN_PATH}/batchsubmit < ${CMD_FILE}
 pkill analyses
 
 # Merge data in sqlite3 database
-python ${MPA_UTIL_SCRIPT_PATH}/cmaes2sqlite.py ${DATA_PATH} ${OUTPUT_PATH}/multirun_${MULTI_PREFIX}.sqldat
-echo "Output written to ${OUTPUT_PATH}/multirun_${MULTI_PREFIX}.sqldat"
-echo "Done."
+python ${MPA_UTIL_SCRIPT_PATH}/cmaes2sqlite.py ${DATA_PATH} ${MPAOUT}/multirun_${MULTI_PREFIX}.sqldat
+echo
+echo "########################"
+echo
+echo "Output written to ${MPAOUT}/multirun_${MULTI_PREFIX}.sqldat"
 
