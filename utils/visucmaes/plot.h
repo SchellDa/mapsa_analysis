@@ -13,6 +13,7 @@ public:
 	struct curve_t
 	{
 		QCPGraph* graph;
+		QCPColorMap* colormap;
 		QCPStatisticalBox* statbox;
 		const PlotDocument::curve_config_t* config;
 	};
@@ -67,7 +68,9 @@ private:
 	void invalidateAllCaches();
 	void invalidateCache(size_t curve_id);
 	void updateSelectionLines();
-	void applyGraph(Database::data_t data, const PlotDocument::curve_config_t* config, QCPGraph* graph);
+	void applyGraph(Database::data_t data, const curve_t& curve);
+	void plotHistogram(Database::data_t data, const PlotDocument::curve_config_t* config, QCPGraph* graph);
+	void plotHistogram2D(Database::data_t data, const PlotDocument::curve_config_t* config, QCPColorMap* colorMap);
 	size_t _id;
 	PlotDocument* _doc;
 	const PlotDocument::plot_config_t* _config;
@@ -78,6 +81,8 @@ private:
 	QVector<double> _selectedParameters;
 	QCPItemLine* _xSelectionLine;
 	QCPItemLine* _ySelectionLine;
+	QCPColorScale* _colorScale;
+	QSharedPointer<QCPAxisTicker> _tickerFixed;
 };
 
 #endif//_PLOT_H_

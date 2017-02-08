@@ -104,6 +104,9 @@
            </item>
            <item row="3" column="1">
             <widget class="QDoubleSpinBox" name="phi">
+             <property name="suffix">
+              <string> rad</string>
+             </property>
              <property name="minimum">
               <double>-10000.000000000000000</double>
              </property>
@@ -124,6 +127,9 @@
            </item>
            <item row="4" column="1">
             <widget class="QDoubleSpinBox" name="theta">
+             <property name="suffix">
+              <string> rad</string>
+             </property>
              <property name="minimum">
               <double>-10000.000000000000000</double>
              </property>
@@ -144,6 +150,9 @@
            </item>
            <item row="5" column="1">
             <widget class="QDoubleSpinBox" name="omega">
+             <property name="suffix">
+              <string> rad</string>
+             </property>
              <property name="minimum">
               <double>-10000.000000000000000</double>
              </property>
@@ -152,6 +161,84 @@
              </property>
              <property name="singleStep">
               <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>Phi</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QDoubleSpinBox" name="phi_2">
+             <property name="suffix">
+              <string>°</string>
+             </property>
+             <property name="decimals">
+              <number>0</number>
+             </property>
+             <property name="minimum">
+              <double>-10000.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>10000.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>Theta</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="1">
+            <widget class="QDoubleSpinBox" name="theta_2">
+             <property name="suffix">
+              <string>°</string>
+             </property>
+             <property name="decimals">
+              <number>0</number>
+             </property>
+             <property name="minimum">
+              <double>-10000.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>10000.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>Omega</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="1">
+            <widget class="QDoubleSpinBox" name="omega_2">
+             <property name="suffix">
+              <string>°</string>
+             </property>
+             <property name="decimals">
+              <number>0</number>
+             </property>
+             <property name="minimum">
+              <double>-10000.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>10000.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>1.000000000000000</double>
              </property>
             </widget>
            </item>
@@ -221,7 +308,7 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="viewLayout">
+       <layout class="QVBoxLayout" name="viewLayout">
         <item>
          <widget class="Viewport" name="view">
           <property name="sizePolicy">
@@ -335,7 +422,11 @@
   <tabstop>phi</tabstop>
   <tabstop>theta</tabstop>
   <tabstop>omega</tabstop>
+  <tabstop>phi_2</tabstop>
+  <tabstop>theta_2</tabstop>
+  <tabstop>omega_2</tabstop>
   <tabstop>run_ids</tabstop>
+  <tabstop>eventFilter</tabstop>
   <tabstop>timedelta</tabstop>
   <tabstop>playback</tabstop>
   <tabstop>event</tabstop>

@@ -15,9 +15,13 @@ CurveSettings::CurveSettings(QWidget* parent, PlotDocument* doc, size_t plotId, 
 	ui->draw_lines->setCheckState(cfg.draw_lines? Qt::Checked : Qt::Unchecked);
 	ui->shape->setCurrentIndex(static_cast<int>(cfg.shape));
 	_color = cfg.color;
-	ui->hist_bins->setValue(static_cast<int>(cfg.hist_nbins));
-	ui->hist_low->setValue(cfg.hist_low);
-	ui->hist_high->setValue(cfg.hist_high);
+	ui->gradient->setCurrentIndex(static_cast<int>(cfg.gradient));
+	ui->hist_bins_x->setValue(static_cast<int>(cfg.hist_nbins_x));
+	ui->hist_low_x->setValue(cfg.hist_low_x);
+	ui->hist_high_x->setValue(cfg.hist_high_x);
+	ui->hist_bins_y->setValue(static_cast<int>(cfg.hist_nbins_y));
+	ui->hist_low_y->setValue(cfg.hist_low_y);
+	ui->hist_high_y->setValue(cfg.hist_high_y);
 	connect(ui->color, &QPushButton::clicked, this, &CurveSettings::chooseColor);
 	connect(ui->test, &QPushButton::clicked, this, &CurveSettings::test);
 	updateColor();
@@ -45,9 +49,13 @@ void CurveSettings::apply()
 	cfg.draw_lines = ui->draw_lines->checkState() == Qt::Checked;
 	cfg.shape = static_cast<QCPScatterStyle::ScatterShape>(ui->shape->currentIndex()); 
 	cfg.color = _color;
-	cfg.hist_nbins = static_cast<size_t>(ui->hist_bins->value());
-	cfg.hist_low = ui->hist_low->value();
-	cfg.hist_high = ui->hist_high->value();
+	cfg.gradient = static_cast<QCPColorGradient::GradientPreset>(ui->gradient->currentIndex()); 
+	cfg.hist_nbins_x = static_cast<size_t>(ui->hist_bins_x->value());
+	cfg.hist_low_x = ui->hist_low_x->value();
+	cfg.hist_high_x	= ui->hist_high_x->value();
+	cfg.hist_nbins_y = static_cast<size_t>(ui->hist_bins_y->value());
+	cfg.hist_low_y = ui->hist_low_y->value();
+	cfg.hist_high_y	= ui->hist_high_y->value();
 	_doc->editCurve(cfg);
 }
 

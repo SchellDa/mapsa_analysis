@@ -4,11 +4,16 @@
 
 Plot::Plot(QWidget* parent, size_t id, PlotDocument* doc)
  : QCustomPlot(parent), _id(id), _doc(doc), _config(nullptr), _selectedParameters(6),
- _xSelectionLine(new QCPItemLine(this)), _ySelectionLine(new QCPItemLine(this))
+ _xSelectionLine(new QCPItemLine(this)), _ySelectionLine(new QCPItemLine(this)),
+ _colorScale(new QCPColorScale(this))
 {
+	plotLayout()->addElement(0, 1, _colorScale);
+	_colorScale->setType(QCPAxis::atRight);
+	_colorScale->setVisible(false);
 	setInteraction(QCP::iSelectPlottables, true);
 	setInteraction(QCP::iSelectLegend, true);
 	legend->setSelectableParts(QCPLegend::spItems);
+	_tickerFixed = xAxis->ticker();
 	connect(this, &QCustomPlot::selectionChangedByUser, this, &Plot::checkSelections);
 }
 
@@ -40,18 +45,26 @@ bool Plot::setConfig(const PlotDocument::global_config_t global_config)
 	setWindowTitle(_config->title);
 	xAxis->setLabel(_config->xlabel);
 	yAxis->setLabel(_config->ylabel);
+	_colorScale->axis()->setLabel(_config->zlabel);
 	QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
 	if(_config->xlog) {
 		xAxis->setScaleType(QCPAxis::stLogarithmic);
 		xAxis->setTicker(logTicker);
+	} else {
+		xAxis->setScaleType(QCPAxis::stLinear);
+		xAxis->setTicker(_tickerFixed);
 	}
 	if(_config->ylog) {
 		yAxis->setScaleType(QCPAxis::stLogarithmic);
 		yAxis->setTicker(logTicker);
+	} else {
+		yAxis->setScaleType(QCPAxis::stLinear);
+		yAxis->setTicker(_tickerFixed);
 	}
+	_colorScale->setVisible(false);
 	legend->setVisible(_config->legend);
 	for(const auto& curve_cfg: _config->curves) {
-		curve_t curve { nullptr, nullptr, &curve_cfg };
+		curve_t curve { nullptr, nullptr, nullptr, &curve_cfg };
 		QPen pen;
 		pen.setColor(curve.config->color);
 		QCPScatterStyle sstyle;
@@ -69,6 +82,9 @@ bool Plot::setConfig(const PlotDocument::global_config_t global_config)
 			curve.statbox->setOutlierStyle(sstyle);
 			curve.statbox->setPen(pen);
 			curve.statbox->setName(curve.config->title);
+		} else if(curve.config->mode == PlotDocument::cmHistogram2D) {
+			curve.colormap = new QCPColorMap(xAxis, yAxis);
+			curve.colormap->setColorScale(_colorScale);
 		} else {
 			curve.graph = new QCPGraph(xAxis, yAxis);
 			if(curve.config->mode == PlotDocument::cmHistogram) {
@@ -141,7 +157,7 @@ void Plot::refresh()
 			qDebug() << "getData";
 			try {
 				auto data = getData(curve.config->id);
-				applyGraph(data, curve.config, curve.graph);
+				applyGraph(data, curve);
 				qDebug() << "processed";
 			} catch(std::exception& e) {
 				emit curveProcessed();
@@ -172,6 +188,9 @@ void Plot::refresh()
 	}
 	if(_config->use_ymax) {
 		yAxis->setRangeUpper(_config->ymax);
+	}
+	if(_colorScale->visible()) {
+		// TODO: apply manual range
 	}
 	updateSelectionLines();
 	replot();
@@ -384,36 +403,64 @@ void Plot::updateSelectionLines()
 	}
 }
 
-void Plot::applyGraph(Database::data_t data, const PlotDocument::curve_config_t* config, QCPGraph* graph)
+void Plot::applyGraph(Database::data_t data, const curve_t& curve)
 {
-	if(!graph) {
-		return;
+	if(curve.config->mode == PlotDocument::cmPoints) {
+		curve.graph->setData(data.x, data.y);
+	} else if(curve.config->mode == PlotDocument::cmHistogram) {
+		plotHistogram(data, curve.config, curve.graph);
+	} else if(curve.config->mode == PlotDocument::cmHistogram2D) {
+		plotHistogram2D(data, curve.config, curve.colormap);
 	}
-	if(config->mode == PlotDocument::cmPoints) {
-		graph->setData(data.x, data.y);
-	} else if(config->mode == PlotDocument::cmHistogram) {
-		QVector<double> bin_x(config->hist_nbins+1);
-		QVector<double> count(config->hist_nbins+1);
-		for(size_t i = 0; i < config->hist_nbins+1; ++i) {
-			bin_x[i] = (config->hist_high - config->hist_low) / (config->hist_nbins+1) *i + config->hist_low;
-		}
-		for(size_t i = 0; i < data.x.size(); ++i) {
-			if(data.x[i] < bin_x[0]) {
-				continue;
-			}
-			if(data.x[i] > bin_x[config->hist_nbins]) {
-				continue;
-			}
-			for(int idx = config->hist_nbins; idx >= 0; --idx) {
-				if(data.x[i] > bin_x[idx]) {
-					count[idx] += 1;
-					break;
-				}
-			}
-		}
-		qDebug() << "Histogram size x/y" << bin_x.size() << count.size();
-		qDebug() << bin_x;
-		qDebug() << count;
-		graph->setData(bin_x, count);
+}
+
+void Plot::plotHistogram(Database::data_t data, const PlotDocument::curve_config_t* config, QCPGraph* graph)
+{
+	QVector<double> bin_x(config->hist_nbins_x+1);
+	QVector<double> count(config->hist_nbins_x+1);
+	for(size_t i = 0; i < config->hist_nbins_x+1; ++i) {
+		bin_x[i] = (config->hist_high_x - config->hist_low_x) / (config->hist_nbins_x+1) *i + config->hist_low_x;
 	}
+	for(size_t i = 0; i < data.x.size(); ++i) {
+		if(data.x[i] < bin_x[0]) {
+			continue;
+		}
+		if(data.x[i] > bin_x[config->hist_nbins_x]) {
+			continue;
+		}
+		for(int idx = config->hist_nbins_x; idx >= 0; --idx) {
+			if(data.x[i] > bin_x[idx]) {
+				count[idx] += 1;
+				break;
+			}
+		}
+	}
+	qDebug() << "Histogram size x/y" << bin_x.size() << count.size();
+	qDebug() << bin_x;
+	qDebug() << count;
+	graph->setData(bin_x, count);
+}
+
+void Plot::plotHistogram2D(Database::data_t data, const PlotDocument::curve_config_t* config, QCPColorMap* colorMap)
+{
+	_colorScale->setVisible(true);
+	colorMap->data()->clear();
+	colorMap->data()->setSize(config->hist_nbins_x+1, config->hist_nbins_y+1);
+	colorMap->data()->setRange(QCPRange(config->hist_low_x, config->hist_high_x),
+	                           QCPRange(config->hist_low_y, config->hist_high_y));
+	assert(data.x.size() == data.y.size());
+	for(size_t i = 0; i < data.x.size(); ++i) {
+		const auto& x = data.x[i];
+		const auto& y = data.y[i];
+		if(!colorMap->data()->keyRange().contains(x) ||
+		   !colorMap->data()->valueRange().contains(y)) {
+			continue;
+		}
+		int ix, iy;
+		colorMap->data()->coordToCell(x, y, &ix, &iy);
+		qDebug() << x << y << ix << iy;
+		colorMap->data()->setCell(ix, iy, colorMap->data()->cell(ix, iy) + 1);
+	}
+	colorMap->setGradient(config->gradient);
+	colorMap->rescaleDataRange(false);
 }

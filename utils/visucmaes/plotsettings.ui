@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>783</width>
-    <height>546</height>
+    <width>775</width>
+    <height>610</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,6 +22,12 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QGroupBox" name="groupBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="title">
         <string>General Settings</string>
        </property>
@@ -275,6 +281,112 @@
        </layout>
       </widget>
      </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_5">
+       <property name="title">
+        <string>Z Axis</string>
+       </property>
+       <layout class="QFormLayout" name="formLayout_4">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Label</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="zlabel"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="use_zmin">
+          <property name="text">
+           <string>Min</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="zmin">
+          <property name="minimum">
+           <double>-100000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="use_zmax">
+          <property name="text">
+           <string>Max</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QDoubleSpinBox" name="zmax">
+          <property name="minimum">
+           <double>-100000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="selection_label_y_2">
+          <property name="text">
+           <string>Selection</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QComboBox" name="selection_z">
+          <item>
+           <property name="text">
+            <string>None</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>x</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>y</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>z</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>phi</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Theta</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Omega</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="zlog">
+          <property name="text">
+           <string>Log</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -364,19 +476,6 @@
     </widget>
    </item>
    <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>102</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
     <widget class="QDialogButtonBox" name="buttonBox_2">
      <property name="standardButtons">
       <set>QDialogButtonBox::Apply|QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
@@ -390,16 +489,25 @@
   <tabstop>show_legend</tabstop>
   <tabstop>xlabel</tabstop>
   <tabstop>ylabel</tabstop>
+  <tabstop>zlabel</tabstop>
   <tabstop>use_xmin</tabstop>
   <tabstop>xmin</tabstop>
   <tabstop>use_ymin</tabstop>
   <tabstop>ymin</tabstop>
+  <tabstop>use_zmin</tabstop>
+  <tabstop>zmin</tabstop>
   <tabstop>use_xmax</tabstop>
   <tabstop>xmax</tabstop>
   <tabstop>use_ymax</tabstop>
   <tabstop>ymax</tabstop>
+  <tabstop>use_zmax</tabstop>
+  <tabstop>zmax</tabstop>
+  <tabstop>xlog</tabstop>
+  <tabstop>ylog</tabstop>
+  <tabstop>zlog</tabstop>
   <tabstop>selection_x</tabstop>
   <tabstop>selection_y</tabstop>
+  <tabstop>selection_z</tabstop>
   <tabstop>query</tabstop>
   <tabstop>test</tabstop>
   <tabstop>query_results</tabstop>

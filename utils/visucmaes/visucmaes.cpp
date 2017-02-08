@@ -150,6 +150,7 @@ void Visucmaes::changeSubwindowSelection(QMdiSubWindow* win)
 	ui->actionPlotEdit->setEnabled(enable);
 	ui->actionPlotClone->setEnabled(enable);
 	ui->actionPlotDelete->setEnabled(enable);
+	ui->actionPlotToggleLegend->setEnabled(enable);
 	ui->actionCurveAdd->setEnabled(enable);
 	ui->actionCurveEdit->setEnabled(false);
 	ui->actionCurveClone->setEnabled(false);
@@ -250,6 +251,11 @@ void Visucmaes::connectPlotActions()
 		assert(currentPlot() != nullptr);
 		assert(_doc != nullptr);
 		_doc->deletePlot(currentPlot()->id());
+	});
+	connect(ui->actionPlotToggleLegend, &QAction::triggered, [this](){
+		assert(currentPlot() != nullptr);
+		assert(_doc != nullptr);
+		_doc->togglePlotLegend(currentPlot()->id());
 	});
 	connect(ui->actionCurveAdd, &QAction::triggered, [this]() {
 		assert(currentPlot() != nullptr);

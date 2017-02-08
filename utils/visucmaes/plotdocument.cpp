@@ -94,20 +94,27 @@ void PlotDocument::open(QString filename)
 		pcfg.title = plot.value("title").toString();
 		pcfg.xlabel = plot.value("xlabel").toString();
 		pcfg.ylabel = plot.value("ylabel").toString();
+		pcfg.zlabel = plot.value("zlabel").toString();
 		pcfg.xmin = plot.value("xmin").toDouble();
 		pcfg.xmax = plot.value("xmax").toDouble();
 		pcfg.ymin = plot.value("ymin").toDouble();
 		pcfg.ymax = plot.value("ymax").toDouble();
+		pcfg.zmin = plot.value("zmin").toDouble();
+		pcfg.zmax = plot.value("zmax").toDouble();
 		pcfg.use_xmin = plot.value("use_xmin").toBool();
 		pcfg.use_xmax = plot.value("use_xmax").toBool();
 		pcfg.use_ymin = plot.value("use_ymin").toBool();
 		pcfg.use_ymax = plot.value("use_ymax").toBool();
+		pcfg.use_zmin = plot.value("use_zmin").toBool();
+		pcfg.use_zmax = plot.value("use_zmax").toBool();
 		pcfg.legend = plot.value("legend").toBool();
 		pcfg.job_query = plot.value("job_query").toString();
 		pcfg.xlog = plot.value("xlog").toBool();
-		pcfg.ylog = plot.value("xlog").toBool();
+		pcfg.ylog = plot.value("ylog").toBool();
+		pcfg.zlog = plot.value("zlog").toBool();
 		pcfg.selection_x = static_cast<axis_parameter_t>(plot.value("selection_x").toInt());
 		pcfg.selection_y = static_cast<axis_parameter_t>(plot.value("selection_y").toInt());
+		pcfg.selection_z = static_cast<axis_parameter_t>(plot.value("selection_z").toInt());
 		for(const auto& curveref: plot.value("curves").toArray()) {
 			QJsonObject curve(curveref.toObject());
 			curve_config_t ccfg;
@@ -119,9 +126,13 @@ void PlotDocument::open(QString filename)
 			ccfg.draw_lines = curve.value("draw_lines").toBool();
 			ccfg.shape = static_cast<QCPScatterStyle::ScatterShape>(curve.value("shape").toInt());
 			ccfg.color = QColor(curve.value("color").toString());
-			ccfg.hist_nbins = static_cast<size_t>(curve.value("hist_bins").toInt());
-			ccfg.hist_low = curve.value("hist_low").toDouble();
-			ccfg.hist_high = curve.value("hist_high").toDouble();
+			ccfg.gradient = static_cast<QCPColorGradient::GradientPreset>(curve.value("gradient").toInt());
+			ccfg.hist_nbins_x = static_cast<size_t>(curve.value("hist_bins_x").toInt());
+			ccfg.hist_low_x = curve.value("hist_low_x").toDouble();
+			ccfg.hist_high_x = curve.value("hist_high_x").toDouble();
+			ccfg.hist_nbins_y = static_cast<size_t>(curve.value("hist_bins_y").toInt());
+			ccfg.hist_low_y = curve.value("hist_low_y").toDouble();
+			ccfg.hist_high_y = curve.value("hist_high_y").toDouble();
 			pcfg.curves.push_back(ccfg);
 		}
 		_config.plots.push_back(pcfg);
@@ -148,20 +159,27 @@ void PlotDocument::save()
 		plot_config.insert("title", QJsonValue(plot.title));
 		plot_config.insert("xlabel", QJsonValue(plot.xlabel));
 		plot_config.insert("ylabel", QJsonValue(plot.ylabel));
+		plot_config.insert("zlabel", QJsonValue(plot.zlabel));
 		plot_config.insert("xmin", QJsonValue(plot.xmin));
 		plot_config.insert("xmax", QJsonValue(plot.xmax));
 		plot_config.insert("ymin", QJsonValue(plot.ymin));
 		plot_config.insert("ymax", QJsonValue(plot.ymax));
+		plot_config.insert("zmin", QJsonValue(plot.zmin));
+		plot_config.insert("zmax", QJsonValue(plot.zmax));
 		plot_config.insert("use_xmin", QJsonValue(plot.use_xmin));
 		plot_config.insert("use_xmax", QJsonValue(plot.use_xmax));
 		plot_config.insert("use_ymin", QJsonValue(plot.use_ymin));
 		plot_config.insert("use_ymax", QJsonValue(plot.use_ymax));
+		plot_config.insert("use_zmin", QJsonValue(plot.use_zmin));
+		plot_config.insert("use_zmax", QJsonValue(plot.use_zmax));
 		plot_config.insert("legend", QJsonValue(plot.legend));
 		plot_config.insert("job_query", QJsonValue(plot.job_query));
 		plot_config.insert("xlog", plot.xlog);
 		plot_config.insert("ylog", plot.ylog);
+		plot_config.insert("zlog", plot.zlog);
 		plot_config.insert("selection_x", static_cast<int>(plot.selection_x));
 		plot_config.insert("selection_y", static_cast<int>(plot.selection_y));
+		plot_config.insert("selection_z", static_cast<int>(plot.selection_z));
 		QJsonArray curves;
 		for(const auto& curve: plot.curves) {
 			QJsonObject curve_config;
@@ -173,9 +191,13 @@ void PlotDocument::save()
 			curve_config.insert("shape", static_cast<int>(curve.shape));
 			curve_config.insert("draw_lines", curve.draw_lines);
 			curve_config.insert("color", curve.color.name());
-			curve_config.insert("hist_bins", static_cast<int>(curve.hist_nbins));
-			curve_config.insert("hist_low", curve.hist_low);
-			curve_config.insert("hist_high", curve.hist_high);
+			curve_config.insert("gradient", static_cast<int>(curve.gradient));
+			curve_config.insert("hist_bins_x", static_cast<int>(curve.hist_nbins_x));
+			curve_config.insert("hist_low_x", curve.hist_low_x);
+			curve_config.insert("hist_high_x", curve.hist_high_x);
+			curve_config.insert("hist_bins_y", static_cast<int>(curve.hist_nbins_y));
+			curve_config.insert("hist_low_y", curve.hist_low_y);
+			curve_config.insert("hist_high_y", curve.hist_high_y);
 			curves.push_back(curve_config);
 		}
 		plot_config.insert("curves", curves);
@@ -208,15 +230,19 @@ void PlotDocument::addPlot()
 	cfg.title = tr("New Plot", "Title of a new plot");
 	cfg.xlabel = tr("X Axis", "Name of new axis.");
 	cfg.ylabel = tr("Y Axis", "Name of new axis.");
-	cfg.xmin = cfg.ymin = 0;
-	cfg.xmax = cfg.ymax = 10;
+	cfg.zlabel = tr("Z Axis", "Name of new axis.");
+	cfg.xmin = cfg.ymin = cfg.zmin = 0;
+	cfg.xmax = cfg.ymax = cfg.zmin = 10;
 	cfg.use_xmin = cfg.use_ymin = cfg.use_xmax = cfg.use_ymax = false;
+	cfg.use_zmin = cfg.use_zmin = false;
 	cfg.legend = true;
 	cfg.job_query = "";
 	cfg.xlog = false;
 	cfg.ylog = false;
+	cfg.zlog = false;
 	cfg.selection_x = apNone;
 	cfg.selection_y = apNone;
+	cfg.selection_z = apNone;
 	config.plots.push_back(cfg);
 	applyConfig(config, tr("add plot", "undo/redo X"));
 }
@@ -265,6 +291,19 @@ void PlotDocument::deletePlot(size_t plotId)
 	assert(false);
 }
 
+void PlotDocument::togglePlotLegend(size_t plotId)
+{
+	global_config_t config(_config);
+	for(size_t i = 0; i < config.plots.size(); ++i) {
+		if(config.plots[i].id == plotId) {
+			config.plots[i].legend = !config.plots[i].legend;
+			applyConfig(config, tr("toggle legend", "undo/redo X"));
+			return;
+		}
+	}
+	assert(false);
+}
+
 void PlotDocument::addCurve(size_t plotId)
 {
 	global_config_t config(_config);
@@ -278,6 +317,10 @@ void PlotDocument::addCurve(size_t plotId)
 		true,
 		QCPScatterStyle::ssCross,
 		QColor::fromHsv((plot.max_curve_id*25)%255, 255, 255),
+		QCPColorGradient::gpThermal,
+		10,
+		0.0,
+		10.0,
 		10,
 		0.0,
 		10.0

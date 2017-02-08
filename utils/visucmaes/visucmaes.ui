@@ -71,8 +71,30 @@
      <string>&amp;Edit</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuPlot">
+    <property name="title">
+     <string>Plot</string>
+    </property>
+    <addaction name="actionPlotAdd"/>
+    <addaction name="actionPlotEdit"/>
+    <addaction name="actionPlotClone"/>
+    <addaction name="actionCurveDelete"/>
+    <addaction name="separator"/>
+    <addaction name="actionPlotToggleLegend"/>
+   </widget>
+   <widget class="QMenu" name="menuCurve">
+    <property name="title">
+     <string>&amp;Curve</string>
+    </property>
+    <addaction name="actionCurveAdd"/>
+    <addaction name="actionCurveEdit"/>
+    <addaction name="actionCurveClone"/>
+    <addaction name="actionCurveDelete"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuPlot"/>
+   <addaction name="menuCurve"/>
    <addaction name="menuDatabase"/>
    <addaction name="menuAbout"/>
   </widget>
@@ -421,6 +443,17 @@
    </property>
    <property name="toolTip">
     <string>Clone the currently selected curve.</string>
+   </property>
+  </action>
+  <action name="actionPlotToggleLegend">
+   <property name="text">
+    <string>Toggle Legend</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle legend On/Off for selected plot</string>
+   </property>
+   <property name="shortcut">
+    <string>L</string>
    </property>
   </action>
  </widget>

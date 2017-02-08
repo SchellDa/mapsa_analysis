@@ -10,6 +10,12 @@ View3D::View3D(QWidget* parent) :
 	connect(ui->eventFilter, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int idx) {
 		ui->view->setEventFilter(static_cast<Viewport::event_filter_t>(idx));
 	});
+	connect(ui->phi, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=](double val){ ui->phi_2->setValue(val*180/3.141); });
+	connect(ui->theta, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=](double val){ ui->theta_2->setValue(val*180/3.141); });
+	connect(ui->omega, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=](double val){ ui->omega_2->setValue(val*180/3.141); });
+	connect(ui->phi_2, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=](double val){ ui->phi->setValue(val*3.141/180); });
+	connect(ui->theta_2, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=](double val){ ui->theta->setValue(val*3.141/180); });
+	connect(ui->omega_2, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=](double val){ ui->omega->setValue(val*3.141/180); });
 }
 
 View3D::~View3D()

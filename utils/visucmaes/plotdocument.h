@@ -18,7 +18,8 @@ public:
 		cmPoints,
 		cmErrors,
 		cmStatisticalBox,
-		cmHistogram
+		cmHistogram,
+		cmHistogram2D
 	};
 	enum axis_parameter_t {
 		apNone,
@@ -39,9 +40,13 @@ public:
 		bool draw_lines;
 		QCPScatterStyle::ScatterShape shape;
 		QColor color;
-		size_t hist_nbins;
-		double hist_low;
-		double hist_high;
+		QCPColorGradient::GradientPreset gradient;
+		size_t hist_nbins_x;
+		double hist_low_x;
+		double hist_high_x;
+		size_t hist_nbins_y;
+		double hist_low_y;
+		double hist_high_y;
 	};
 	struct plot_config_t
 	{
@@ -50,20 +55,27 @@ public:
 		QString title;
 		QString xlabel;
 		QString ylabel;
+		QString zlabel;
 		double xmin;
 		double xmax;
 		double ymin;
 		double ymax;
+		double zmin;
+		double zmax;
 		bool use_xmin;
 		bool use_xmax;
 		bool use_ymin;
 		bool use_ymax;
+		bool use_zmin;
+		bool use_zmax;
 		bool legend;
 		QString job_query;
 		axis_parameter_t selection_x;
 		axis_parameter_t selection_y;
+		axis_parameter_t selection_z;
 		double xlog;
 		double ylog;
+		double zlog;
 		QVector<curve_config_t> curves;
 	};
 	struct global_config_t
@@ -127,6 +139,7 @@ public slots:
 	void editPlot(plot_config_t cfg);
 	void clonePlot(size_t plotId);
 	void deletePlot(size_t plotId);
+	void togglePlotLegend(size_t plotId);
 
 	void addCurve(size_t plotId);
 	void editCurve(curve_config_t cfg);

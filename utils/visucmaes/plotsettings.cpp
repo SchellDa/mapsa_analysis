@@ -11,20 +11,27 @@ PlotSettings::PlotSettings(QWidget* parent, PlotDocument* doc, size_t plotId) :
 	ui->title->setText(cfg.title);
 	ui->xlabel->setText(cfg.xlabel);
 	ui->ylabel->setText(cfg.ylabel);
+	ui->zlabel->setText(cfg.zlabel);
 	ui->xmin->setValue(cfg.xmin);
 	ui->xmax->setValue(cfg.xmax);
 	ui->ymin->setValue(cfg.ymin);
 	ui->ymax->setValue(cfg.ymax);
+	ui->zmin->setValue(cfg.zmin);
+	ui->zmax->setValue(cfg.zmax);
 	ui->use_xmin->setCheckState(cfg.use_xmin? Qt::Checked : Qt::Unchecked);
 	ui->use_xmax->setCheckState(cfg.use_xmax? Qt::Checked : Qt::Unchecked);
 	ui->use_ymin->setCheckState(cfg.use_ymin? Qt::Checked : Qt::Unchecked);
 	ui->use_ymax->setCheckState(cfg.use_ymax? Qt::Checked : Qt::Unchecked);
+	ui->use_zmin->setCheckState(cfg.use_zmin? Qt::Checked : Qt::Unchecked);
+	ui->use_zmax->setCheckState(cfg.use_zmax? Qt::Checked : Qt::Unchecked);
 	ui->show_legend->setCheckState(cfg.legend? Qt::Checked : Qt::Unchecked);
 	ui->query->setPlainText(cfg.job_query);
 	ui->xlog->setCheckState(cfg.xlog? Qt::Checked : Qt::Unchecked);
 	ui->ylog->setCheckState(cfg.ylog? Qt::Checked : Qt::Unchecked);
+	ui->zlog->setCheckState(cfg.zlog? Qt::Checked : Qt::Unchecked);
 	ui->selection_x->setCurrentIndex(static_cast<int>(cfg.selection_x));
 	ui->selection_y->setCurrentIndex(static_cast<int>(cfg.selection_y));
+	ui->selection_z->setCurrentIndex(static_cast<int>(cfg.selection_z));
 	connect(ui->test, &QPushButton::clicked, this, &PlotSettings::test);
 }
 
@@ -46,20 +53,27 @@ void PlotSettings::apply()
 	cfg.title = ui->title->text();
 	cfg.xlabel = ui->xlabel->text();
 	cfg.ylabel = ui->ylabel->text();
+	cfg.zlabel = ui->zlabel->text();
 	cfg.xmin = ui->xmin->value();
 	cfg.xmax = ui->xmax->value();
 	cfg.ymin = ui->ymin->value();
 	cfg.ymax = ui->ymax->value();
+	cfg.zmin = ui->zmin->value();
+	cfg.zmax = ui->zmax->value();
 	cfg.use_xmin = ui->use_xmin->checkState() == Qt::Checked;
 	cfg.use_xmax = ui->use_xmax->checkState() == Qt::Checked;
 	cfg.use_ymin = ui->use_ymin->checkState() == Qt::Checked;
 	cfg.use_ymax = ui->use_ymax->checkState() == Qt::Checked;
+	cfg.use_zmin = ui->use_zmin->checkState() == Qt::Checked;
+	cfg.use_zmax = ui->use_zmax->checkState() == Qt::Checked;
 	cfg.legend = ui->show_legend->checkState() == Qt::Checked;
 	cfg.job_query = ui->query->toPlainText();
 	cfg.xlog = ui->xlog->checkState() == Qt::Checked;
 	cfg.ylog = ui->ylog->checkState() == Qt::Checked;
+	cfg.zlog = ui->zlog->checkState() == Qt::Checked;
 	cfg.selection_x = static_cast<PlotDocument::axis_parameter_t>(ui->selection_x->currentIndex()); 
 	cfg.selection_y = static_cast<PlotDocument::axis_parameter_t>(ui->selection_y->currentIndex()); 
+	cfg.selection_z = static_cast<PlotDocument::axis_parameter_t>(ui->selection_z->currentIndex()); 
 	_doc->editPlot(cfg);
 }
 

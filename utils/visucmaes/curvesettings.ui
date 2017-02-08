@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>776</width>
-    <height>520</height>
+    <width>731</width>
+    <height>524</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -65,6 +65,11 @@
             <string>Histogram</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Histogram 2D</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>
@@ -76,6 +81,13 @@
         <string>Style</string>
        </property>
        <layout class="QFormLayout" name="formLayout_2">
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="draw_lines">
+          <property name="text">
+           <string>Draw Lines</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="0">
          <widget class="QLabel" name="label_3">
           <property name="text">
@@ -214,11 +226,75 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="draw_lines">
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>Draw Lines</string>
+           <string>Gradient</string>
           </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QComboBox" name="gradient">
+          <item>
+           <property name="text">
+            <string>Grayscale</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Hot</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Cold</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Night</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Candy</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Geography</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Ion</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Thermal</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Polar</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Spectrum</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Jet</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Hues</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>
@@ -229,16 +305,9 @@
        <property name="title">
         <string>Histogram</string>
        </property>
-       <layout class="QFormLayout" name="formLayout_3">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_13">
-          <property name="text">
-           <string>Num Bins</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QSpinBox" name="hist_bins">
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="1" column="1">
+         <widget class="QSpinBox" name="hist_bins_x">
           <property name="minimum">
            <number>1</number>
           </property>
@@ -247,8 +316,8 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="hist_low">
+        <item row="2" column="1">
+         <widget class="QDoubleSpinBox" name="hist_low_x">
           <property name="minimum">
            <double>-100000.000000000000000</double>
           </property>
@@ -257,27 +326,84 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="hist_high">
+        <item row="2" column="2">
+         <widget class="QDoubleSpinBox" name="hist_low_y">
           <property name="minimum">
            <double>-100000.000000000000000</double>
           </property>
           <property name="maximum">
            <double>100000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>X</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="label_15">
+          <property name="text">
+           <string>Y (2D)</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QLabel" name="label_11">
+         <widget class="QLabel" name="label_13">
           <property name="text">
-           <string>Low</string>
+           <string>Num Bins</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QDoubleSpinBox" name="hist_high_y">
+          <property name="minimum">
+           <double>-100000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>High</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QSpinBox" name="hist_bins_y">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>10000</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QDoubleSpinBox" name="hist_high_x">
+          <property name="minimum">
+           <double>-100000.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100000.000000000000000</double>
           </property>
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="QLabel" name="label_12">
+         <widget class="QLabel" name="label_11">
           <property name="text">
-           <string>High</string>
+           <string>Low</string>
           </property>
          </widget>
         </item>
@@ -302,9 +428,9 @@
    <item>
     <widget class="QGroupBox" name="groupBox_4">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>2</horstretch>
+       <verstretch>2</verstretch>
       </sizepolicy>
      </property>
      <property name="title">
@@ -389,9 +515,12 @@
   <tabstop>shape</tabstop>
   <tabstop>dashes</tabstop>
   <tabstop>color</tabstop>
-  <tabstop>hist_bins</tabstop>
-  <tabstop>hist_low</tabstop>
-  <tabstop>hist_high</tabstop>
+  <tabstop>hist_bins_x</tabstop>
+  <tabstop>hist_bins_y</tabstop>
+  <tabstop>hist_low_x</tabstop>
+  <tabstop>hist_low_y</tabstop>
+  <tabstop>hist_high_x</tabstop>
+  <tabstop>hist_high_y</tabstop>
   <tabstop>query</tabstop>
   <tabstop>test</tabstop>
   <tabstop>query_results</tabstop>
