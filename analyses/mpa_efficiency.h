@@ -32,6 +32,7 @@ private:
 	TH2D* _correlatedOverlayed;
 	TH2D* _total;
 	TH2D* _totalOverlayed;
+	TH2D* _fake;
 	TH1D* _hitsPerEvent;
 	TH1D* _hitsPerEventWithTrack;
 	TH1D* _hitsPerEventWithTrackMasked;
@@ -43,7 +44,10 @@ private:
 	double _nSigma;
 	size_t _totalCount;
 	size_t _correlatedCount;
+	size_t _fakeCount;
+	size_t _totalMpaCount;
 	bool _singularEventAnalysis;
+	bool _antiSingularEventAnalysis;
 	bool _inactiveMask;
 	std::string _alignType;
 };

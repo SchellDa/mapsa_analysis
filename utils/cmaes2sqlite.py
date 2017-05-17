@@ -177,14 +177,17 @@ status_list)
     c.executemany("""
 INSERT INTO path ( fitness, x, y, z, phi, theta, omega, sigma, job_id, generation ) VALUES (?,?,?,?,?,?,?,?,?,?);
 """, path_list)
-    space_list = readCsvFile(job["space_file"])
-    for idx, _ in enumerate(space_list):
-        space_list[idx].append(job_id)
-        space_list[idx].append(idx)
-    c.executemany("""
+    try:
+        space_list = readCsvFile(job["space_file"])
+        for idx, _ in enumerate(space_list):
+            space_list[idx].append(job_id)
+            space_list[idx].append(idx)
+        c.executemany("""
 INSERT INTO parameterspace ( fitness, x, y, z, phi, theta, omega, total_tracks,
 used_tracks, job_id, feval_no ) VALUES (?,?,?,?,?,?,?,?,?,?,?);
 """, space_list)
+    except KeyError:
+        pass
     if write_cache:
         cache_list = readCsvFile(job["cache_file"])
         for idx, _ in enumerate(cache_list):

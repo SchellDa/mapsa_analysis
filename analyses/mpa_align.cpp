@@ -180,6 +180,7 @@ void MpaAlign::scanFinish()
 			   << align.position(1) << " "
 			   << align.position(2) << " "
 			   << align.x_sigma << " "
+			   << "0 0 0 "
 			   << align.y_width << "\n";
 			of.flush();
 			of.close();

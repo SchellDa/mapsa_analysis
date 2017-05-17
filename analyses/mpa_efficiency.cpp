@@ -16,7 +16,7 @@ REGISTER_ANALYSIS_TYPE(MpaEfficiency, "Calculate MPA Efficiency based.")
 MpaEfficiency::MpaEfficiency() :
  Analysis(), _file(nullptr)
 {
-	addProcess("analyze", CS_TRACK,
+	addProcess("analyze", CS_ALWAYS,
 	 core::Analysis::init_callback_t{},
 	 std::bind(&MpaEfficiency::analyzeRunInit, this),
 	 std::bind(&MpaEfficiency::analyze, this, std::placeholders::_1, std::placeholders::_2),
@@ -24,7 +24,8 @@ MpaEfficiency::MpaEfficiency() :
 	 std::bind(&MpaEfficiency::analyzeFinish, this)
 	);
 	getOptionsDescription().add_options()
-		("singular", "If set, only events with a single track and MPA hit are selected for analysis.")
+		("singular", "If set, only events with a single track are used for analysis.")
+		("anti-singular", "If set, only events with more than one track are used for analysis. ")
 		("inactive-mask,i", "Exclude a 40µm wide region at the 'end' of each pixel. This corresponds to the implants, isolation and bias rail. It is expected that the pixels are in-sensitive there, so this flag should be used to find the efficiency of the active sensor area.")
 		("align-type,T", po::value<std::string>()->default_value("MpaAlign"), "")
 	;
@@ -59,6 +60,13 @@ void MpaEfficiency::init(const po::variables_map& vm)
 	                  _mpaTransform.num_pixels_y * resolution * sizeY/sizeX,
 	                  0.0,
 			  sizeY);
+	_fake = new TH2D("fake", "Fake Hits",
+	                  _mpaTransform.num_pixels_x,
+			  0.0,
+			  _mpaTransform.num_pixels_x,
+			  _mpaTransform.num_pixels_y,
+			  0.0,
+	                  _mpaTransform.num_pixels_y);
 	_shitTracks = new TH2D("shitTracks", "Non-masked Tracks without MPA hits",
 	                  _mpaTransform.num_pixels_x * resolution,
 			  0.0,
@@ -100,6 +108,8 @@ void MpaEfficiency::init(const po::variables_map& vm)
 				     _mpaTransform.total_width);
 	_totalCount = 0;
 	_correlatedCount = 0;
+	_fakeCount = 0;
+	_totalMpaCount = 0;
 	_bunchCrossingId = new TH1D("bunchCrossingID", "Bunch crossing IDs per Event", 65536, 0, 65536);
 	try {
 		std::ifstream fmask(_config.getVariable("pixel_mask"));
@@ -118,6 +128,7 @@ void MpaEfficiency::init(const po::variables_map& vm)
 		std::cout << "No pixel_mask option set." << std::endl;
 	}
 	_singularEventAnalysis = vm.count("singular") > 0;
+	_antiSingularEventAnalysis = vm.count("anti-singular") > 0;
 	_inactiveMask = vm.count("inactive-mask") > 0;
 	_alignType = vm["align-type"].as<std::string>();
 }
@@ -135,22 +146,27 @@ std::string MpaEfficiency::getHelp(const std::string& argv0) const
 void MpaEfficiency::analyzeRunInit()
 {
 	const int runId = getCurrentRunId();
-	_aligner.setNSigma(_config.get<double>("n_sigma_cut"));
 	_nSigma = _config.get<double>("n_sigma_cut");
 	std::string alignfile (
-		_config.get<std::string>("output_dir") +
+		_config.get<std::string>("alignment_dir") +
 		std::string("/") +
 		_alignType +
 		std::string("_") +
 		getMpaIdPadded(runId) +
 		".align"
 	);
-	if(!_aligner.loadAlignmentData(alignfile)) {
+	std::ifstream fin(alignfile);
+	if(fin.fail()) {
 		throw std::runtime_error(std::string("Cannot find alignment data for run ")
 		                         + std::to_string(runId));
 	}
-	_aligner.setCuts({_mpaTransform.inner_pixel_width, _mpaTransform.bottom_pixel_height});
-	_mpaTransform.setOffset(_aligner.getOffset());
+	double x, y, z, fval, phi, theta, omega;
+	double dummy;
+	fin >> x >> y >> z;
+	fin >> dummy;
+	fin >> phi >> theta >> omega;
+	_mpaTransform.setOffset({x, y, z});
+	_mpaTransform.setRotation({phi, theta, omega});
 	auto offset = _mpaTransform.getOffset();
 	std::cout << "Run MPA offset: "
 	          << offset(0) << " "
@@ -168,14 +184,15 @@ bool MpaEfficiency::analyze(const core::TrackStreamReader::event_t& track_event,
 			++mpaHits;
 	}
 	_hitsPerEvent->Fill(mpaHits);
-	if((mpaHits != 1 || track_event.tracks.size() != 1) && _singularEventAnalysis) {
+	if(track_event.tracks.size() != 1 && _singularEventAnalysis) {
 		return true;
 	}
-
+	if(track_event.tracks.size() <= 1 && _antiSingularEventAnalysis) {
+		return true;
+	}
 	for(auto& bxId : mpa_event.bunchCrossing) {
 		_bunchCrossingId->Fill(bxId);
 	}
-
 	bool hasTrackOnMpa = false;
 	bool hasNonmaskedTrackOnMpa = false;
 	for(const auto& track: track_event.tracks) {
@@ -249,6 +266,37 @@ bool MpaEfficiency::analyze(const core::TrackStreamReader::event_t& track_event,
 	if(hasTrackOnMpa) {
 		_hitsPerEventWithTrack->Fill(mpaHits);
 	}
+	// Calculate fake hits
+	for(size_t idx = 0; idx < mpa_event.data.size(); ++idx) {
+		if(mpa_event.data[idx] == 0 || _pixelMask[idx]) {
+			continue;
+		}
+		++_totalMpaCount;
+		bool gotHit = false;
+		for(const auto& track: track_event.tracks) {
+			Eigen::Vector3d t_global = track.extrapolateOnPlane(3, 5, _mpaTransform.getOffset()(2), 2);
+			Eigen::Vector3d t_local(t_global - _mpaTransform.getOffset());
+			const auto sizeX = _mpaTransform.total_width;
+			const auto sizeY = _mpaTransform.total_height;
+			// track outside of MPA
+			if(t_local(0) < 0.0 || t_local(0) > sizeX ||
+			   t_local(1) < 0.0 || t_local(1) > sizeY) {
+				continue;
+			}
+			auto pixel_coord = _mpaTransform.transform(idx, true);
+			auto pixel_size = _mpaTransform.getPixelSize(idx);
+			if(!((pixel_coord - t_global).head<2>().array().abs() < pixel_size.array()*_nSigma).all()) {
+				continue;
+			}
+			gotHit = true;
+			break;
+		}
+		if(!gotHit) {
+			auto pixel_coord = _mpaTransform.translatePixelIndex(idx);
+			_fake->Fill(pixel_coord(0), pixel_coord(1));
+			++_fakeCount;
+		}
+	}
 	return true;
 }
 
@@ -268,14 +316,31 @@ void MpaEfficiency::analyzeFinish()
 	auto run = _runlist.getByMpaRun(getAllRunIds()[0]);
 	double efficiency = static_cast<double>(_correlatedCount) / _totalCount;
 	std::ofstream fout(getFilename(".eff"));
-	fout << "# 0\tTotal\tCorrelated\tEfficiency\tAngle\tThresh\tnSigma\tRuns\n";
+	fout << "# 0\tTotal\tCorrelated\tEfficiency\tAngle\tThresh\tnSigma\tFakeCount\tMpaCount\taX\taY\taZ\taPhi\taTheta\taOmega\taType\tInactiveMask\tMode\tRuns\n";
 	fout << "0\t"
 	     << _totalCount << "\t"
 	     << _correlatedCount << "\t"
 	     << efficiency << "\t"
 	     << run.angle << "\t"
 	     << run.threshold << "\t"
-	     << _nSigma << "\t";
+	     << _nSigma << "\t"
+	     << _fakeCount << "\t"
+	     << _totalMpaCount << "\t"
+	     << _mpaTransform.getOffset()(0) << "\t"
+	     << _mpaTransform.getOffset()(1) << "\t"
+	     << _mpaTransform.getOffset()(2) << "\t"
+	     << _mpaTransform.getAngles()(0) << "\t"
+	     << _mpaTransform.getAngles()(1) << "\t"
+	     << _mpaTransform.getAngles()(2) << "\t"
+	     << _alignType << "\t"
+	     << _inactiveMask << "\t";
+	if(_singularEventAnalysis) {
+		fout << "single" << "\t";
+	} else if ( _antiSingularEventAnalysis) {
+		fout << "anti" << "\t";
+	} else {
+		fout << "all" << "\t";
+	}
 	bool first = true;
 	for(const auto runId: getAllRunIds()) {
 		if(!first) fout << ",";
@@ -318,7 +383,7 @@ void MpaEfficiency::analyzeFinish()
 	txt->AddText(info.str().c_str());
 
 	info.str("");
-	info << "Threshold: " << run.threshold << " uA\n";
+	info << "Threshold: " << run.threshold << "\n";
 	txt->AddText(info.str().c_str());
 
 	info.str("");
@@ -327,11 +392,20 @@ void MpaEfficiency::analyzeFinish()
 	txt->AddText(info.str().c_str());
 
 	info.str("");
+	info << "Num Fake Hits: " << std::setprecision(2) << std::fixed
+		  << _fakeCount;
+	txt->AddText(info.str().c_str());
+
+	info.str("");
 	info << "n sigma: " << std::setprecision(2) << std::fixed
 		  << _nSigma;
 	txt->AddText(info.str().c_str());
 	if(_singularEventAnalysis) {
-		info.str("Singular events only!");
+		info.str("Single-track-events only!");
+		txt->AddText(info.str().c_str());
+	}
+	if(_antiSingularEventAnalysis) {
+		info.str("Multiple-track-events only!");
 		txt->AddText(info.str().c_str());
 	}
 
@@ -424,6 +498,8 @@ void MpaEfficiency::analyzeFinish()
 	          << "\nDUT hits: " << _correlatedCount
 		  << "\nEfficiency: " << std::setprecision(2) << std::fixed
 		  << efficiency * 100.0 << "%"
+	          << "\nFake Count: " << _fakeCount
+	          << "\nMpa Count: " << _totalMpaCount
 		  << std::endl;
 	int total2d_xflow = _total->GetBinContent(0) + _total->GetBinContent(total_bins-1);
 	int hit2d_xflow = _correlated->GetBinContent(0) + _correlated->GetBinContent(total_bins-1);

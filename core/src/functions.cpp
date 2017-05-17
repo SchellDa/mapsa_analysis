@@ -67,4 +67,9 @@ double gauss1d(double* xx, double* par)
 	return par[0]/TMath::Sqrt(2.0*M_PI * par[1]*par[1]) * TMath::Exp(-TMath::Power(xx[0] - par[2], 2) / (par[1]*par[1]));
 }
 
+double gauss1d_offset(double* xx, double* par)
+{
+	return par[0]/TMath::Sqrt(2.0*M_PI * par[1]*par[1]) * TMath::Exp(-TMath::Power(xx[0] - par[2], 2) / (par[1]*par[1])) + par[3];
+}
+
 }// namespace core

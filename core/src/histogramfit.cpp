@@ -10,7 +10,7 @@
 using namespace core;
 
 HistogramFit::HistogramFit(TH1* hist, function_t func, size_t nparams) :
- _hist(hist), _function(func), _min(ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad")), _nparams(nparams),
+ _hist(hist), _function(func), _min(ROOT::Math::Factory::CreateMinimizer("Minuit", "Migrad")), _nparams(nparams),
  _chi2fctor(this, &HistogramFit::Chi2, _nparams)
 {
 	assert(_hist != nullptr);
@@ -150,6 +150,8 @@ TGraph* HistogramFit::createFittedFunction() const
 void HistogramFit::addFittedFunction()
 {
 	auto graph = createFittedFunction();
+	graph->SetLineColorAlpha(kRed, 0.95);
+	graph->SetLineWidth(2);
 	_hist->GetListOfFunctions()->Add(graph);
 }
 

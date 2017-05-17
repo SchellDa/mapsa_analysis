@@ -105,19 +105,25 @@ void MpaMinuitAlign::scanFinish()
 	min->SetMaxIterations(1000);
 	min->SetTolerance(0.1);
 	min->SetPrintLevel(2);
-	min->SetVariable(0, "X", 0, 1);
-	min->SetVariable(1, "Y", 0, 1);
-	min->SetVariable(2, "Z", 850, 1);
+	min->SetVariable(0, "X", -2.96, 1);
+	min->SetVariable(1, "Y", -2.78, 1);
+	min->SetVariable(2, "Z", 878, 1);
 	min->SetVariable(3, "phi", 0, 0.1);
 	min->SetVariable(4, "theta", 0, 0.1);
 	min->SetVariable(5, "omega", 0, 0.1);
+//	min->SetVariable(0, "X", 0.0, 5);
+//	min->SetVariable(1, "Y", 0.0, 5);
+//	min->SetVariable(2, "Z", 860, 10);
+//	min->SetVariable(3, "phi", 0, 0.1);
+//	min->SetVariable(4, "theta", 0, 0.1);
+//	min->SetVariable(5, "omega", 0, 0.1);
 	if(!min->Minimize()) {
 		std::cout << "Minimization failed!" << std::endl;
 		return;
 	}
 	auto par = min->X();
-	Eigen::VectorXd bestparam;
-	bestparam, par[0], par[1], par[2], par[3], par[4], par[5];
+	Eigen::VectorXd bestparam(6);
+	bestparam << par[0], par[1], par[2], par[3], par[4], par[5];
 
 	_mpaTransform.setOffset(bestparam.head<3>());
 	_mpaTransform.setRotation(bestparam.tail<3>());
@@ -200,7 +206,7 @@ double MpaMinuitAlign::chi2(const double* param)
 	if(num_entries > total_entries/100) {
 		fitness = chi2val / num_entries;
 	}
-	fitness = chi2val;
+	// fitness = chi2val;
 	_spaceFile << fitness << "\t"
 	           << param[0] << "\t"
 	           << param[1] << "\t"

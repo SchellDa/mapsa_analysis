@@ -286,8 +286,13 @@ void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& read
 				evtCount = 0;
 				auto track_it = read.trackreader.begin();
 				for(const auto& pixel: *read.pixelreader) {
-					if(track_it->eventNumber < (int)pixel.eventNumber + _dataOffset)
+					while(track_it->eventNumber < (int)pixel.eventNumber + _dataOffset && track_it != read.trackreader.end())
 						++track_it;
+					TrackStreamReader::event_t track = *track_it;
+					if(track.eventNumber != pixel.eventNumber) {
+						track.tracks.clear();
+						track.eventNumber = pixel.eventNumber;
+					}
 					if(evtCount % 1000 == 0) {
 						std::cout << process.name << ": Processing step " << evtCount;
 						if(_rerunNumber)
@@ -295,7 +300,7 @@ void Analysis::executeProcess(const std::vector<Analysis::run_read_pair_t>& read
 						std::cout << " for MPA run " << read.runId << std::endl;
 					}
 					++evtCount;
-					if(!process.run(*track_it, pixel))
+					if(!process.run(track, pixel))
 						break;
 				}
 				_analysisRunning = false;

@@ -24,6 +24,8 @@ MpaCmaesAlign::MpaCmaesAlign() :
 		("sample-size,n", po::value<int>()->default_value(10000), "Number of data points to include in alignment histogram")
 		("multirun-paths,M", po::value<std::string>(), "Put results in directory specialized for multiple alignment execution. Useful for analyzing the alignment with further postprocessing.")
 		("write-cache,C", "If set, up to 1000 hits from the cache are written to disk. Useful for debugging.")
+		("write-function,F", "If set, each traversed phase space point is written to disk. Timeconsuming!")
+		("efficiency-model,E", "Use efficiency based fitness function instead of chi2 model.")
 	;
 	addProcess("load", /* CS_ALWAYS */ CS_TRACK,
 	           core::Analysis::init_callback_t {},
@@ -60,16 +62,37 @@ void MpaCmaesAlign::init(const po::variables_map& vm)
 		}
 		_config.setVariable("output_dir", output_dir);
 	}
-
+	try {
+		std::ifstream fmask(_config.getVariable("pixel_mask"));
+		_pixelMask.resize(_mpaTransform.num_pixels, false);
+		while(fmask.good()) {
+			int idx = -1;
+			fmask >> idx;
+			if(idx < 0) {
+				// throw std::out_of_range("Invalid pixel mask index, must not be negative.");
+				continue;
+			} else if(idx >= _mpaTransform.num_pixels) {
+				throw std::out_of_range("Invalid pixel mask index, must be smaller than number of MPA pixels.");
+			}
+			_pixelMask[idx] = true;
+		}
+	} catch(core::CfgParse::no_variable_error& e) {
+		std::cout << "No pixel_mask option set." << std::endl;
+	}
 	_file = new TFile(getFilename(".root").c_str(), "RECREATE");
 	_aligner.initHistograms();
 	_sampleSize = vm["sample-size"].as<int>();
 	_writeCache = vm.count("write-cache") > 0;
+	_modelEfficiency = vm.count("efficiency-model") > 0;
+	_writeFunction = vm.count("write-function") > 0;
 	_eventCache.reserve(_sampleSize);
 	_cacheFull = false;
 	_forceStatus = _config.get<int>("cmaes_force_status") > 0;
 	_allowedExitStatus = _config.getVector<int>("cmaes_allowed_exit_status");
 	_maxForceStatusRuns = _config.get<int>("cmaes_max_force_status_runs");
+	_initFromAlignment = _config.get<int>("cmaes_parameter_init_from_alignment") > 0;
+	_nSigma = _config.get<double>("cmaes_efficiency_sigma");
+	std::cout << "cmaes_parameter_init_from_alignment " << _config.get<int>("cmaes_parameter_init_from_alignment") << std::endl;
 	std::remove(getFilename(".status").c_str());
 	std::ofstream statusFile(getFilename(".status"));
 	statusFile << "# Rerun\tStatus" << std::endl;
@@ -97,14 +120,14 @@ bool MpaCmaesAlign::scanRun(const core::TrackStreamReader::event_t& track_event,
 		return false;
 	}
 	size_t nhits = 0;
-	size_t mpa_index = 0;
+	int mpa_index = -1;
 	for(size_t i=0; i < mpa_event.data.size(); ++i) {
 		if(mpa_event.data[i]) {
 			++nhits;
 			mpa_index = i;
 		}
 	}
-	if(track_event.tracks.size() == 1 && nhits == 1) {
+	if(track_event.tracks.size() == 1 && (nhits == 1 || _modelEfficiency) && nhits < 2) {
 		_eventCache.push_back({track_event.tracks[0], mpa_index});
 	}
 	return _eventCache.size() < _sampleSize;
@@ -131,58 +154,11 @@ void MpaCmaesAlign::scanFinish()
 		}
 	}
 	_cacheFull = true;
-	std::ofstream func_file(getFilename("_space.csv"));
-//	std::ofstream hitpoints_file(getFilename("_hitpoints.csv"));
-//	std::ofstream misspoints_file(getFilename("_misspoints.csv"));
+	std::ofstream func_file;
+	if(_writeFunction) {
+		func_file.open(getFilename("_space.csv"));
+	}
 	std::ofstream path_file(getFilename("_path.csv"));
-	FitFunc chi2 = [this, &func_file/*, &hitpoints_file, &misspoints_file*/](const double* param, const int N) mutable
-	{
-		core::MpaTransform trans;
-		trans.setOffset({param[0], param[1], param[2]});
-		trans.setRotation({param[3], param[4], param[5]});
-		double chi2val = 0.0;
-		size_t total_entries = 0;
-		size_t num_entries = 0;
-		for(const auto& evt: _eventCache) {
-			auto b = trans.mpaPlaneTrackIntersect(evt.track, 3, 5);
-			++total_entries;
-			auto a = trans.transform(evt.mpa_index);
-			auto sqrdist = (b-a).squaredNorm();
-			if(sqrdist < 1) {
-				chi2val += sqrdist;
-				++num_entries;
-		/*		hitpoints_file << a(0) << " "
-				               << a(1) << " "
-				               << a(2) << "\t"
-				               << b(0) << " "
-				               << b(1) << " "
-				               << b(2) << "\n";*/
-			} else {
-/*				misspoints_file << a(0) << " "
-				                << a(1) << " "
-				                << a(2) << "\t"
-				                << b(0) << " "
-				                << b(1) << " "
-				                << b(2) << "\n";*/
-			}
-		}
-//		hitpoints_file << "\n\n";
-//		misspoints_file << "\n\n";
-		double fitness = 1000;
-		if(num_entries > total_entries/100) {
-			fitness = chi2val / num_entries;
-		}
-		func_file << fitness << "\t"
-		          << param[0] << "\t"
-		          << param[1] << "\t"
-		          << param[2] << "\t"
-		          << param[3] << "\t"
-		          << param[4] << "\t"
-		          << param[5] << "\t"
-			  << num_entries << "\t"
-		          << _eventCache.size() << "\n";
-		return fitness;
-	};
 	ProgressFunc<CMAParameters<GenoPheno<pwqBoundStrategy>>, CMASolutions> select_time =
 		[this, &path_file](const CMAParameters<GenoPheno<pwqBoundStrategy>>& params, const CMASolutions& cmasols)
 	{
@@ -210,8 +186,18 @@ void MpaCmaesAlign::scanFinish()
 		return 0;
 	};
 	auto cmaparams = getParametersFromConfig();
+	std::function<double(const double*, const int& N)> model;
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+	if(_modelEfficiency) {
+		std::cout << "Use 'efficiency' model" << std::endl;
+		model = std::bind(&MpaCmaesAlign::modelEfficiency, this, _1, _2, _writeFunction? &func_file : nullptr);
+	} else {
+		std::cout << "Use 'chi2' model" << std::endl;
+		model = std::bind(&MpaCmaesAlign::modelChi2, this, _1, _2, _writeFunction? &func_file : nullptr);
+	}
 	std::cout << "Samples per Generation lambda = " << cmaparams.lambda() << std::endl;
-	CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(chi2, cmaparams, select_time);
+	CMASolutions cmasols = cmaes<GenoPheno<pwqBoundStrategy>>(model, cmaparams, select_time);
 	std::cout << "best solution: " << cmasols << std::endl;
 	std::cout << "optimization took: " << cmasols.elapsed_time() / 1000.0 << " seconds" << std::endl;
 	std::cout << "status: " << cmasols.run_status() << std::endl;
@@ -233,19 +219,6 @@ void MpaCmaesAlign::scanFinish()
 	std::ofstream statusfile(getFilename("_status.csv"));
 	statusfile << cmasols.run_status() << std::endl;
 	statusfile.close();
-
-	/*std::ofstream df(getFilename("_solution_zscan.csv"));
-	df << "# x=" << cand.get_x()[2] << ", chi2=" << cand.get_fvalue() << "\n";
-	for(size_t i=0; i < initial_parameters.size(); ++i) {
-		initial_parameters[i] = cand.get_x()[2];
-	}
-	for(double z = 0; z < 1000; z += 5.0) {
-		initial_parameters[2] = z;
-		df << z << " "
-		   << chi2(&initial_parameters.front(), initial_parameters.size()) << "\n";
-	}
-	df.flush();
-	df.close();*/
 
 	_mpaTransform.setOffset(bestparam.head<3>());
 	_mpaTransform.setRotation(bestparam.tail<3>());
@@ -284,7 +257,35 @@ libcmaes::CMAParameters<GenoPheno<pwqBoundStrategy>> MpaCmaesAlign::getParameter
 	auto low = _config.getVector<double>("cmaes_parameters_low");
 	auto init = _config.getVector<double>("cmaes_parameters_init");
 	auto high = _config.getVector<double>("cmaes_parameters_high");
+	auto restrict_range = _config.getVector<double>("cmaes_param_restrict_range");
+	auto param_init_select = _config.getVector<int>("cmaes_param_init_select");
+	auto param_preset_and_restrict = _config.get<int>("cmaes_param_preset_and_restrict") > 0;
 	auto elitism = _config.get<int>("cmaes_elitism");
+	if(_initFromAlignment) {
+		std::string alignfile (
+		_config.get<std::string>("alignment_dir") +
+		std::string("/MpaAlign_") +
+		getMpaIdPadded(getCurrentRunId()) +
+		".align"
+		);
+		std::ifstream fin(alignfile);
+		if(fin.fail()) {
+			throw std::runtime_error(std::string("Cannot find alignment data for run ")
+			                         + std::to_string(getCurrentRunId()));
+		}
+		double x, y, z, fval, phi, theta, omega;
+		double dummy;
+		fin >> x >> y >> z;
+		fin >> dummy;
+		fin >> phi >> theta >> omega;
+		init.clear();
+		init.push_back(x);
+		init.push_back(y);
+		init.push_back(z);
+		init.push_back(phi);
+		init.push_back(theta);
+		init.push_back(omega);
+	}
 	if(low.size() != dim) {
 		throw std::out_of_range("Config variable 'cmaes_parameters_low' must define exactly 6 entries!");
 	}
@@ -294,11 +295,28 @@ libcmaes::CMAParameters<GenoPheno<pwqBoundStrategy>> MpaCmaesAlign::getParameter
 	if(high.size() != dim) {
 		throw std::out_of_range("Config variable 'cmaes_parameters_high' must define exactly 6 entries!");
 	}
-	for(size_t i=0; i < dim; ++i) {
-		if(init[i] < low[i] || init[i] > high[i]) {
-			std::cerr << "The initial value " << init[i] << "of parameter " << i << " must be in range ["
-			          << low[i] << ", " << high[i] << "]!" << std::endl;
-			throw std::out_of_range("Initial CMAES parameter out of bounds!");
+	if(restrict_range.size() != dim) {
+		throw std::out_of_range("Config variable 'cmaes_param_restrict_range' must define exactly 6 entries!");
+	}
+	if(param_init_select.size() != dim) {
+		throw std::out_of_range("Config variable 'cmaes_param_init_select' must define exactly 6 entries!");
+	}
+	if(param_preset_and_restrict) {
+		auto runlist =_runlist.getByMpaRun(getCurrentRunId());
+		for(size_t i = 0; i < dim; ++i) {
+			if(param_init_select[i] == 1) {
+				init[i] = runlist.angle * 3.1415/180.0;
+			}
+			high[i] = init[i] + restrict_range[i]/2;
+			low[i] = init[i] - restrict_range[i]/2;
+		}
+	} else {
+		for(size_t i=0; i < dim; ++i) {
+			if(init[i] < low[i] || init[i] > high[i]) {
+				std::cerr << "The initial value " << init[i] << "of parameter " << i << " must be in range ["
+				          << low[i] << ", " << high[i] << "]!" << std::endl;
+				throw std::out_of_range("Initial CMAES parameter out of bounds!");
+			}
 		}
 	}
 	double sigma = 2.0;
@@ -318,7 +336,7 @@ libcmaes::CMAParameters<GenoPheno<pwqBoundStrategy>> MpaCmaesAlign::getParameter
 	CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(init, sigma, lambda, 0, gp);
 	cmaparams.set_max_fevals(100000);
 	cmaparams.set_max_iter(max_iter);
-	cmaparams.set_ftarget(0.1);
+	cmaparams.set_ftarget(0.001);
 	cmaparams.set_fplot(getFilename("_cmaes.dat"));
 	cmaparams.set_elitism(elitism);
 	
@@ -336,3 +354,98 @@ libcmaes::CMAParameters<GenoPheno<pwqBoundStrategy>> MpaCmaesAlign::getParameter
 
 	return cmaparams;
 }
+
+double MpaCmaesAlign::modelChi2(const double* param, const int N, std::ofstream* func_file)
+{
+	core::MpaTransform trans;
+	trans.setOffset({param[0], param[1], param[2]});
+	trans.setRotation({param[3], param[4], param[5]});
+	double chi2val = 0.0;
+	size_t total_entries = 0;
+	size_t num_entries = 0;
+	for(const auto& evt: _eventCache) {
+		auto b = trans.mpaPlaneTrackIntersect(evt.track, 3, 5);
+		++total_entries;
+		auto a = trans.transform(evt.mpa_index);
+		auto sqrdist = (b-a).squaredNorm();
+		if(sqrdist < 1) {
+			chi2val += sqrdist;
+			++num_entries;
+		}
+	}
+	double fitness = 1000;
+	if(num_entries > total_entries/100) {
+		fitness = chi2val / num_entries;
+	}
+	if(func_file) {
+		*func_file << fitness << "\t"
+		           << param[0] << "\t"
+		           << param[1] << "\t"
+		           << param[2] << "\t"
+		           << param[3] << "\t"
+		           << param[4] << "\t"
+		           << param[5] << "\t"
+			   << num_entries << "\t"
+		           << _eventCache.size() << "\n";
+	}
+	return fitness;
+}
+
+double MpaCmaesAlign::modelEfficiency(const double* param, const int N, std::ofstream* func_file)
+{
+	core::MpaTransform trans;
+	trans.setOffset({param[0], param[1], param[2]});
+	trans.setRotation({param[3], param[4], param[5]});
+	size_t total_hits = 0;
+	size_t correlated_hits = 0;
+	for(const auto& evt: _eventCache) {
+		Eigen::Vector3d t_global = evt.track.extrapolateOnPlane(3, 5, trans.getOffset()(2), 2);
+		Eigen::Vector3d t_local(t_global - trans.getOffset());
+		const auto sizeX = trans.total_width;
+		const auto sizeY = trans.total_height;
+		if(t_local(0) < 0.0 || t_local(0) > sizeX ||
+		   t_local(1) < 0.0 || t_local(1) > sizeY) {
+			continue;
+		}
+		bool is_masked = false;
+		static const double maskSigma = 0.5;
+		for(size_t idx = 0; idx < trans.num_pixels; ++idx) {
+			// (small, overzealous) optimization
+			if(!_pixelMask[idx]) continue;
+			auto pixel_coord = trans.transform(idx, true);
+			auto pixel_size = trans.getPixelSize(idx);
+			if(((pixel_coord - t_global).head<2>().array().abs() < pixel_size.array()*maskSigma).all()) {
+				is_masked = true;
+				break;
+			}
+		}
+		if(is_masked) {
+			continue;
+		}
+		++total_hits;
+		if(evt.mpa_index >= 0) {
+			auto pixel_coord = trans.transform(evt.mpa_index, true);
+			auto pixel_size = trans.getPixelSize(evt.mpa_index);
+			if(((pixel_coord - t_global).head<2>().array().abs() < pixel_size.array()*_nSigma).all()) {
+				++correlated_hits;
+			}
+		}
+	}
+	double fitness = 1.0 - static_cast<double>(correlated_hits) / static_cast<double>(total_hits);
+	if(total_hits < _eventCache.size()/100) {
+		fitness = 2.0;
+	}
+	if(func_file) {
+		*func_file << fitness << "\t"
+		           << param[0] << "\t"
+		           << param[1] << "\t"
+		           << param[2] << "\t"
+		           << param[3] << "\t"
+		           << param[4] << "\t"
+		           << param[5] << "\t"
+			   << total_hits << "\t"
+		           << _eventCache.size() << "\n";
+	}
+	return fitness;
+}
+

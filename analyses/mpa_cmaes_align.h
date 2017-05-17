@@ -26,6 +26,9 @@ private:
 	void scanFinish();
 
 	libcmaes::CMAParameters<libcmaes::GenoPheno<libcmaes::pwqBoundStrategy>> getParametersFromConfig() const;
+	
+	double modelChi2(const double* param, const int N, std::ofstream* funcfile=nullptr);
+	double modelEfficiency(const double* param, const int N, std::ofstream* funcfile=nullptr);
 
 	struct alignment_t {
 		Eigen::Vector3d position;
@@ -34,7 +37,7 @@ private:
 	};
 	struct event_t {
 		core::Track track;
-		size_t mpa_index;
+		int mpa_index;
 	};
 	std::vector<event_t> _eventCache;
 	bool _cacheFull;
@@ -44,9 +47,14 @@ private:
 	size_t _sampleSize;
 	std::vector<int> _allowedExitStatus;
 	bool _forceStatus;
+	bool _initFromAlignment;
 	size_t _maxForceStatusRuns;
 
 	bool _writeCache;
+	bool _writeFunction;
+	bool _modelEfficiency;
+	double _nSigma;
+	std::vector<bool> _pixelMask;
 };
 
 #endif//MPA_CMAES_ALIGN_H

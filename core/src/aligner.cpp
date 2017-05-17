@@ -16,7 +16,7 @@ using namespace core;
 
 
 Aligner::Aligner() :
- xHistogramConfig{-5, 5, 1000} , yHistogramConfig{-5, 5, 250},
+ xHistogramConfig{-5, 5, 2000} , yHistogramConfig{-5, 5, 250},
  _nsigma(1.0), _alignX(nullptr), _alignY(nullptr),
  _calculated(false), _offset(0, 0, 0), _cuts(0, 0)
 {
@@ -216,19 +216,23 @@ Eigen::Vector2d Aligner::alignPlateau(TH1D* cor, const double& nrms, const doubl
 	if(fixedMean) {
 		mean = 0.0;
 	}
-	HistogramFit fit(cor, symmetric_plateau_function2, 5);
-	fit.setLimitX(mean-rms*nrms, mean+rms*nrms);
-	fit.minimizer()->SetVariable(0, "mid", rms, 0.1);
-	fit.minimizer()->SetVariable(1, "width", rms, 0.1);
-	fit.minimizer()->SetVariable(2, "height", cor->GetMaximum(), 0.1);
-	fit.minimizer()->SetVariable(3, "sigma", 0.1, 0.1);
-	fit.minimizer()->SetVariable(4, "base", cor->GetMaximum(), 0.1);
-	fit.fit();
-	fit.addFittedFunction();
-	auto result = fit.getResult();
+	auto piecewise = new TF1("piecewise", symmetric_plateau_function2, mean-rms*nrms, mean+rms*nrms, 5);
+	if(fixedMean) {
+		piecewise->FixParameter(0, 0.0);
+	} else {
+		piecewise->SetParameter(0, mean);
+	}
+	piecewise->SetParameter(1, rms);
+	piecewise->SetParameter(2, cor->GetMaximum());
+	piecewise->SetParameter(3, 0.1);
+	piecewise->SetParameter(4, cor->GetMaximum());
+	auto result = cor->Fit(piecewise, quiet?"RMSq+":"RMS+", "", mean-rms*nrms, mean+rms*nrms);
+	if(result.Get() == nullptr) {
+		return {0, 10000.0};
+	}
 	return {
-		result[0],
-		result[1] + result[3]
+		result->Parameter(0),
+		result->Parameter(1) + result->Parameter(3)
 	};
 }
 
@@ -238,14 +242,19 @@ Eigen::Vector2d Aligner::alignGaussian(TH1D* cor, const double& nrms, const doub
 	auto mean = cor->GetBinLowEdge(maxBin);
 	auto rms = cor->GetRMS();
 	auto rebinned = rebinIfNeccessary(cor, nrms, binratio);
-	HistogramFit fit(cor, gauss1d, 3);
-	fit.setLimitX(mean - rms*nrms, mean + rms*nrms);
-	fit.minimizer()->SetVariable(0, "const", rms, 0.1);
-	fit.minimizer()->SetVariable(1, "sigma", rms, 0.1);
-	fit.minimizer()->SetVariable(2, "mean", cor->GetMaximum(), 0.1);
-	fit.fit();
-	fit.addFittedFunction();
-	auto result = fit.getResult();
-	return { result[1], result[2] };
+	if(fixedMean) {
+		mean = 0.0;
+	}
+	auto gaus = new TF1("newgaus", "gaus", mean-rms*nrms, mean+rms*nrms);
+	if(fixedMean) {
+		gaus->FixParameter(1, 0);
+	}
+	auto result = cor->Fit(gaus, quiet?"RMSq+":"RMS+", "", mean-rms*nrms, mean+rms*nrms);
+	if(result.Get() == nullptr) {
+		return {0, 10000.0};
+	}
+	return {
+		result->Parameter(1),
+		result->Parameter(2)
+	};
 }
-

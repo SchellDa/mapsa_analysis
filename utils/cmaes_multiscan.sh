@@ -10,7 +10,9 @@
 ##  NUM_SAMPLES
 ##  MPA_UTIL_SCRIPT_PATH
 ##  MPA_UTIL_BIN_PATH
+##  INIT_FROM_ALIGN
 ##  MPAOUT
+##  RESTRICT
 ####################
 
 if [ -z ${MPA_UTIL_SCRIPT_PATH} ]; then
@@ -41,6 +43,14 @@ if [ -z ${NUM_SAMPLES} ]; then
 	NUM_SAMPLES=30000000
 	echo "Default NUM_SAMPLES=${NUM_SAMPLES}"
 fi
+if [ -z ${RESTRICT} ]; then
+	RESTRICT=1
+	echo "Default RESTRICT=${RESTRICT}"
+fi
+if [ -z ${INIT_FROM_ALIGN} ]; then
+	INIT_FROM_ALIGN=0
+	echo "Default INIT_FROM_ALIGN=${INIT_FROM_ALIGN}"
+fi
 
 if [ -z "${LAMBDAS}" ]; then
 	if [ -z ${LAMBDA_START} ] || [ -z ${LAMBDA_STOP} ]; then
@@ -70,7 +80,7 @@ for run in ${RUNS}; do
 	echo "Preparing run ${run}..."
 	for lambda in ${LAMBDAS}; do
 		for retry in `seq ${NUM_RETRIES}`; do
-			echo "./analyses/analyses MpaCmaesAlign -C -M ${MULTI_PREFIX} --run ${run} -n ${NUM_SAMPLES} -D \"cmaes_lambda=${lambda}\" -D \"output_prefix=num${num}\" > /dev/null 2>&1" >> ${CMD_FILE}
+			echo "./analyses/analyses MpaCmaesAlign -C -M ${MULTI_PREFIX} --run ${run} -n ${NUM_SAMPLES} -D \"cmaes_lambda=${lambda}\" -D \"output_prefix=num${num}\" -D \"cmaes_param_preset_and_restrict=${RESTRICT}\" -D \"cmaes_parameter_init_from_alignment=${INIT_FROM_ALIGN}\" -E -F > /dev/null 2>&1" >> ${CMD_FILE}
 			num=`expr ${num} + 1`
 		done
 	done

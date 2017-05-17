@@ -177,6 +177,7 @@ public:
 
 	void setRotation(const Eigen::Vector3d& rot)
 	{
+		_angles = rot;
 		_rotation = Eigen::AngleAxis<double>(rot(0), Eigen::Vector3d::UnitX()) *
 		            Eigen::AngleAxis<double>(rot(1), Eigen::Vector3d::UnitY()) *
 		            Eigen::AngleAxis<double>(rot(2), Eigen::Vector3d::UnitZ());
@@ -199,6 +200,8 @@ public:
 	Eigen::Vector3d getOffset() const { return _offset; }
 	Eigen::Vector3d getNormal() const { return _normal; }
 
+	Eigen::Vector3d getAngles() const { return _angles; }
+
 	Eigen::Vector2d getPixelSize(const size_t& idx) const { return getPixelSize(translatePixelIndex(idx)); }
 	Eigen::Vector2d getPixelSize(const Eigen::Vector2i& pixel_coord) const
 	{
@@ -218,6 +221,7 @@ private:
 	Eigen::Vector3d _normal;
 	Eigen::Hyperplane<double, 3> _plane;
 	Eigen::Vector3d _offset;
+	Eigen::Vector3d _angles;
 };
 
 } // namespace core

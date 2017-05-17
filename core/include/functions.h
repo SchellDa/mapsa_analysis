@@ -50,6 +50,16 @@ double symmetric_plateau_function2(double* xx, double* par);
  */
 double gauss1d(double* xx, double* par);
 
+/** \brief 1D Gauss Function with Offset
+ *
+ * \param xx[0] Independent variable
+ * \param par[0] Constant
+ * \param par[1] Sigma
+ * \param par[2] Mean
+ * \param par[3] Offset
+ */
+double gauss1d_offset(double* xx, double* par);
+
 }
 
 #endif
