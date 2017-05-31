@@ -57,7 +57,7 @@ void GblAlign::init()
 void GblAlign::run(const core::MergedAnalysis::run_data_t& run)
 {
 	loadPrealignment();
-	std::vector<Track> trackCandidates { getTrackCandidates(100000, run) };
+	std::vector<core::TripletTrack> trackCandidates { getTrackCandidates(100000, run) };
 	fitTracks(trackCandidates);
 }
 
@@ -73,7 +73,7 @@ Eigen::MatrixXd GblAlign::jacobianStep(double step)
 	return jac;
 }
 
-Eigen::MatrixXd GblAlign::getDerivatives(Triplet t, double dut_z, Eigen::Vector3d angles)
+Eigen::MatrixXd GblAlign::getDerivatives(core::Triplet t, double dut_z, Eigen::Vector3d angles)
 {
 	double turn = angles(0);
 	double tilt = angles(1);
@@ -151,33 +151,7 @@ Eigen::MatrixXd GblAlign::getDerivatives(Triplet t, double dut_z, Eigen::Vector3
 	return der;
 }
 
-std::vector<Triplet> GblAlign::findTriplets(const core::MergedAnalysis::run_data_t& run, double angle_cut, double residual_cut,
-                                            std::array<int, 3> planes)
-{
-	std::vector<Triplet> triplets;
-	auto td = &(*run.telescopeHits)->p1;
-	for(int ia = 0; ia < td[planes[0]].x.GetNoElements(); ++ia) {
-		for(int ib = 0; ib < td[planes[1]].x.GetNoElements(); ++ib) {
-			for(int ic = 0; ic < td[planes[2]].x.GetNoElements(); ++ic) {
-				Triplet t({td[planes[0]].x[ia], td[planes[0]].y[ia], td[planes[0]].z[ia]},
-				          {td[planes[1]].x[ib], td[planes[1]].y[ib], td[planes[1]].z[ib]},
-				          {td[planes[2]].x[ic], td[planes[2]].y[ic], td[planes[2]].z[ic]});
-				if(std::abs(t.getdx()) > angle_cut * t.getdz())
-					continue;
-				if(std::abs(t.getdy()) > angle_cut * t.getdz())
-					continue;
-				if(std::abs(t.getdx(1)) > residual_cut)
-					continue;
-				if(std::abs(t.getdy(1)) > residual_cut)
-					continue;
-				triplets.push_back(t);
-			}
-		}
-	}
-	return triplets;
-}
-
-std::vector<Track> GblAlign::getTrackCandidates(size_t maxCandidates, const core::MergedAnalysis::run_data_t& run)
+std::vector<core::TripletTrack> GblAlign::getTrackCandidates(size_t maxCandidates, const core::MergedAnalysis::run_data_t& run)
 {
 	const double angle_cut = 0.16;
 	const double residual_cut = 0.1;
@@ -186,10 +160,10 @@ std::vector<Track> GblAlign::getTrackCandidates(size_t maxCandidates, const core
 	const double track_residual_cut = 0.1;
 	const double kink_cut = 0.001;
 	const double dut_z = 385;
-	std::vector<Track> candidates;
+	std::vector<core::TripletTrack> candidates;
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) {
 		run.tree->GetEntry(evt);
-		auto downstream = findTriplets(run, angle_cut, residual_cut, {3, 4, 5});
+		auto downstream = core::Triplet::findTriplets(run, angle_cut, residual_cut, {3, 4, 5});
 		// debug histograms
 		for(const auto& triplet: downstream) {
 			_down_angle_x->Fill(std::abs(triplet.getdx() / triplet.getdz()));
@@ -197,7 +171,7 @@ std::vector<Track> GblAlign::getTrackCandidates(size_t maxCandidates, const core
 			_down_res_x->Fill(std::abs(triplet.getdx(1)));
 			_down_res_y->Fill(std::abs(triplet.getdy(1)));
 		}
-		auto upstream = findTriplets(run, angle_cut*100, residual_cut*100, {0, 1, 2});
+		auto upstream = core::Triplet::findTriplets(run, angle_cut*100, residual_cut*100, {0, 1, 2});
 		// debug histograms
 		for(const auto& triplet: upstream) {
 			_up_angle_x->Fill(std::abs(triplet.getdx() / triplet.getdz()));
@@ -208,7 +182,7 @@ std::vector<Track> GblAlign::getTrackCandidates(size_t maxCandidates, const core
 		// cut downstream triplets on their residual to ref hit
 		auto refData = (*run.telescopeHits)->ref;
 //		std::vector<Triplet> acceptedDownstream;
-		std::vector<std::pair<Triplet, Eigen::Vector3d>> fullDownstream;
+		std::vector<std::pair<core::Triplet, Eigen::Vector3d>> fullDownstream;
 		for(int i = 0; i < refData.x.GetNoElements(); ++i) {
 			Eigen::Vector3d hit(refData.x[i],
 			                     refData.y[i],
@@ -253,7 +227,7 @@ std::vector<Track> GblAlign::getTrackCandidates(size_t maxCandidates, const core
 			auto down = pair.first;
 			auto ref = pair.second;
 			for(const auto& up: upstream) {
-				Track t(up, down, ref);
+				core::TripletTrack t(up, down, ref);
 				auto resx = t.xresidualat(dut_z);
 				auto resy = t.yresidualat(dut_z);
 				auto kinkx = std::abs(t.kinkx());
@@ -291,7 +265,7 @@ std::vector<Track> GblAlign::getTrackCandidates(size_t maxCandidates, const core
 	result = _ref_down_res_y->Fit("gaus", "FSMR", "");
 	_refPreAlign(1) += result->Parameter(1);
 	std::cout << " * extrapolated ref pre-alignment\n" << _refPreAlign << std::endl;
-	std::vector<Track> accepted;
+	std::vector<core::TripletTrack> accepted;
 	for(auto track: candidates) {
 		auto track_x = track.xresidualat(dut_z);
 		auto track_y = track.yresidualat(dut_z);
@@ -329,7 +303,7 @@ std::vector<Track> GblAlign::getTrackCandidates(size_t maxCandidates, const core
 	return accepted;
 }
 
-void GblAlign::fitTracks(std::vector<Track> trackCandidates)
+void GblAlign::fitTracks(std::vector<core::TripletTrack> trackCandidates)
 {
 	Eigen::Matrix2d proj;
 	proj << 1, 0,
