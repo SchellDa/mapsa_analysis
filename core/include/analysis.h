@@ -95,6 +95,7 @@ public:
 	virtual std::string getName() const;
 	virtual std::string getRootFilename(const std::string& suffix="") const;
 	virtual std::string getFilename(const std::string& suffix="") const;
+	virtual std::string getFilename(const std::string& prefix, const std::string& suffix, bool extraPrefixes=true, bool allRuns=true) const;
 	virtual std::string getFilename(const int& runId, const std::string& suffix="") const;
 
 	virtual bool multirunConsistencyCheck(const std::string& argv0, const po::variables_map& vm) = 0;

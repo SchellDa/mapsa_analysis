@@ -1,5 +1,12 @@
 project(mapsa_analysis_core)
 
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/root_dict.cpp ${CMAKE_BINARY_DIR}/root_dict.h
+	COMMAND ${ROOT_CINT_EXECUTABLE} -f ${CMAKE_BINARY_DIR}/root_dict.cpp -c
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/datastructures.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/LinkDef.h"
+	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/datastructures.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/LinkDef.h"
+)
+
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/core.cpp
@@ -10,11 +17,14 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/trackstreamreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/analysis.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/trackanalysis.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/mergedanalysis.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/quickrunlistreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/aligner.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/functions.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/mpatransform.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/histogramfit.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/datastructures.cpp
+	${CMAKE_BINARY_DIR}/root_dict.cpp
 )
 
 add_definitions("-Wall")

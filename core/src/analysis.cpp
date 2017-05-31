@@ -69,17 +69,28 @@ std::string Analysis::getName() const
 
 std::string Analysis::getFilename(const std::string& suffix) const
 {
+	return getFilename(getName(), suffix, true);
+}
+
+std::string Analysis::getFilename(const std::string& prefix, const std::string& suffix, bool extraPrefixes, bool allRuns) const
+{
 	std::ostringstream sstr;
-	sstr << _config.getVariable("output_dir") << "/" << getName();
-	try {
-		auto prefix = _config.getVariable("output_prefix");
-		if(prefix.size()) {
-			sstr << "_" << prefix;
+	sstr << _config.getVariable("output_dir") << "/" << prefix;
+	if(extraPrefixes) {
+		try {
+			auto prefix = _config.getVariable("output_prefix");
+			if(prefix.size()) {
+				sstr << "_" << prefix;
+			}
+		} catch(CfgParse::no_variable_error& e) {
 		}
-	} catch(CfgParse::no_variable_error& e) {
 	}
-	for(const auto& id: _allRunIds) {
-		sstr << "_" << getMpaIdPadded(id);
+	if(allRuns) {
+		for(const auto& id: _allRunIds) {
+			sstr << "_" << getMpaIdPadded(id);
+		}
+	} else {
+		sstr << "_" << getMpaIdPadded(_currentRunId);
 	}
 	sstr << suffix;
        return sstr.str();
