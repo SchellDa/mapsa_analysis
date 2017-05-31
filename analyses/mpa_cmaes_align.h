@@ -2,14 +2,14 @@
 #ifndef MPA_CMAES_ALIGN_H
 #define MPA_CMAES_ALIGN_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 #include "aligner.h"
 #include <TH1D.h>
 #include <TCanvas.h>
 #include <TFile.h>
 #include <cmaes.h>
 
-class MpaCmaesAlign : public core::Analysis
+class MpaCmaesAlign : public core::TracTrackkAnalysis
 {
 public:
         MpaCmaesAlign();

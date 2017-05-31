@@ -5,15 +5,15 @@
 REGISTER_ANALYSIS_TYPE(Test, "Textual analysis description here.")
 
 Test::Test() :
- Analysis()
+ TrackAnalysis()
 {
 	std::cout << "Constructor" << std::endl;
 	addProcess("test", CS_ALWAYS,
-	           core::Analysis::init_callback_t{},
-		   core::Analysis::run_init_callback_t{},
+	           core::TrackAnalysis::init_callback_t{},
+		   core::TrackAnalysis::run_init_callback_t{},
 	           std::bind(&Test::analyze, this, std::placeholders::_1, std::placeholders::_2),
-		   core::Analysis::run_post_callback_t{},
-		   core::Analysis::post_callback_t{}
+		   core::TrackAnalysis::run_post_callback_t{},
+		   core::TrackAnalysis::post_callback_t{}
 		   );
 }
 

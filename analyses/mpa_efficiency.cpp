@@ -14,13 +14,13 @@
 REGISTER_ANALYSIS_TYPE(MpaEfficiency, "Calculate MPA Efficiency based.")
 
 MpaEfficiency::MpaEfficiency() :
- Analysis(), _file(nullptr)
+ TrackAnalysis(), _file(nullptr)
 {
 	addProcess("analyze", CS_ALWAYS,
-	 core::Analysis::init_callback_t{},
+	 core::TrackAnalysis::init_callback_t{},
 	 std::bind(&MpaEfficiency::analyzeRunInit, this),
 	 std::bind(&MpaEfficiency::analyze, this, std::placeholders::_1, std::placeholders::_2),
-	 Analysis::run_post_callback_t{},
+	 TrackAnalysis::run_post_callback_t{},
 	 std::bind(&MpaEfficiency::analyzeFinish, this)
 	);
 	getOptionsDescription().add_options()

@@ -9,27 +9,27 @@
 REGISTER_ANALYSIS_TYPE(Clusterize, "Textual analysis description here.")
 
 Clusterize::Clusterize() :
- Analysis(), _file(nullptr), _aligner(), _clusterSizeHist(nullptr)
+ TrackAnalysis(), _file(nullptr), _aligner(), _clusterSizeHist(nullptr)
 {
 	addProcess("clusterize", CS_ALWAYS /* CS_TRACK */,
-	           core::Analysis::init_callback_t{},
-		   core::Analysis::run_init_callback_t{},
+	           core::TrackAnalysis::init_callback_t{},
+		   core::TrackAnalysis::run_init_callback_t{},
 	           std::bind(&Clusterize::clusterize, this, std::placeholders::_1, std::placeholders::_2),
-		   core::Analysis::run_post_callback_t{},
+		   core::TrackAnalysis::run_post_callback_t{},
 	           std::bind(&Clusterize::finishClusterize, this)
 	           );
 	addProcess("align", CS_TRACK,
-	           core::Analysis::init_callback_t{},
-		   core::Analysis::run_init_callback_t{},
+	           core::TrackAnalysis::init_callback_t{},
+		   core::TrackAnalysis::run_init_callback_t{},
 	           std::bind(&Clusterize::align, this, std::placeholders::_1, std::placeholders::_2),
-		   core::Analysis::run_post_callback_t{},
+		   core::TrackAnalysis::run_post_callback_t{},
 	           std::bind(&Clusterize::finishAlign, this)
 	           );
 	addProcess("cutClusterSize", CS_TRACK,
-	           core::Analysis::init_callback_t{},
-		   core::Analysis::run_init_callback_t{},
+	           core::TrackAnalysis::init_callback_t{},
+		   core::TrackAnalysis::run_init_callback_t{},
 	           std::bind(&Clusterize::cutClusterSize, this, std::placeholders::_1, std::placeholders::_2),
-		   core::Analysis::run_post_callback_t{},
+		   core::TrackAnalysis::run_post_callback_t{},
 	           std::bind(&Clusterize::finishCutClusterSize, this)
 	           );
 	getOptionsDescription().add_options()

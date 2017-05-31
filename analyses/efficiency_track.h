@@ -2,7 +2,7 @@
 #ifndef EFFICIENCY_TRACK_H
 #define EFFICIENCY_TRACK_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 #include "aligner.h"
 #include <TFile.h>
 #include <TH1D.h>
@@ -10,7 +10,7 @@
 #include <TGraph2D.h>
 #include <fstream>
 
-class EfficiencyTrack : public core::Analysis
+class EfficiencyTrack : public core::TrackAnalysis
 {
 public:
         EfficiencyTrack();

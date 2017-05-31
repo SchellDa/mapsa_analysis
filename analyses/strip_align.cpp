@@ -9,7 +9,7 @@
 REGISTER_ANALYSIS_TYPE(StripAlign, "Textual analysis description here.")
 
 StripAlign::StripAlign() :
- Analysis(), _file(nullptr)
+ TrackAnalysis(), _file(nullptr)
 {
 	getOptionsDescription().add_options()
 		("low-y", po::value<double>()->default_value(-100), "Lower bound of Y align scan")
@@ -26,17 +26,17 @@ StripAlign::StripAlign() :
 		("noisy-as-fuck,F", "Use alternative, slightly less stable residual fit. Useful for rather noisy runs")
 	;
 	addProcess("scan", /* CS_ALWAYS */ CS_TRACK,
-	           core::Analysis::init_callback_t {},
+	           core::TrackAnalysis::init_callback_t {},
 	           std::bind(&StripAlign::scanInit, this),
 		   std::bind(&StripAlign::scanRun, this, std::placeholders::_1, std::placeholders::_2),
-	           core::Analysis::run_post_callback_t {},
+	           core::TrackAnalysis::run_post_callback_t {},
 	           std::bind(&StripAlign::scanFinish, this)
 	           );
 	addProcess("yAlign", /* CS_ALWAYS */ CS_TRACK,
-	           core::Analysis::init_callback_t {},
+	           core::TrackAnalysis::init_callback_t {},
 	           std::bind(&StripAlign::yAlignInit, this),
 		   std::bind(&StripAlign::yAlignRun, this, std::placeholders::_1, std::placeholders::_2),
-	           core::Analysis::run_post_callback_t {},
+	           core::TrackAnalysis::run_post_callback_t {},
 	           std::bind(&StripAlign::yAlignFinish, this)
 	           );
 }

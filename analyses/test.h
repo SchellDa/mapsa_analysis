@@ -2,9 +2,9 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 
-class Test : public core::Analysis
+class Test : public core::TrackAnalysis
 {
 public:
         Test();

@@ -2,7 +2,7 @@
 #ifndef CLUSTERIZE_H
 #define CLUSTERIZE_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 #include "aligner.h"
 #include <fstream>
 #include "eigenhash.h"
@@ -10,7 +10,7 @@
 #include <TFile.h>
 #include <TH1F.h>
 
-class Clusterize : public core::Analysis
+class Clusterize : public core::TrackAnalysis
 {
 public:
 	struct cluster_t {

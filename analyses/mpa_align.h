@@ -2,13 +2,13 @@
 #ifndef MPA_ALIGN_H
 #define MPA_ALIGN_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 #include "aligner.h"
 #include <TH1D.h>
 #include <TCanvas.h>
 #include <TFile.h>
 
-class MpaAlign : public core::Analysis
+class MpaAlign : public core::TrackAnalysis
 {
 public:
         MpaAlign();

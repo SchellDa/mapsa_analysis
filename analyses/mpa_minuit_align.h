@@ -2,14 +2,14 @@
 #ifndef MPA_MINUIT_ALIGN_H
 #define MPA_MINUIT_ALIGN_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 #include "aligner.h"
 #include <TH1D.h>
 #include <TCanvas.h>
 #include <TFile.h>
 #include <fstream>
 
-class MpaMinuitAlign : public core::Analysis
+class MpaMinuitAlign : public core::TrackAnalysis
 {
 public:
         MpaMinuitAlign();

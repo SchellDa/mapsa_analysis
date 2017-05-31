@@ -12,13 +12,13 @@
 REGISTER_ANALYSIS_TYPE(EfficiencyTrack, "[legacy] Old and dubious analysis for calculating the MPA efficiency.")
 
 EfficiencyTrack::EfficiencyTrack() :
- Analysis(), _file(nullptr), _totalHitCount(0), _correlatedHitCount(0)
+ TrackAnalysis(), _file(nullptr), _totalHitCount(0), _correlatedHitCount(0)
 {
 	addProcess("analyze", CS_TRACK,
-	 core::Analysis::init_callback_t{},
+	 core::TrackAnalysis::init_callback_t{},
 	 std::bind(&EfficiencyTrack::analyzeRunInit, this),
 	 std::bind(&EfficiencyTrack::analyze, this, std::placeholders::_1, std::placeholders::_2),
-	 Analysis::run_post_callback_t{},
+	 TrackAnalysis::run_post_callback_t{},
 	 std::bind(&EfficiencyTrack::analyzeFinish, this)
 	);
 	getOptionsDescription().add_options()

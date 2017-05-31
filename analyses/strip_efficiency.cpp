@@ -12,13 +12,13 @@
 REGISTER_ANALYSIS_TYPE(StripEfficiency, "Measure the efficiency of a strip sensor.")
 
 StripEfficiency::StripEfficiency() :
- Analysis(), _file(nullptr), _channelMask(), _totalHits(0), _maskedTotalHits(0), _correlatedHits(0)
+ TrackAnalysis(), _file(nullptr), _channelMask(), _totalHits(0), _maskedTotalHits(0), _correlatedHits(0)
 {
 	addProcess("analyze", CS_TRACK,
-	 core::Analysis::init_callback_t{},
+	 core::TrackAnalysis::init_callback_t{},
 	 std::bind(&StripEfficiency::analyzeRunInit, this),
 	 std::bind(&StripEfficiency::analyze, this, std::placeholders::_1, std::placeholders::_2),
-	 Analysis::run_post_callback_t{},
+	 TrackAnalysis::run_post_callback_t{},
 	 std::bind(&StripEfficiency::analyzeFinish, this)
 	);
 	getOptionsDescription().add_options()

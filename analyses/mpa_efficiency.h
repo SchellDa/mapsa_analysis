@@ -2,7 +2,7 @@
 #ifndef MPA_EFFICIENCY_H
 #define MPA_EFFICIENCY_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 #include "aligner.h"
 #include <TFile.h>
 #include <TH1D.h>
@@ -10,7 +10,7 @@
 #include <TGraph2D.h>
 #include <fstream>
 
-class MpaEfficiency : public core::Analysis
+class MpaEfficiency : public core::TrackAnalysis
 {
 public:
         MpaEfficiency();

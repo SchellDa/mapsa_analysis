@@ -2,7 +2,7 @@
 #ifndef STRIP_ALIGN_H
 #define STRIP_ALIGN_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 #include "aligner.h"
 #include <TH1D.h>
 #include <TH2D.h>
@@ -10,7 +10,7 @@
 #include <TFile.h>
 #include <fstream>
 
-class StripAlign : public core::Analysis
+class StripAlign : public core::TrackAnalysis
 {
 public:
         StripAlign();

@@ -2,12 +2,12 @@
 #ifndef DATA_SKIP_H
 #define DATA_SKIP_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 #include <TFile.h>
 #include <TH1D.h>
 #include <TCanvas.h>
 
-class DataSkip : public core::Analysis
+class DataSkip : public core::TrackAnalysis
 {
 public:
         DataSkip();

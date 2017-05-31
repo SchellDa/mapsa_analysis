@@ -8,13 +8,13 @@
 REGISTER_ANALYSIS_TYPE(DataSkip, "Textual analysis description here.")
 
 DataSkip::DataSkip() :
- Analysis(), _file(nullptr), _currentHist(nullptr)
+ TrackAnalysis(), _file(nullptr), _currentHist(nullptr)
 {
 	addProcess("analyze", CS_TRACK,
-		core::Analysis::init_callback_t{},
-		core::Analysis::run_init_callback_t{},
+		core::TrackAnalysis::init_callback_t{},
+		core::TrackAnalysis::run_init_callback_t{},
 		std::bind(&DataSkip::analyze, this, std::placeholders::_1, std::placeholders::_2),
-		core::Analysis::run_post_callback_t{},
+		core::TrackAnalysis::run_post_callback_t{},
 	        std::bind(&DataSkip::finish, this));
 	getOptionsDescription().add_options()
 		("range", po::value<int>()->default_value(10), "Generate correlation in data offset range -NUM to NUM")

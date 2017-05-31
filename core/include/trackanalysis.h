@@ -1,9 +1,8 @@
 
-#ifndef ANALYSIS_H
-#define ANALYSIS_H
+#ifndef TRACK_ANALYSIS_H
+#define TRACK_ANALYSIS_H
 
-#include <boost/program_options.hpp>
-#include "cfgparse.h"
+#include "analysis.h"
 #include "trackstreamreader.h"
 #include "basesensorstreamreader.h"
 #include "quickrunlistreader.h"
@@ -30,11 +29,31 @@ namespace core {
  * are implemented. Note that getHelp() only displays a free-text help message and not a option-by-option
  * documentation. Each option is autodocumented by Boost.
  */
-class Analysis
+class TrackAnalysis : public Analysis
 {
 public:
-	Analysis();
-	virtual ~Analysis() {}
+	TrackAnalysis();
+	virtual ~TrackAnalysis() {}
+
+	enum callback_stop_t {
+		CS_ALWAYS,
+		CS_TRACK
+	};
+	typedef std::function<void()> init_callback_t;
+	typedef std::function<void()> run_init_callback_t;
+	typedef std::function<bool(const TrackStreamReader::event_t&,
+	                           const BaseSensorStreamReader::event_t&)> run_callback_t;
+	typedef std::function<void()> run_post_callback_t;
+	typedef std::function<void()> post_callback_t;
+	struct process_t {
+		std::string name;
+		callback_stop_t mode;
+		init_callback_t init;
+		run_init_callback_t run_init;
+		run_callback_t run;
+		run_post_callback_t run_post;
+		post_callback_t post;
+	};
 
 	/** \brief Load configuration from file and from command line
 	 *
@@ -45,25 +64,13 @@ public:
 	 */
 	virtual bool loadConfig(const po::variables_map& vm);
 
-	virtual void init(const po::variables_map& vm) = 0;
+	virtual void init(const po::variables_map& vm) {};
 
 	/** \brief Perform analysis. Must be reimplemented.
 	 *
 	 * This is the work-horse to perform any actual analysis.
 	 */
-	virtual void run(const po::variables_map& vm) = 0;
-
-	/** \brief Get boost::program_options::options_description object to add further command line
-	 * arguments
-	 */
-	const po::options_description& getOptionsDescription() const { return _options; }
-	po::options_description& getOptionsDescription() { return _options; }
-
-	/** \brief Get boost::program_options::positional_options_description object to add further
-	 * positional command line arguments
-	 */
-	const po::positional_options_description& getPositionalsDescription() const { return _positionals; }
-	po::positional_options_description& getPositionalsDescription() { return _positionals; }
+	virtual void run(const po::variables_map& vm);
 
 	/** \brief Get string describing the tool usage from the command line
 	 *
@@ -88,39 +95,52 @@ public:
 	 * an empty string.
 	 */
 	virtual std::string getHelp(const std::string& argv0) const;
+
+	virtual std::string getRunIdPadded(int id) const;
 	
-	static std::string getPaddedIdString(int id, unsigned int width);
-	virtual std::string getMpaIdPadded(int id) const;
-
-	virtual std::string getName() const;
-	virtual std::string getRootFilename(const std::string& suffix="") const;
-	virtual std::string getFilename(const std::string& suffix="") const;
-	virtual std::string getFilename(const int& runId, const std::string& suffix="") const;
-
-	virtual bool multirunConsistencyCheck(const std::string& argv0, const po::variables_map& vm) = 0;
+	virtual bool multirunConsistencyCheck(const std::string& argv0, const po::variables_map& vm);
 
 protected:
-	CfgParse _config;
-	std::vector<int> _allRunIds;
-	int _currentRunId;
+	void addProcess(const process_t& proc);
+	void addProcess(const std::string& name,
+	                const callback_stop_t& mode,
+	                const init_callback_t& init,
+			const run_init_callback_t& run_init,
+	                const run_callback_t& run,
+	                const run_post_callback_t& run_post,
+			const post_callback_t& stop)
+	{
+		addProcess({name, mode, init, run_init, run, run_post, stop});
+	}
+	void setDataOffset(int dataOffset);
+	int getDataOffset() const { return _dataOffset; }
+	void rerun();
+	size_t getRerunNumber() const { return _rerunNumber; }
+
+	QuickRunlistReader _runlist;
+	MpaTransform _mpaTransform;
+
+	const std::vector<int>& getAllRunIds() const { return _allRunIds; }
+	int getCurrentRunId() const { return _currentRunId; }
 
 private:
-	po::options_description _options;
-	po::positional_options_description _positionals;
+	struct run_read_pair_t
+	{
+		int runId;
+		std::shared_ptr<core::BaseSensorStreamReader> pixelreader;
+		core::TrackStreamReader trackreader;
+	};
+
+	void executeProcess(const std::vector<run_read_pair_t>& reader,
+                            const process_t& proc);
+
+	std::vector<process_t> _processes;
+	int _dataOffset;
+	bool _analysisRunning;
+	bool _rerunProcess;
+	size_t _rerunNumber;
 };
-
-/** \brief short-hand type for the factory class for core::Analysis. */
-typedef AbstractFactory<Analysis, std::string> AnalysisFactory;
-
-/** \brief Register new analysis type
- *
- * Register an new analysis type. It must be a subclass of core::Analysis. Call this makro from the implementation
- * file of your analysis class.
- * \param type C++ identifier of the analysis to register.
- * \param descr String with a short description of the analysis.
- */ 
-#define REGISTER_ANALYSIS_TYPE(type, descr) REGISTER_FACTORY_TYPE_WITH_DESCR(core::Analysis, type, descr)
 
 }// namespace core
 
-#endif//ANALYSIS_H
+#endif//TRACK_ANALYSIS_H

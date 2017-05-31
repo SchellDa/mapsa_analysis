@@ -8,7 +8,7 @@
 REGISTER_ANALYSIS_TYPE(MpaAlign, "Perform XYZ and angular alignment of MPA.")
 
 MpaAlign::MpaAlign() :
- Analysis(), _aligner(), _file(nullptr)
+ TrackAnalysis(), _aligner(), _file(nullptr)
 {
 	getOptionsDescription().add_options()
 		("low-z", po::value<double>()->default_value(820), "Lower bound of Z align scan")
@@ -17,10 +17,10 @@ MpaAlign::MpaAlign() :
 		("sample-size,n", po::value<int>()->default_value(10000), "Number of data points to include in alignment histogram")
 	;
 	addProcess("scan", /* CS_ALWAYS */ CS_TRACK,
-	           core::Analysis::init_callback_t {},
+	           core::TrackAnalysis::init_callback_t {},
 	           std::bind(&MpaAlign::scanInit, this),
 		   std::bind(&MpaAlign::scanRun, this, std::placeholders::_1, std::placeholders::_2),
-	           core::Analysis::run_post_callback_t {},
+	           core::TrackAnalysis::run_post_callback_t {},
 	           std::bind(&MpaAlign::scanFinish, this)
 	           );
 }

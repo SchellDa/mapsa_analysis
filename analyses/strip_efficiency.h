@@ -2,7 +2,7 @@
 #ifndef STRIP_EFFICIENCY_H
 #define STRIP_EFFICIENCY_H
 
-#include "analysis.h"
+#include "trackanalysis.h"
 #include "aligner.h"
 #include <TFile.h>
 #include <TH1D.h>
@@ -10,7 +10,7 @@
 #include <TGraph2D.h>
 #include <fstream>
 
-class StripEfficiency : public core::Analysis
+class StripEfficiency : public core::TrackAnalysis
 {
 public:
         StripEfficiency();
