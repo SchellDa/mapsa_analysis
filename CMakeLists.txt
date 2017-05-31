@@ -21,6 +21,11 @@ find_package(ROOT REQUIRED)
 add_definitions("--std=c++11" ${ROOT_DEFINITIONS})
 link_libraries(${ROOT_LIBRARIES})
 include_directories(${ROOT_INCLUDE_DIR})
+
+find_package(GBL REQUIRED)
+link_libraries(${GBL_LIBRARIES})
+include_directories(${GBL_INCLUDE_DIRS})
+
 if(${ENABLE_CBC_ANALYSIS})
 add_subdirectory(interface)
 endif(${ENABLE_CBC_ANALYSIS})
