@@ -150,7 +150,7 @@ TGraph* HistogramFit::createFittedFunction() const
 void HistogramFit::addFittedFunction()
 {
 	auto graph = createFittedFunction();
-	graph->SetLineColorAlpha(kRed, 0.95);
+	// graph->SetLineColorAlpha(kRed, 0.95);
 	graph->SetLineWidth(2);
 	_hist->GetListOfFunctions()->Add(graph);
 }
