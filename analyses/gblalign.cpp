@@ -30,34 +30,44 @@ void GblAlign::init()
 	loadResolutions();
 	_eBeam = _config.get<double>("e_beam");
 	_file = new TFile(getRootFilename().c_str(), "recreate");
-	_down_angle_x = new TH1F("downstream_angle_x", "Angle of downstream triplets", 100, 0, 0.5);
-	_down_angle_y = new TH1F("downstream_angle_y", "Angle of downstream triplets", 100, 0, 0.5);
-	_down_res_x = new TH1F("downstream_res_x", "Center residual of downstream triplets", 100, 0, 0.5);
-	_down_res_y = new TH1F("downstream_res_y", "Center residual of downstream triplets", 100, 0, 0.5);
-	_up_angle_x = new TH1F("upstream_angle_x", "Angle of upstream triplets", 100, 0, 0.5);
-	_up_angle_y = new TH1F("upstream_angle_y", "Angle of upstream triplets", 100, 0, 0.5);
-	_up_res_x = new TH1F("upstream_res_x", "Center residual of upstream triplets", 100, 0, 0.5);
-	_up_res_y = new TH1F("upstream_res_y", "Center residual of upstream triplets", 100, 0, 0.5);
-	_ref_down_res_x = new TH1F("ref_downstream_res_x", "Residual between downstream and ref", 1000, -5, 5);
-	_ref_down_res_y = new TH1F("ref_downstream_res_y", "Residual between downstream and ref", 1000, -5, 5);
-	_dut_up_res_x = new TH1F("dut_upstream_res_x", "Residual between upstream and dut", 1000, -5, 5);
-	_dut_up_res_y = new TH1F("dut_upstream_res_y", "Residual between upstream and dut", 1000, -5, 5);
-	_track_kink_x = new TH1F("track_kink_x", "", 1000, 0, 0.1);
-	_track_kink_y = new TH1F("track_kink_y", "", 1000, 0, 0.1);
-	_track_residual_x = new TH1F("track_residual_x", "", 1000, -1, 10);
-	_track_residual_y = new TH1F("track_residual_y", "", 1000, -1, 10);
-	_planes_z = new TH1F("planes_z", "Z positions of hits in accepted triplets", 500, -100, 1000);
-	_candidate_res_track_x = new TH1F("candidate_res_track_x", "", 500, -1, 1);
-	_candidate_res_track_y = new TH1F("candidate_res_track_y", "", 500, -1, 1);
-	_candidate_res_ref_x = new TH1F("candidate_res_ref_x", "", 500, -1, 1);
-	_candidate_res_ref_y = new TH1F("candidate_res_ref_y", "", 500, -1, 1);
+	_trackHists = core::TripletTrack::genDebugHistograms();
+	_trackConsts.angle_cut = 0.16;
+	_trackConsts.upstream_residual_cut = 0.1;
+	_trackConsts.downstream_residual_cut = 0.1;
+	_trackConsts.six_residual_cut = 0.1;
+	_trackConsts.six_kink_cut = 0.01;
+	_trackConsts.ref_residual_precut = 0.7;
+	_trackConsts.ref_residual_cut = 0.1;
+	_trackConsts.dut_z = 385;
 	_gbl_chi2_dist = new TH1F("gbl_chi2ndf_dist", "", 1000, 0, 100);
 }
 
 void GblAlign::run(const core::MergedAnalysis::run_data_t& run)
 {
 	loadPrealignment();
-	std::vector<core::TripletTrack> trackCandidates { getTrackCandidates(100000, run) };
+	_trackConsts.ref_prealign = _refPreAlign;
+	auto trackCandidates = core::TripletTrack::getTracksWithRef(_trackConsts, run, _trackHists, &_refPreAlign);
+	std::cout << " * new extrapolated ref prealignment:\n" << _refPreAlign << std::endl;
+	std::ofstream fout(getFilename("_all_tracks.csv"));
+	for(const auto& track: trackCandidates) {
+		for(const auto& hit: track.upstream().getHits()) {
+			fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
+		}
+		for(const auto& hit: track.downstream().getHits()) {
+			fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
+		}
+		//for(int i = 0; i < 3; ++i) {
+		//	auto hit = track.upstream()[i];
+		//	fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
+		//}
+		//for(int i = 0; i < 3; ++i) {
+		//	auto hit = track.downstream()[i];
+		//	fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
+		//}
+		//auto hit = track.refHit();
+		//fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
+		fout << "\n\n";
+	}
 	fitTracks(trackCandidates);
 }
 
@@ -79,7 +89,7 @@ Eigen::MatrixXd GblAlign::getDerivatives(core::Triplet t, double dut_z, Eigen::V
 	double tilt = angles(1);
 	double DUTrot = angles(2);
 	double upsign = -1;
-	double wt = atan(1) / 180;
+	double wt = atan(1.0) / 45.0;
 	double Nx =-sin( turn*wt )*cos( tilt*wt );
 	double Ny = sin( tilt*wt );
 	double Nz =-cos( turn*wt )*cos( tilt*wt );
@@ -149,158 +159,6 @@ Eigen::MatrixXd GblAlign::getDerivatives(core::Triplet t, double dut_z, Eigen::V
  	der(0,5) = -upsign*( cf*(co*dxcdz-so*ddzcdz) + sf*(ca*dycdz+sa*(so*dxcdz+co*ddzcdz))); // dresidx/dz
   	der(1,5) =  upsign*(-sf*(co*dxcdz-so*ddzcdz) + cf*(ca*dycdz+sa*(so*dxcdz+co*ddzcdz))); // dresidy/dz
 	return der;
-}
-
-std::vector<core::TripletTrack> GblAlign::getTrackCandidates(size_t maxCandidates, const core::MergedAnalysis::run_data_t& run)
-{
-	const double angle_cut = 0.16;
-	const double residual_cut = 0.1;
-	const double ref_residual_cut = 0.7;
-	const double ref_residual_cut_narrow = 0.06;
-	const double track_residual_cut = 0.1;
-	const double kink_cut = 0.001;
-	const double dut_z = 385;
-	std::vector<core::TripletTrack> candidates;
-	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) {
-		run.tree->GetEntry(evt);
-		auto downstream = core::Triplet::findTriplets(run, angle_cut, residual_cut, {3, 4, 5});
-		// debug histograms
-		for(const auto& triplet: downstream) {
-			_down_angle_x->Fill(std::abs(triplet.getdx() / triplet.getdz()));
-			_down_angle_y->Fill(std::abs(triplet.getdy() / triplet.getdz()));
-			_down_res_x->Fill(std::abs(triplet.getdx(1)));
-			_down_res_y->Fill(std::abs(triplet.getdy(1)));
-		}
-		auto upstream = core::Triplet::findTriplets(run, angle_cut*100, residual_cut*100, {0, 1, 2});
-		// debug histograms
-		for(const auto& triplet: upstream) {
-			_up_angle_x->Fill(std::abs(triplet.getdx() / triplet.getdz()));
-			_up_angle_y->Fill(std::abs(triplet.getdy() / triplet.getdz()));
-			_up_res_x->Fill(std::abs(triplet.getdx(1)));
-			_up_res_y->Fill(std::abs(triplet.getdy(1)));
-		}
-		// cut downstream triplets on their residual to ref hit
-		auto refData = (*run.telescopeHits)->ref;
-//		std::vector<Triplet> acceptedDownstream;
-		std::vector<std::pair<core::Triplet, Eigen::Vector3d>> fullDownstream;
-		for(int i = 0; i < refData.x.GetNoElements(); ++i) {
-			Eigen::Vector3d hit(refData.x[i],
-			                     refData.y[i],
-					     refData.z[i]);
-			for(const auto& triplet: downstream) {
-				double resx = triplet.getdx(hit - _refPreAlign);
-				double resy = triplet.getdy(hit - _refPreAlign);
-				if(std::abs(resx) > ref_residual_cut || std::abs(resy) > ref_residual_cut) {
-					continue;
-				}
-				_ref_down_res_x->Fill(resx);
-				_ref_down_res_y->Fill(resy);
-				// acceptedDownstream.push_back(triplet);
-				fullDownstream.push_back({triplet, hit});
-			}
-		}
-//		// find new prealignment (more exact)
-//		auto result = _ref_down_res_x->Fit("gaus", "FSMR", "");
-//		_refPreAlign(0) = result->Parameter(1);
-//		result = _track_residual_y->Fit("gaus", "FSMR", "");
-//		_refPreAlign(1) = result->Parameter(1);
-//		// cut downstream triplets on their residual to ref hit
-//		std::vector<std::pair<Triplet, Eigen::Vector3d>> fullDownstream;
-//		for(int i = 0; i < refData.x.GetNoElements(); ++i) {
-//			Eigen::Vector3d hit(refData.x[i],
-//			                    refData.y[i],
-//					    refData.z[i]);
-//			hit -= _refPreAlign;
-//			for(const auto& triplet: acceptedDownstream) {
-//				double resx = std::abs(triplet.getdx(hit));
-//				double resy = std::abs(triplet.getdy(hit));
-//				if(resx > ref_residual_narrow_cut || resy > ref_residual_narrow_cut) {
-//					continue;
-//				}
-//				_ref_down_res_x_pre->Fill(resx);
-//				_ref_down_res_y_pre->Fill(resy);
-//				fullDownstream.push_back({triplet, hit});
-//			}
-//		}
-		// build tracks
-		for(const auto& pair: fullDownstream) {
-			auto down = pair.first;
-			auto ref = pair.second;
-			for(const auto& up: upstream) {
-				core::TripletTrack t(up, down, ref);
-				auto resx = t.xresidualat(dut_z);
-				auto resy = t.yresidualat(dut_z);
-				auto kinkx = std::abs(t.kinkx());
-				auto kinky = std::abs(t.kinky());
-				if(std::abs(resx) > track_residual_cut || std::abs(resy) > track_residual_cut) {
-					continue;
-				}
-				if(kinkx > kink_cut || kinky > kink_cut) {
-					continue;
-				}
-				_track_kink_x->Fill(kinkx);
-				_track_kink_y->Fill(kinky);
-				_track_residual_x->Fill(resx);
-				_track_residual_y->Fill(resy);
-				candidates.push_back(t);
-			}
-		}
-		for(const auto& pair: fullDownstream) {
-			const auto& hit = pair.first;
-			const auto& ref = pair.second;
-			for(int i = 0; i < 3; ++i) {
-				_planes_z->Fill(hit[i](2));
-			}
-			_planes_z->Fill(ref(2));
-		}
-		for(const auto& hit: upstream) {
-			for(int i = 0; i < 3; ++i) {
-				_planes_z->Fill(hit[i](2));
-			}
-		}
-	}
-	// find new prealignment (more exact)
-	auto result = _ref_down_res_x->Fit("gaus", "FSMR", "");
-	_refPreAlign(0) += result->Parameter(1);
-	result = _ref_down_res_y->Fit("gaus", "FSMR", "");
-	_refPreAlign(1) += result->Parameter(1);
-	std::cout << " * extrapolated ref pre-alignment\n" << _refPreAlign << std::endl;
-	std::vector<core::TripletTrack> accepted;
-	for(auto track: candidates) {
-		auto track_x = track.xresidualat(dut_z);
-		auto track_y = track.yresidualat(dut_z);
-		auto ref_x = track.xrefresidual(_refPreAlign);
-		auto ref_y = track.yrefresidual(_refPreAlign);
-		if(std::abs(ref_x) > ref_residual_cut_narrow || std::abs(ref_y) > ref_residual_cut_narrow) {
-			continue;
-		}
-		_candidate_res_track_x->Fill(track_x);
-		_candidate_res_track_y->Fill(track_y);
-		_candidate_res_ref_x->Fill(ref_x);
-		_candidate_res_ref_y->Fill(ref_y);
-		accepted.push_back(track);
-	}
-	std::ofstream fout(getFilename("_all_tracks.csv"));
-	for(const auto& track: candidates) {
-		for(const auto& hit: track.upstream().getHits()) {
-			fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
-		}
-		for(const auto& hit: track.downstream().getHits()) {
-			fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
-		}
-		//for(int i = 0; i < 3; ++i) {
-		//	auto hit = track.upstream()[i];
-		//	fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
-		//}
-		//for(int i = 0; i < 3; ++i) {
-		//	auto hit = track.downstream()[i];
-		//	fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
-		//}
-		//auto hit = track.refHit();
-		//fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
-		fout << "\n\n";
-	}
-	return accepted;
 }
 
 void GblAlign::fitTracks(std::vector<core::TripletTrack> trackCandidates)

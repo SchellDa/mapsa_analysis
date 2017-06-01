@@ -27,7 +27,6 @@ public:
 	static Eigen::MatrixXd getDerivatives(core::Triplet t, double dut_z, Eigen::Vector3d angles);
 
 private:
-	std::vector<core::TripletTrack> getTrackCandidates(size_t maxCandidates, const core::MergedAnalysis::run_data_t& run);
 	void fitTracks(std::vector<core::TripletTrack> trackCandidates);
 	Eigen::Vector3d calcFitDebugHistograms(int planeId, gbl::GblTrajectory* traj);
 	void loadPrealignment();
@@ -40,27 +39,8 @@ private:
 	Eigen::Vector2d _precisionMpa;
 	double _eBeam;
 
-	TH1F* _down_angle_x;
-	TH1F* _down_angle_y;
-	TH1F* _down_res_x;
-	TH1F* _down_res_y;
-	TH1F* _up_angle_x;
-	TH1F* _up_angle_y;
-	TH1F* _up_res_x;
-	TH1F* _up_res_y;
-	TH1F* _ref_down_res_x;
-	TH1F* _ref_down_res_y;
-	TH1F* _dut_up_res_x;
-	TH1F* _dut_up_res_y;
-	TH1F* _track_kink_x;
-	TH1F* _track_kink_y;
-	TH1F* _track_residual_x;
-	TH1F* _track_residual_y;
-	TH1F* _planes_z;
-	TH1F* _candidate_res_track_x;
-	TH1F* _candidate_res_track_y;
-	TH1F* _candidate_res_ref_x;
-	TH1F* _candidate_res_ref_y;
+	core::TripletTrack::histograms_t _trackHists;
+	core::TripletTrack::constants_t _trackConsts;
 	TH1F* _gbl_chi2_dist;
 };
 
