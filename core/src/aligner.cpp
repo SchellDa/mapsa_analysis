@@ -193,10 +193,10 @@ bool Aligner::rebinIfNeccessary(TH1D* cor, const double& nrms, const double& bin
 	auto mean = cor->GetBinLowEdge(maxBin);
 	auto rms = cor->GetRMS();
 	if(cor->GetEntries() * binratio * 2 < cor->GetNbinsX()) {
-		/*std::cout << "REBIN!\n"
+		std::cout << "REBIN!\n"
 		          << "Num entries: " << cor->GetEntries() << "\n"
 		          << "Entry threshold: " << cor->GetEntries() * binratio * 2 << "\n"
-			  << "Num X bins: " << cor->GetNbinsX() << "\n";*/
+			  << "Num X bins: " << cor->GetNbinsX() << "\n";
 		cor->Rebin(cor->GetNbinsX() / (cor->GetEntries() * binratio));
 		// std::cout << "New reduced bin number: " << cor->GetNbinsX() << std::endl;
 
@@ -222,7 +222,7 @@ Eigen::Vector2d Aligner::alignPlateau(TH1D* cor, const double& nrms, const doubl
 	} else {
 		piecewise->SetParameter(0, mean);
 	}
-	piecewise->SetParameter(1, rms);
+	piecewise->SetParameter(1, 1.4);
 	piecewise->SetParameter(2, cor->GetMaximum());
 	piecewise->SetParameter(3, 0.1);
 	piecewise->SetParameter(4, cor->GetMaximum());

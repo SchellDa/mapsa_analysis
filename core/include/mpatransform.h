@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <stdexcept>
 #include "track.h"
+#include "triplet.h"
 
 namespace core {
 
@@ -44,6 +45,7 @@ public:
 	{
 		// Initialize normal vector and rotation matrix
 		setRotation({0.0, 0.0, 0.0});
+		_mpaIdx = 2;
 	}
 
 	/// \brief Transform pixel index to world coordinates	
@@ -118,6 +120,15 @@ public:
 		// Eigen::Hyperplane<double, 3> plane(_normal, _offset);
 		Eigen::ParametrizedLine<double, 3> line(track.points.at(a),
 		                                     track.points.at(b) - track.points.at(a));
+		auto t = line.intersectionParameter(_plane);
+		return line.pointAt(t);
+	}
+
+	Eigen::Vector3d mpaPlaneTrackIntersect(const Triplet& triplet) const
+	{
+		// Eigen::Hyperplane<double, 3> plane(_normal, _offset);
+		Eigen::ParametrizedLine<double, 3> line(triplet[0],
+		                                     triplet[1] - triplet[0]);
 		auto t = line.intersectionParameter(_plane);
 		return line.pointAt(t);
 	}
@@ -222,6 +233,7 @@ private:
 	Eigen::Hyperplane<double, 3> _plane;
 	Eigen::Vector3d _offset;
 	Eigen::Vector3d _angles;
+	int _mpaIdx;
 };
 
 } // namespace core

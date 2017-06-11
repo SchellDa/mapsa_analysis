@@ -78,10 +78,10 @@ public:
 
 	void setFixedMean(const bool& fixed) { _fixedMean = fixed; }
 
+	static Eigen::Vector2d alignPlateau(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean=false);
+	static Eigen::Vector2d alignGaussian(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean=false);
 private:
-	bool rebinIfNeccessary(TH1D* cor, const double& nrms, const double& binratio);
-	Eigen::Vector2d alignPlateau(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean=false);
-	Eigen::Vector2d alignGaussian(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean=false);
+	static bool rebinIfNeccessary(TH1D* cor, const double& nrms, const double& binratio);
 	double _nsigma;
 	TH1D* _alignX;
 	TH1D* _alignY;

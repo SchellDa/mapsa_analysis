@@ -2,7 +2,7 @@
 
 using namespace core;
 
-std::vector<Triplet> Triplet::findTriplets(const core::MergedAnalysis::run_data_t& run,
+std::vector<Triplet> Triplet::findTriplets(const core::run_data_t& run,
                                            double angle_cut,
                                            double residual_cut,
                                            std::array<int, 3> planes)
@@ -28,4 +28,12 @@ std::vector<Triplet> Triplet::findTriplets(const core::MergedAnalysis::run_data_
 		}
 	}
 	return triplets;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Triplet& T)
+{
+	for(auto h: T.getHits()) {
+		stream << h(0) << " " << h(1) << " " << h(2) << "\n";
+	}
+	return stream;
 }

@@ -26,6 +26,7 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/datastructures.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/triplet.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/triplettrack.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/mpahitgenerator.cpp
 	${CMAKE_BINARY_DIR}/root_dict.cpp
 )
 

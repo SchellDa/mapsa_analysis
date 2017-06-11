@@ -38,7 +38,11 @@ void GblAlign::init()
 	_trackConsts.six_kink_cut = 0.01;
 	_trackConsts.ref_residual_precut = 0.7;
 	_trackConsts.ref_residual_cut = 0.1;
+	_trackConsts.dut_residual_cut_x = 0.6;
+	_trackConsts.dut_residual_cut_y = 0.07;
 	_trackConsts.dut_z = 385;
+	_trackConsts.dut_rot = 0;
+	_trackConsts.dut_plateau_x = true;
 	_gbl_chi2_dist = new TH1F("gbl_chi2ndf_dist", "", 1000, 0, 100);
 }
 
@@ -46,16 +50,19 @@ void GblAlign::run(const core::run_data_t& run)
 {
 	loadPrealignment();
 	_trackConsts.ref_prealign = _refPreAlign;
-	auto trackCandidates = core::TripletTrack::getTracksWithRef(_trackConsts, run, _trackHists, &_refPreAlign);
+	auto trackCandidates = core::TripletTrack::getTracksWithRefDut(_trackConsts, run, _trackHists, &_refPreAlign, &_dutPreAlign);
 	std::cout << " * new extrapolated ref prealignment:\n" << _refPreAlign << std::endl;
+	std::cout << " * dut prealignment:\n" << _dutPreAlign << std::endl;
 	std::ofstream fout(getFilename("_all_tracks.csv"));
-	for(const auto& track: trackCandidates) {
-		for(const auto& hit: track.upstream().getHits()) {
-			fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
-		}
-		for(const auto& hit: track.downstream().getHits()) {
-			fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
-		}
+	for(auto pair: trackCandidates) {
+		auto track = pair.first;
+		fout << track.upstream();
+		Eigen::Vector3d hit;
+		hit = pair.second - _dutPreAlign;
+		fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
+		fout << track.downstream();
+		hit = track.refHit() - _refPreAlign;
+		fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
 		//for(int i = 0; i < 3; ++i) {
 		//	auto hit = track.upstream()[i];
 		//	fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
@@ -161,7 +168,7 @@ Eigen::MatrixXd GblAlign::getDerivatives(core::Triplet t, double dut_z, Eigen::V
 	return der;
 }
 
-void GblAlign::fitTracks(std::vector<core::TripletTrack> trackCandidates)
+void GblAlign::fitTracks(std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> trackCandidates)
 {
 	Eigen::Matrix2d proj;
 	proj << 1, 0,
@@ -174,7 +181,9 @@ void GblAlign::fitTracks(std::vector<core::TripletTrack> trackCandidates)
 	std::ofstream fout(getFilename("_trackfits.csv"));
 	std::ofstream fout_tracks(getFilename("_tracks.csv"));
 	gbl::MilleBinary mille(getFilename("_mille.bin"));	
-	for(const auto& track: trackCandidates) {
+	for(const auto& pair: trackCandidates) {
+		auto& track = pair.first;
+		auto& dutHit = pair.second;
 		std::vector<gbl::GblPoint> trajectory;
 		double prev_z = track.upstream()[0](0);
 		for(const auto& hit: track.upstream().getHits()) {
@@ -184,8 +193,33 @@ void GblAlign::fitTracks(std::vector<core::TripletTrack> trackCandidates)
 			p.addScatterer(scatter, wscatter);
 			trajectory.push_back(p);
 			fout_tracks << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
-		} {
+		} { /* DUT */
+			Eigen::Vector3d hit = dutHit - _dutPreAlign;
+			fout_tracks << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
+			gbl::GblPoint p(jacobianStep(hit(2) - prev_z));
+			prev_z = hit(2);
+			Eigen::Vector2d precision(_precisionMpa);
+			if(true) {
+				precision(0) = _precisionMpa(1);
+				precision(1) = _precisionMpa(0);
+			}
+			p.addMeasurement(proj, track.upstream().getds(hit), precision);
+			p.addScatterer(scatter, wscatter);
+//			auto der = getDerivatives(track.upstream(), hit(2), {0, 0, 0});
+			std::vector<int> labels(3);
+			labels[0] = 11;
+			labels[1] = 12;
+			labels[2] = 13;
+//			labels[3] = 4;
+//			labels[4] = 5;
+//			labels[5] = 6;
+			Eigen::Matrix<double, 2, 3> der;
+			der << 1.0, 0.0, track.upstream().slope()(0),
+			       0.0, 1.0, track.upstream().slope()(1);
+			p.addGlobals(labels, der);
+			trajectory.push_back(p);
 		}
+		/* DOWNSTREAM */
 		for(const auto& hit: track.downstream().getHits()) {
 			gbl::GblPoint p(jacobianStep(hit(2) - prev_z));
 			prev_z = hit(2);
@@ -193,7 +227,7 @@ void GblAlign::fitTracks(std::vector<core::TripletTrack> trackCandidates)
 			p.addScatterer(scatter, wscatter);
 			trajectory.push_back(p);
 			fout_tracks << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
-		} {
+		} { /* REF */
 			Eigen::Vector3d hit = track.refHit() - _refPreAlign;
 			fout_tracks << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
 			gbl::GblPoint p(jacobianStep(hit(2) - prev_z));
@@ -242,6 +276,9 @@ void GblAlign::fitTracks(std::vector<core::TripletTrack> trackCandidates)
 //	       << "4  0.0  0.0\n" // dtilt
 //	       << "5  0.0  0.0\n" // dturn
 //	       << "6  0.0  0.0\n" // dz
+	       << "11  0.0  0.0\n" // dx
+	       << "12  0.0  0.0\n" // dy
+	       << "13  0.0  0.0\n" // dz
 	       << "\n"
 	       << "! chisqcut 5.0 2.5\n"
 	       << "outlierdownweighting 4\n"
@@ -252,6 +289,14 @@ void GblAlign::fitTracks(std::vector<core::TripletTrack> trackCandidates)
 	       << "histprint\n"
 	       << "\n"
 	       << "end\n";
+	std::ofstream fprealign(getFilename("_prealign.txt"));
+	fprealign << "1 " << _refPreAlign(0) << "\n"
+	          << "2 " << _refPreAlign(1) << "\n"
+	          << "3 " << _refPreAlign(2) << "\n"
+	          << "11 " << _dutPreAlign(0) << "\n"
+	          << "12 " << _dutPreAlign(1) << "\n"
+	          << "13 " << _dutPreAlign(2) + _trackConsts.dut_z << "\n"
+		  << std::flush;
 }
 
 Eigen::Vector3d GblAlign::calcFitDebugHistograms(int planeId, gbl::GblTrajectory* traj)

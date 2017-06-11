@@ -27,7 +27,7 @@ public:
 	static Eigen::MatrixXd getDerivatives(core::Triplet t, double dut_z, Eigen::Vector3d angles);
 
 private:
-	void fitTracks(std::vector<core::TripletTrack> trackCandidates);
+	void fitTracks(std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> trackCandidates);
 	Eigen::Vector3d calcFitDebugHistograms(int planeId, gbl::GblTrajectory* traj);
 	void loadPrealignment();
 	void loadResolutions();

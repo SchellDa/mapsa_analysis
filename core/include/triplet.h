@@ -149,4 +149,6 @@ private:
 
 }
 
+std::ostream& operator<<(std::ostream& stream, const core::Triplet& T);
+
 #endif//TRIPLET_H
