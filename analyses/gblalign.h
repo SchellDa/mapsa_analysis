@@ -20,7 +20,7 @@ public:
 	virtual ~GblAlign();
 
 	virtual void init();
-	virtual void run(const core::MergedAnalysis::run_data_t& run);
+	virtual void run(const core::run_data_t& run);
 	virtual void finalize();
 
 	static Eigen::MatrixXd jacobianStep(double step);

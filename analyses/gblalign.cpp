@@ -42,7 +42,7 @@ void GblAlign::init()
 	_gbl_chi2_dist = new TH1F("gbl_chi2ndf_dist", "", 1000, 0, 100);
 }
 
-void GblAlign::run(const core::MergedAnalysis::run_data_t& run)
+void GblAlign::run(const core::run_data_t& run)
 {
 	loadPrealignment();
 	_trackConsts.ref_prealign = _refPreAlign;

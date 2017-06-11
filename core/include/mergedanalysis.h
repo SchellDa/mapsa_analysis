@@ -14,21 +14,6 @@ namespace core {
 class MergedAnalysis : public Analysis
 {
 public:
-	struct mpa_data_t
-	{
-		std::string name;
-		int index;
-		MpaData** data;
-	};
-	struct run_data_t
-	{
-		int runId;
-		TFile* file;
-		TTree* tree;
-		TelescopeData** telescopeData;
-		TelescopeHits** telescopeHits;
-		std::vector<mpa_data_t> mpaData;
-	};
 	MergedAnalysis();
 	virtual ~MergedAnalysis();
 

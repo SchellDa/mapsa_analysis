@@ -3,6 +3,10 @@
 
 #include <TObject.h>
 #include <TVector.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <string>
+#include <vector>
 
 class Conditionals {
 public:
@@ -106,6 +110,27 @@ public:
 	virtual ~TelescopeHits();
 	ClassDef(TelescopeHits, 1);
 };
+
+namespace core {
+
+struct mpa_data_t
+{
+	std::string name;
+	int index;
+	MpaData** data;
+};
+	
+struct run_data_t
+{
+	int runId;
+	TFile* file;
+	TTree* tree;
+	TelescopeData** telescopeData;
+	TelescopeHits** telescopeHits;
+	std::vector<mpa_data_t> mpaData;
+};
+
+}
 
 #endif//DATA_STRUCTURES_H
 

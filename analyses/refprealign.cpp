@@ -35,7 +35,7 @@ void RefPreAlign::init()
 	_dutResY = new TH1F("dut_res_y", "DUT Residual Y", 200, -10, 10);
 }
 
-void RefPreAlign::run(const core::MergedAnalysis::run_data_t& run)
+void RefPreAlign::run(const core::run_data_t& run)
 {
 	std::cout << "Run " << run.runId << std::endl;
 	auto telHits = *run.telescopeHits;

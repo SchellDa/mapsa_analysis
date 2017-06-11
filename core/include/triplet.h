@@ -1,7 +1,7 @@
 #ifndef TRIPLET_H
 #define TRIPLET_H
 
-#include "mergedanalysis.h"
+#include "datastructures.h"
 #include <Eigen/Dense>
 
 namespace core
@@ -138,7 +138,7 @@ public:
 		return _hits;
 	}
 
-	static std::vector<Triplet> findTriplets(const core::MergedAnalysis::run_data_t& run,
+	static std::vector<Triplet> findTriplets(const core::run_data_t& run,
 	                                         double angle_cut,
 	                                         double residual_cut,
 	                                         std::array<int, 3> planes);
