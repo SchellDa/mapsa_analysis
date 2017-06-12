@@ -40,13 +40,13 @@ void MpaTripletEfficiency::init()
 	_trackConsts.dut_plateau_x = true;
 	_trackHits = new TH2F("track_hits", "Tracks passing the MaPSA",
 	                      160, 0, 16,
-			      30, 0, 3);
+			      60, -3, 3);
 	_realHits = new TH2F("real_hits", "Registered Tracks",
 	                      160, 0, 16,
-			      30, 0, 3);
+			      60, -3, 3);
 	_fakeHits = new TH2F("fake_hits", "Formerly Shit-Tracks",
 	                      160, 0, 16,
-			      30, 0, 3);
+			      60, -3, 3);
 	_overlayedTrackHits = new TH2F("overlayed_track_hits", "Tracks passing the MaPSA",
 	                      60, 0, 2,
 			      200, 0, 1);
@@ -81,9 +81,9 @@ void MpaTripletEfficiency::run(const core::run_data_t& run)
 	transform.setRotation({_trackConsts.dut_rot, 0, 3.1415 / 180 * 90});
 	std::cout << "Track particles to DUT" << std::endl;
 //	std::ofstream fout(getFilename("_hits.csv"));
-	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) {
+	for(size_t evt = 2; evt < run.tree->GetEntries(); ++evt) {
 		run.tree->GetEntry(evt);
-		auto mpaHits = core::MpaHitGenerator::getCounterHits(run, transform);
+		auto mpaHits = core::MpaHitGenerator::getCounterClusters(run, transform, nullptr, nullptr);
 		_mpaActivationHist->Fill(_currentRunId, mpaHits.size());
 		for(; trackIdx < tracks.size() && tracks[trackIdx].first.getEventNo() < evt; ++trackIdx) {
 //			std::cout << " Skipping track " << trackIdx
@@ -167,7 +167,7 @@ void MpaTripletEfficiency::calcTrack(core::TripletTrack track, std::vector<Eigen
 	}
 	try { 
 		auto hitpoint = transform.mpaPlaneTrackIntersect(track.upstream());
-		Eigen::Vector2d pc = transform.globalToPixelCoord(hitpoint);
+		Eigen::Vector2d pc = transform.globalToPixelCoord(hitpoint, {2, 5});
 		Eigen::Vector2d overlay_pc(fmod(pc(0), 2), fmod(pc(1), 1));
 		auto pixelIdx = transform.pixelCoordToIndex(pc.cast<int>());
 		_trackHits->Fill(pc(0), pc(1));

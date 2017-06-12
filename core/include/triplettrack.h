@@ -96,6 +96,7 @@ public:
 		TH1F* ref_down_res_y;
 		TH1D* dut_up_res_x;
 		TH1D* dut_up_res_y;
+		TH1F* dut_cluster_size;
 		TH1F* track_kink_x;
 		TH1F* track_kink_y;
 		TH1F* track_residual_x;

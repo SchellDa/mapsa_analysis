@@ -41,30 +41,38 @@ public:
 	static constexpr double total_width = 2 * outer_pixel_width + 14 * inner_pixel_width; // 18mm
 	static constexpr double total_height = 2 * upper_pixel_height + bottom_pixel_height;
 
-	MpaTransform()
+	MpaTransform() :
+	 _offset({0, 0, 0})
 	{
 		// Initialize normal vector and rotation matrix
 		setRotation({0.0, 0.0, 0.0});
-		_mpaIdx = 2;
 	}
 
 	/// \brief Transform pixel index to world coordinates	
-	Eigen::Vector3d transform(const size_t& pixelIdx, bool midpoints=true) const
+	Eigen::Vector3d transform(const size_t& pixelIdx, bool midpoints=true, int mpaIndex=2) const
 	{
-		return pixelCoordToGlobal(translatePixelIndex(pixelIdx), midpoints);
+		return pixelCoordToGlobal(translatePixelIndex(pixelIdx, mpaIndex), midpoints);
 	}
 
 	/// \brief Translates the pixel index to 2D pixel coordinates
-	Eigen::Vector2i translatePixelIndex(const size_t& pixelIdx) const
+	Eigen::Vector2i translatePixelIndex(const size_t& pixelIdx, int mpaIndex=2) const
 	{
 		if(pixelIdx > num_pixels) {
 			throw std::out_of_range("Pixel index out of range");
 		}
 		int py = 2 - pixelIdx/16;
-		return Eigen::Vector2i(
+		Eigen::Vector2i pc(
 			((py==1)?15:0) + static_cast<unsigned int>(pixelIdx)%16 * ((py==1)?-1:1),
 			py
 		);
+		if(mpaIndex <= 3) {
+			pc(0) += 16 * (mpaIndex - 2);
+		} else {
+			pc(0) = 16 - pc(0);
+			pc(0) -= 16 * (mpaIndex - 5);
+			pc(1) *= -1;
+		}
+		return pc;
 	}
 
 	/** \brief Transforms pixel coordinates to world-space coordinates
@@ -93,17 +101,25 @@ public:
 	{
 		// Express pixel coordinates in "module coordinates" with uniform scale across all pixels
 		// X coordinate simple because outer pixels just have double width :)
-		double x = pixelCoord(0) + 1.0;
-		if(pixelCoord(0) >= 15.0) {
-			x = (pixelCoord(0)-15.0)*2 + 16.0;
-		} else if(pixelCoord(0) < 1) {
-			x = pixelCoord(0)*2;
+		double pc_xmod = std::fmod(pixelCoord(0)+16, 16);
+		double x = pc_xmod + 1.0;
+		if(pc_xmod >= 15.0) {
+			x = (pc_xmod-15.0)*2 + 16.0;
+		} else if(pc_xmod < 1) {
+			x = pc_xmod*2;
 		}
 		x /= 18;
+		if(pixelCoord(0) > 16) {
+			x += 1;
+		} else if (pixelCoord(0) < 0) {
+			x -= 1;
+		}
 		double y = pixelCoord(1);
 		const double bottom_scale = bottom_pixel_height/upper_pixel_height;
 		if(y >= 2.0) {
 			y = (pixelCoord(1)-2) * bottom_scale + 2.0;
+		} else if(y <= -2.0) {
+			y = (pixelCoord(1)+2) * bottom_scale - 2.0;
 		}
 		y /= (2 + bottom_scale);
 		// We now have the "module coordinates" x and y in a [0:1] range
@@ -158,14 +174,35 @@ public:
 		return 0; // todo implement further pixel arrangements...
 	}
 
-	Eigen::Vector2d globalToPixelCoord(const Eigen::Vector3d& global) const
+	Eigen::Vector2d globalToPixelCoord(const Eigen::Vector3d& global, std::vector<int> activeMpa={2}) const
+	{
+		for(const auto& mpaIdx: activeMpa) {
+			try {
+				return globalToPixelCoord(global, mpaIdx);
+			} catch(std::out_of_range& e) {
+			}
+		}
+		throw std::out_of_range("Hit is not in pixel plane");
+		return Eigen::Vector2d{0, 0};
+	}
+
+	Eigen::Vector2d globalToPixelCoord(const Eigen::Vector3d& global, int mpaIndex) const
 	{
 		static const Eigen::Vector3d halfOff({total_width/2, total_height/2, 0.0});
 		// Eigen::Vector3d local = _invRotation*(global - _offset - halfOff) + halfOff;
 		Eigen::Vector3d local = _invRotation*(global - _offset);
+		if(mpaIndex <= 3) {
+			local(0) -= total_width * (mpaIndex-2);
+		} else {
+			local(0) += total_width * (mpaIndex-5);
+			local(1) += total_height;
+		}
 		const double bottom_scale = bottom_pixel_height / upper_pixel_height;
 		if((local.array().head(2) < 0 || local.array().head(2) > Eigen::Array2d(total_width, total_height)).any()) {
 			throw std::out_of_range("Hit is not in pixel plane");
+		}
+		if(mpaIndex > 3) {
+			local(1) -= total_height;
 		}
 		// scale the local coordinates to module coordinates ([0,1] range across sensor)
 		// and then apply the "virtual pixel count"
@@ -182,6 +219,15 @@ public:
 		double pixel_y = module_y;
 		if(module_y > 2.0) {
 			pixel_y = (module_y - 2)/bottom_scale + 2.0;
+		} else if(module_y < -2.0) {
+			pixel_y = (module_y + 2)/bottom_scale - 2.0;
+		}
+		if(mpaIndex > 3) {
+			pixel_y *= -1;
+			pixel_x -= 16*(mpaIndex-5);
+			pixel_y *= -1;
+		} else {
+			pixel_x += 16*(mpaIndex - 2);
 		}
 		return {pixel_x, pixel_y};
 	}
@@ -201,6 +247,19 @@ public:
 		_plane = Eigen::Hyperplane<double, 3>::Through(a, b, c);
 		_normal = _plane.normal();*/
 		_plane = Eigen::Hyperplane<double, 3>(_normal, _offset);
+	}
+
+	static double pixelArea(Eigen::Vector2i coord)
+	{
+		double x = inner_pixel_width;
+		double y = upper_pixel_height;
+		if(y == 2 || y == -2) {
+			y = bottom_pixel_height;
+		}
+		if(x == -16 || x == -1 || x == 0 || x == 15 || x == 16 || x == 31) {
+			x = outer_pixel_width;
+		}
+		return x * y;
 	}
 
 	void setOffset(const Eigen::Vector3d& offset)
@@ -233,7 +292,6 @@ private:
 	Eigen::Hyperplane<double, 3> _plane;
 	Eigen::Vector3d _offset;
 	Eigen::Vector3d _angles;
-	int _mpaIdx;
 };
 
 } // namespace core

@@ -22,6 +22,7 @@ TripletTrack::histograms_t TripletTrack::genDebugHistograms(std::string name_pre
 	hist.ref_down_res_y = new TH1F((name_prefix+"ref_downstream_res_y").c_str(), "Residual between downstream and ref", 1000, -5, 5);
 	hist.dut_up_res_x = new TH1D((name_prefix+"dut_upstream_res_x").c_str(), "Residual between upstream and dut", 1000, -10, 10);
 	hist.dut_up_res_y = new TH1D((name_prefix+"dut_upstream_res_y").c_str(), "Residual between upstream and dut", 1000, -10, 10);
+	hist.dut_cluster_size = new TH1F((name_prefix+"dut_cluster_size").c_str(), "Size of clusters in DUT", 50, 0, 50);
 	hist.track_kink_x = new TH1F((name_prefix+"track_kink_x").c_str(), "", 1000, 0, 0.1);
 	hist.track_kink_y = new TH1F((name_prefix+"track_kink_y").c_str(), "", 1000, 0, 0.1);
 	hist.track_residual_x = new TH1F((name_prefix+"track_residual_x").c_str(), "", 2000, -10, 10);
@@ -262,7 +263,8 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 		// build upstream vector
 		std::vector<std::pair<core::Triplet, Eigen::Vector3d>> fullUpstream;
 		if(useDut) {
-			auto mpaHits = MpaHitGenerator::getCounterHits(run, transform);
+			std::vector<int> clusterSize;
+			auto mpaHits = MpaHitGenerator::getCounterClusters(run, transform, &clusterSize, nullptr);
 			for(const auto& hit: mpaHits) {
 				for(const auto& triplet: upstream) {
 					double resx = triplet.getdx(hit);
@@ -271,6 +273,9 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 					hist.dut_up_res_y->Fill(resy);
 					fullUpstream.push_back({triplet, hit});
 				}
+			}
+			for(auto size: clusterSize) {
+				hist.dut_cluster_size->Fill(size);
 			}
 		} else {
 			for(const auto& triplet: upstream) {

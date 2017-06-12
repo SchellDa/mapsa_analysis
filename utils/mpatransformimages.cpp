@@ -48,6 +48,48 @@ void planeOffsetTest()
 	of.close();
 }
 
+void fullMapsaPlane()
+{
+	core::MpaTransform transform;
+	std::ofstream pixel_index_file("full_mapsa_pixel_index_file.csv");
+	pixel_index_file << "# Mpa\tIndex\tPixel X\tPixel Y\tWorld X\tWorld Y\n";
+	for(size_t mpaIdx = 1; mpaIdx <= 6; ++mpaIdx) {
+		if(mpaIdx == 4) {
+			pixel_index_file << "\n\n";
+		}
+		for(size_t i = 0; i < transform.num_pixels; ++i) {
+			auto pc = transform.translatePixelIndex(i, mpaIdx);
+			auto wc = transform.pixelCoordToGlobal(pc, true);
+			pixel_index_file << mpaIdx << "\t" << i << "\t"
+			                 << pc(0) << "\t" << pc(1) << "\t"
+			                 << wc(0) << "\t" << wc(1) << "\n";
+		}
+	}
+	pixel_index_file.close();
+}
+
+void fullMapsaRandomHits()
+{
+	core::MpaTransform transform;
+	std::ofstream random_hit_file("full_random_hit_file.csv");
+	random_hit_file << "# In X\tIn Y\tOut X\tOut Y\n";
+	for(size_t i = 0; i < 100; ++i) {
+		double x = static_cast<double>(rand())/RAND_MAX * 16 * 3 - 16;
+		double y = static_cast<double>(rand())/RAND_MAX * 3 * 2 - 3;
+		auto global = transform.pixelCoordToGlobal(Eigen::Vector2d{x, y});
+		try {
+			auto back = transform.globalToPixelCoord(global, {1, 2, 3, 4, 5, 6});
+			random_hit_file << x << "\t"
+			                << y << "\t"
+					<< back(0) << "\t"
+					<< back(1) << "\n";
+		} catch(std::out_of_range& e) {
+		}
+		
+	}
+	random_hit_file.close();
+}
+
 int main(int argc, char* argv[]) {
 	core::MpaTransform transform;
 	std::ofstream pixel_grid_file("pixel_grid.csv");
@@ -62,6 +104,18 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	pixel_grid_file.close();
+	std::ofstream full_grid_file("full_grid.csv");
+	full_grid_file << "# PixX\tPixel Y\tGlobal X\tGlobal Y\n";
+	for(double x=-16; x <= 32.04; x += 0.25) {
+		for(double y=-3; y <= transform.num_pixels_y+0.04; y += 0.25) {
+			auto global = transform.pixelCoordToGlobal(Eigen::Vector2d{x, y});
+			full_grid_file << x << "\t"
+			                << y << "\t"
+					<< global(0) << "\t"
+					<< global(1) << "\n";
+		}
+	}
+	full_grid_file.close();
 	std::ofstream random_hit_file("random_hit_file.csv");
 	random_hit_file << "# In X\tIn Y\tOut X\tOut Y\n";
 	for(size_t i = 0; i < 100; ++i) {
@@ -73,7 +127,6 @@ int main(int argc, char* argv[]) {
 		                << y << "\t"
 				<< back(0) << "\t"
 				<< back(1) << "\n";
-		
 	}
 	random_hit_file.close();
 	std::ofstream random_hit_rotated("random_hit_rotated.csv");
@@ -102,5 +155,7 @@ int main(int argc, char* argv[]) {
 	pixel_index_file.close();
 	angularPoints();
 	planeOffsetTest();
+	fullMapsaPlane();
+	fullMapsaRandomHits();
 	return 0;
 }
