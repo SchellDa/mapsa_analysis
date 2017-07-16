@@ -108,6 +108,9 @@ public:
 		TH1F* candidate_res_ref_y;
 		TH1F* candidate_res_dut_x;
 		TH1F* candidate_res_dut_y;
+		TH1F* plane_local_x;
+		TH1F* plane_local_y;
+		TH1F* plane_local_z;
 		TH1F* gbl_chi2_dist;
 	};
 
@@ -123,8 +126,8 @@ public:
 		double dut_residual_precut_y;
 		double dut_residual_cut_x;
 		double dut_residual_cut_y;
-		double dut_z;
-		double dut_rot;
+		Eigen::Vector3d dut_initial_offset;
+		Eigen::Vector3d dut_initial_rotation;
 		bool dut_plateau_x;
 		Eigen::Vector3d ref_prealign;
 		Eigen::Vector3d dut_prealign;

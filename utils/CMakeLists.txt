@@ -19,6 +19,8 @@ add_executable(mpatransformimages mpatransformimages.cpp)
 add_executable(belphegor belphegor.cpp)
 add_executable(sacrifice sacrifice.cpp)
 add_executable(testfit testfit.cpp)
+add_executable(genclustertest genclustertest.cpp)
+add_executable(rotationmatrices rotationmatrices.cpp)
 target_link_libraries(belphegor AnalysisClasses)
 
 set(BUILD_VISUCMAES false CACHE "BOOL" "Build VisuCMAES utility. Requires Qt5")

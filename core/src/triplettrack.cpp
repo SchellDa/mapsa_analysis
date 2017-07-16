@@ -221,8 +221,8 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	assert(hist.down_angle_x);
 	std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> candidates;
 	MpaTransform transform;
-	transform.setOffset({0, 0, consts.dut_z});
-	transform.setRotation({consts.dut_rot, 0, 3.1415/180*90});
+	transform.setOffset(consts.offset);
+	transform.setRotation(consts.rotation);
 	int numMpa = 0;
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) {
 		run.tree->GetEntry(evt);
@@ -353,11 +353,13 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> accepted;
 	for(auto pair: candidates) {
 		TripletTrack track = pair.first;
-		auto dut = pair.second - dutPreAlign;
+		auto dut = pair.second - dutPreAlign; // activated DUT pixel in global coords
 		auto track_x = track.xresidualat(consts.dut_z);
 		auto track_y = track.yresidualat(consts.dut_z);
 		auto ref_x = track.xrefresidual(refPreAlign);
 		auto ref_y = track.yrefresidual(refPreAlign);
+		auto plane_hit = transform.mpaPlaneTrackIntersect(track.upstream);
+		Eigen::Vector3d plane_local_hit = transform.getInverseRotation()*(global - transform.getOffset());
 		auto dut_x = track.upstream().getdx(dut);
 		auto dut_y = track.upstream().getdy(dut);
 		if(std::abs(ref_x) > consts.ref_residual_cut || std::abs(ref_y) > consts.ref_residual_cut) {

@@ -8,6 +8,7 @@
 #include <TTree.h>
 #include <string>
 #include <vector>
+#include "runlistreader.h"
 
 namespace core {
 
@@ -29,6 +30,7 @@ public:
 
 private:
 	std::vector<run_data_t> _runData;
+	RunlistReader _runlist;
 };
 
 }

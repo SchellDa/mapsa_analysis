@@ -6,8 +6,11 @@
 using namespace core;
 
 MergedAnalysis::MergedAnalysis() :
- Analysis()
+ Analysis(), _runlist(_config)
 {
+	getOptionsDescription().add_options()
+		("runlist,l", po::value<std::string>(), "Per-run information table")
+	;
 }
 
 MergedAnalysis::~MergedAnalysis()
@@ -62,6 +65,14 @@ void MergedAnalysis::init(const po::variables_map& vm)
 		}
 		_runData.push_back(data);
 	}
+	if(vm.count("runlist")) {
+		try {
+			_runlist.load(vm["runlist"].as<std::string>());
+		} catch(std::exception& e) {
+			std::cerr << "Error while loading runlist:\n" << e.what() << std::endl;
+			throw;
+		}
+	}
 }
 
 void MergedAnalysis::run(const po::variables_map& vm)
@@ -69,6 +80,7 @@ void MergedAnalysis::run(const po::variables_map& vm)
 	init(vm);
 	_currentRunId = _runData[0].runId;
 	_config.setVariable("MpaRun", getMpaIdPadded(_currentRunId));
+	_runlist.loadRun();
 	init();
 	for(const auto& data: _runData) {
 		_currentRunId = data.runId;

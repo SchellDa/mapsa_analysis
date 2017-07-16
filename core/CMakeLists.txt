@@ -19,6 +19,7 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/trackanalysis.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/mergedanalysis.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/quickrunlistreader.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/runlistreader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/aligner.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/functions.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/mpatransform.cpp

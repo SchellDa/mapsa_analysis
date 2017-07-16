@@ -12,6 +12,7 @@ class MpaHitGenerator
 public:
 	static std::vector<Eigen::Vector3d> getCounterHits(run_data_t run, Eigen::Vector3d offset, Eigen::Vector3d rotation);
 	static std::vector<Eigen::Vector3d> getCounterHits(run_data_t run, const MpaTransform& transform);
+	static std::vector<Eigen::Vector2i> getCounterPixels(run_data_t run, const MpaTransform& transform);
 	static std::vector<Eigen::Vector3d> getCounterClusters(run_data_t run, MpaTransform transform,
 	                                                       std::vector<int>* clusterSizes,
 	                                                       std::vector<double>* clusterAreas);

@@ -19,7 +19,7 @@ public:
 
 private:
 	void loadCurrentAlignment();
-	void calcTrack(core::TripletTrack track, std::vector<Eigen::Vector3d> mpaHits, core::MpaTransform transform, core::run_data_t run);
+	void calcTrack(core::TripletTrack track, std::vector<Eigen::Vector2d> mpaHits, core::MpaTransform transform, core::run_data_t run);
 	TFile* _file;
 	core::TripletTrack::constants_t _trackConsts;
 	Eigen::Vector3d _refAlignOffset;
@@ -27,6 +27,8 @@ private:
 	TH2F* _trackHits;
 	TH2F* _realHits;
 	TH2F* _fakeHits;
+	TH2F* _clusterHits;
+	TH2F* _pixelHits;
 	TH2F* _overlayedTrackHits;
 	TH2F* _overlayedRealHits;
 	TH1F* _dutResX;
@@ -36,6 +38,9 @@ private:
 	TH1F* _mpaHitHist;
 	TH1F* _trackHist;
 	TH1F* _mpaActivationHist;
+	TH1F* _clusterSize;
+	size_t _trackHitCount;
+	size_t _realHitCount;
 	std::vector<double> _runIdsDouble;
 	std::vector<double> _meanResX;
 	std::vector<double> _meanResY;

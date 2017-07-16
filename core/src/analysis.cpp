@@ -86,8 +86,14 @@ std::string Analysis::getFilename(const std::string& prefix, const std::string& 
 		}
 	}
 	if(allRuns) {
-		for(const auto& id: _allRunIds) {
-			sstr << "_" << getMpaIdPadded(id);
+		if(_allRunIds.size() < 10) {
+			for(const auto& id: _allRunIds) {
+				sstr << "_" << getMpaIdPadded(id);
+			}
+		} else {
+			auto min = *std::min(_allRunIds.begin(), _allRunIds.end());
+			auto max = *std::max(_allRunIds.begin(), _allRunIds.end());
+			sstr << getMpaIdPadded(min) << "-to-" << getMpaIdPadded(max);
 		}
 	} else {
 		sstr << "_" << getMpaIdPadded(_currentRunId);

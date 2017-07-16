@@ -41,9 +41,20 @@ void MpaClusterTest::run(const core::run_data_t& run)
 	core::MpaTransform transform;
 	transform.setOffset(Eigen::Vector3d{0, 0, 385});
 	transform.setRotation({0, 0, 3.1415 / 180 * 90});
-	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) {
+	std::ofstream fhits(getFilename("_hits.csv"));
+	std::ofstream fclusters(getFilename("_clusters.csv"));
+	for(size_t evt = 2; evt < run.tree->GetEntries(); ++evt) {
 		run.tree->GetEntry(evt);
-		auto clusters = core::MpaHitGenerator::getCounterClustersLocal(run, transform, &sizes, &areas);
+		auto pixels = core::MpaHitGenerator::getCounterPixels(run, transform);
+		auto clusters = core::MpaHitGenerator::clusterize(pixels, &sizes, &areas);
+		for(auto pixel: pixels) {
+			fhits << pixel(0) << " " << pixel(1) << "\n";
+		}
+		for(auto cluster: clusters) {
+			fclusters << cluster(0) << " " << cluster(1) << "\n";
+		}
+		fhits << "\n\n";
+		fclusters << "\n\n";
 		std::vector<Eigen::Vector3d> hits;
 		for(auto& cluster: clusters) {
 			hits.push_back(transform.pixelCoordToGlobal(cluster));
