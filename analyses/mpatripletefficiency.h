@@ -33,14 +33,18 @@ private:
 	TH2F* _overlayedRealHits;
 	TH1F* _dutResX;
 	TH1F* _dutResY;
+	TH1F* _dutResZ;
 	TH1F* _currentDutResX;
 	TH1F* _currentDutResY;
+	TH1F* _currentDutResZ;
 	TH1F* _mpaHitHist;
 	TH1F* _trackHist;
 	TH1F* _mpaActivationHist;
 	TH1F* _clusterSize;
 	size_t _trackHitCount;
 	size_t _realHitCount;
+	double _resCutX;
+	double _resCutY;
 	std::vector<double> _runIdsDouble;
 	std::vector<double> _meanResX;
 	std::vector<double> _meanResY;

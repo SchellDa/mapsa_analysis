@@ -126,8 +126,8 @@ public:
 		double dut_residual_precut_y;
 		double dut_residual_cut_x;
 		double dut_residual_cut_y;
-		Eigen::Vector3d dut_initial_offset;
-		Eigen::Vector3d dut_initial_rotation;
+		Eigen::Vector3d dut_offset;
+		Eigen::Vector3d dut_rotation;
 		bool dut_plateau_x;
 		Eigen::Vector3d ref_prealign;
 		Eigen::Vector3d dut_prealign;

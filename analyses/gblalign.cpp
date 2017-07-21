@@ -31,15 +31,15 @@ void GblAlign::init()
 	_eBeam = _config.get<double>("e_beam");
 	_file = new TFile(getRootFilename().c_str(), "recreate");
 	_trackHists = core::TripletTrack::genDebugHistograms();
-	_trackConsts.angle_cut = 0.16;
-	_trackConsts.upstream_residual_cut = 0.1;
-	_trackConsts.downstream_residual_cut = 0.1;
-	_trackConsts.six_residual_cut = 0.1;
-	_trackConsts.six_kink_cut = 0.01;
-	_trackConsts.ref_residual_precut = 0.7;
-	_trackConsts.ref_residual_cut = 0.1;
-	_trackConsts.dut_residual_cut_x = 0.6;
-	_trackConsts.dut_residual_cut_y = 0.07;
+	_trackConsts.angle_cut = _config.get<double>("angle_cut");
+	_trackConsts.upstream_residual_cut = _config.get<double>("upstream_residual_cut");
+	_trackConsts.downstream_residual_cut = _config.get<double>("downstream_residual_cut");
+	_trackConsts.six_residual_cut = _config.get<double>("six_residual_cut");
+	_trackConsts.six_kink_cut = _config.get<double>("six_kink_cut");
+	_trackConsts.ref_residual_precut = _config.get<double>("ref_residual_precut");
+	_trackConsts.ref_residual_cut = _config.get<double>("ref_residual_cut");
+	_trackConsts.dut_residual_cut_x = _config.get<double>("dut_residual_cut_x");
+	_trackConsts.dut_residual_cut_y = _config.get<double>("dut_residual_cut_y");
 	_trackConsts.dut_offset = Eigen::Vector3d({
 		_config.get<double>("dut_x"),
 		_config.get<double>("dut_y"),
@@ -49,8 +49,10 @@ void GblAlign::init()
 		_config.get<double>("dut_phi"),
 		_config.get<double>("dut_theta"),
 		_config.get<double>("dut_omega")
-		}) * 180.0 / M_PI;
+		}) * M_PI / 180;
 	_trackConsts.dut_plateau_x = true;
+	std::cout << "DUT Offset:\n" << _trackConsts.dut_offset << std::endl;
+	std::cout << "DUT Rotation:\n" << _trackConsts.dut_rotation << std::endl;
 	_gbl_chi2_dist = new TH1F("gbl_chi2ndf_dist", "", 1000, 0, 100);
 }
 
@@ -69,7 +71,7 @@ void GblAlign::run(const core::run_data_t& run)
 		hit = pair.second - _dutPreAlign;
 		fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
 		fout << track.downstream();
-		hit = track.refHit() - _refPreAlign;
+		hit = track.refHit() + _refPreAlign;
 		fout << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
 		//for(int i = 0; i < 3; ++i) {
 		//	auto hit = track.upstream()[i];
@@ -182,7 +184,7 @@ void GblAlign::fitTracks(std::vector<std::pair<core::TripletTrack, Eigen::Vector
 			trajectory.push_back(p);
 			fout_tracks << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
 		} { /* DUT */
-			Eigen::Vector3d hit = dutHit - _dutPreAlign;
+			Eigen::Vector3d hit = dutHit + _dutPreAlign;
 			fout_tracks << hit(0) << " " << hit(1) << " " << hit(2) << "\n";
 			gbl::GblPoint p(jacobianStep(hit(2) - prev_z));
 			prev_z = hit(2);
@@ -286,12 +288,13 @@ void GblAlign::fitTracks(std::vector<std::pair<core::TripletTrack, Eigen::Vector
 	       << "\n"
 	       << "end\n";
 	std::ofstream fprealign(getFilename("_prealign.txt"));
+	Eigen::Vector3d dut = _dutPreAlign + _trackConsts.dut_offset;
 	fprealign << "1 " << _refPreAlign(0) << "\n"
 	          << "2 " << _refPreAlign(1) << "\n"
 	          << "3 " << _refPreAlign(2) << "\n"
-	          << "11 " << _dutPreAlign(0) << "\n"
-	          << "12 " << _dutPreAlign(1) << "\n"
-	          << "13 " << _dutPreAlign(2) + _trackConsts.dut_z << "\n"
+	          << "11 " << dut(0) << "\n"
+	          << "12 " << dut(1) << "\n"
+	          << "13 " << dut(2) << "\n"
 		  << std::flush;
 }
 
