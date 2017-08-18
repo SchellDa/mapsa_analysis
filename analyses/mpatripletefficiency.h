@@ -48,6 +48,9 @@ private:
 	std::vector<double> _runIdsDouble;
 	std::vector<double> _meanResX;
 	std::vector<double> _meanResY;
+	Eigen::Vector2d _fiducialMin;
+	Eigen::Vector2d _fiducialMax;
+	std::vector<Eigen::Vector2i> _maskedPixels;
 };
 
 #endif//MPA_TRIPLET_EFFICIENCY_H

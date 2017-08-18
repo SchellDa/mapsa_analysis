@@ -85,6 +85,17 @@ void MpaTripletEfficiency::init()
 void MpaTripletEfficiency::run(const core::run_data_t& run)
 {
 	loadCurrentAlignment();
+
+	_maskedPixels.clear();
+	core::MpaTransform transform;
+	for(auto pixelIdx: _config.getVector<int>("triplet_efficiency_masked")) {
+		_maskedPixels.push_back(transform.translatePixelIndex(pixelIdx));
+	}
+	_fiducialMin(0) = _config.get<double>("triplet_efficiency_fiducial_min_x");
+	_fiducialMin(1) = _config.get<double>("triplet_efficiency_fiducial_min_y");
+	_fiducialMax(0) = _config.get<double>("triplet_efficiency_fiducial_max_x");
+	_fiducialMax(1) = _config.get<double>("triplet_efficiency_fiducial_max_y");
+
 	std::string dir("run_");
 	dir += std::to_string(_currentRunId);
 	_file->mkdir(dir.c_str());
@@ -96,7 +107,6 @@ void MpaTripletEfficiency::run(const core::run_data_t& run)
 	auto hists = core::TripletTrack::genDebugHistograms();
 	auto tracks = core::TripletTrack::getTracksWithRefDut(_trackConsts, run, hists, nullptr, nullptr, false);
 	size_t trackIdx = 0;
-	core::MpaTransform transform;
 	transform.setOffset(_dutAlignOffset);
 	transform.setRotation(_trackConsts.dut_rotation);
 	std::cout << "Track particles to DUT" << std::endl;
@@ -220,6 +230,15 @@ void MpaTripletEfficiency::calcTrack(core::TripletTrack track, std::vector<Eigen
 		Eigen::Vector2d pc = transform.globalToPixelCoord(hitpoint);
 		Eigen::Vector2d overlay_pc(fmod(pc(0), 2), fmod(pc(1), 1));
 		auto pixelIdx = transform.pixelCoordToIndex(pc.cast<int>());
+		if(pc(0) < _fiducialMin(0) || pc(0) > _fiducialMax(0) ||
+		   pc(1) < _fiducialMin(1) || pc(1) > _fiducialMax(1)) {
+			return;
+		}
+		for(auto maskedPc: _maskedPixels) {
+			if((int)pc(0) == maskedPc(0) && (int)pc(1) == maskedPc(1)) {
+				return;
+			}
+		}
 		_trackHits->Fill(pc(0), pc(1));
 		_trackHitCount++;
 		bool overlaying_pixel = true;
