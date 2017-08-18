@@ -123,8 +123,8 @@ void MpaAlign::scanFinish()
 	title += " mm";
 	auto xcor = _aligner.getHistX();
 	auto ycor = _aligner.getHistY();
-	xcor->Write();
-	ycor->Write();
+	xcor->GetXaxis()->SetTitle("x residual (mm)");
+	ycor->GetYaxis()->SetTitle("y residual (mm)");
 	xcor->SetTitle(title.c_str());
 	ycor->SetTitle(title.c_str());
 	_xCanvas->cd(cd);
@@ -132,6 +132,8 @@ void MpaAlign::scanFinish()
 	_yCanvas->cd(cd);
 	ycor->Draw();
 	++_currentScanStep;
+	xcor->Write();
+	ycor->Write();
 	if(_currentScanStep < _numSteps) {
 		rerun();
 	} else {
