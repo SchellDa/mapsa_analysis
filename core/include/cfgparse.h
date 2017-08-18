@@ -120,6 +120,9 @@ public:
 		while(is.good()) {
 			std::string value;
 			is >> value;
+			if(value.size() == 0) {
+				continue;
+			}
 			try {
 				vec.push_back(boost::lexical_cast<T>(value));
 			} catch(boost::bad_lexical_cast& e) {
