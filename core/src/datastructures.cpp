@@ -81,3 +81,10 @@ TelescopeHits::~TelescopeHits()
 {
 }
 
+AlibavaData::AlibavaData()
+{
+}
+
+AlibavaData::~AlibavaData()
+{
+}

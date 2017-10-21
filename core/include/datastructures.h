@@ -111,6 +111,21 @@ public:
 	ClassDef(TelescopeHits, 1);
 };
 
+class AlibavaData {
+public:
+
+    TVector event;
+    TVector center;
+    TVectorD clock;
+    TVectorD time;
+    TVectorD temp;
+    TVectorD clusterSignal;
+
+    AlibavaData();
+    virtual ~AlibavaData();
+    ClassDef(AlibavaData, 1);
+};
+
 namespace core {
 
 struct mpa_data_t
@@ -128,6 +143,16 @@ struct run_data_t
 	TelescopeData** telescopeData;
 	TelescopeHits** telescopeHits;
 	std::vector<mpa_data_t> mpaData;
+};
+
+struct alibava_run_data_t
+{
+	int runId;
+	TFile* iFile;
+	TTree* iTree;
+	TelescopeData** telescopeData;
+	TelescopeHits** telescopeHits;
+	std::vector<AlibavaData> aliData;
 };
 
 }
