@@ -114,16 +114,16 @@ public:
 class AlibavaData {
 public:
 
-    TVector event;
-    TVector center;
-    TVectorD clock;
-    TVectorD time;
-    TVectorD temp;
-    TVectorD clusterSignal;
+	TVector event;
+	TVector center;
+	TVectorD clock;
+	TVectorD time;
+	TVectorD temp;
+	TVectorD clusterSignal;
 
-    AlibavaData();
-    virtual ~AlibavaData();
-    ClassDef(AlibavaData, 1);
+	AlibavaData();
+	virtual ~AlibavaData();
+	ClassDef(AlibavaData, 1);
 };
 
 namespace core {
@@ -148,11 +148,11 @@ struct run_data_t
 struct alibava_run_data_t
 {
 	int runId;
-	TFile* iFile;
-	TTree* iTree;
-	TelescopeData** telescopeData;
-	TelescopeHits** telescopeHits;
-	std::vector<AlibavaData> aliData;
+	TFile* file;
+	TTree* tree;
+	TelescopeData* telescopeData;
+	TelescopeHits* telescopeHits;
+	AlibavaData* alibavaData;
 };
 
 }

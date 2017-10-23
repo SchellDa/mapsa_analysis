@@ -4,7 +4,8 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/root_dict.cpp ${CMAKE_BINARY_DIR}/
 	COMMAND ${ROOT_CINT_EXECUTABLE} -f ${CMAKE_BINARY_DIR}/root_dict.cpp -c
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/datastructures.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/LinkDef.h"
-	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/datastructures.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/LinkDef.h"
+	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/datastructures.h" 
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/LinkDef.h"
 )
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -28,6 +29,7 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/triplet.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/triplettrack.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/mpahitgenerator.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/alibavaanalysis.cpp
 	${CMAKE_BINARY_DIR}/root_dict.cpp
 )
 
@@ -56,9 +58,11 @@ include_directories(${CMAKE_BINARY_DIR})
 
 add_definitions("-fPIC")
 add_library(core STATIC ${SOURCE})
+
 if(${ENABLE_CBC_ANALYSIS})
 target_link_libraries(core interface)
 endif(${ENABLE_CBC_ANALYSIS})
+
 if(BUILD_TESTING)
  add_definitions("-Wno-unused-variable")
  include_directories(${GOOGLETEST_INCLUDE_DIR})

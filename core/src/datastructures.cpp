@@ -10,6 +10,7 @@ ClassImp(TelescopePlaneClusters)
 ClassImp(PlaneHits)
 ClassImp(TelescopeData)
 ClassImp(TelescopeHits)
+ClassImp(AlibavaData)
 
 Conditionals::Conditionals() :
  threshold(NAN), voltage(NAN), current(NAN),
@@ -88,3 +89,4 @@ AlibavaData::AlibavaData()
 AlibavaData::~AlibavaData()
 {
 }
+
