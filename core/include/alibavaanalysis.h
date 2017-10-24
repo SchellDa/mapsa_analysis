@@ -25,7 +25,7 @@ public:
 					      const po::variables_map& vm);
   
 private:
-	std::vector<alibava_run_data_t> _runData;
+	alibava_run_data_t _runData;
 };
 
 }

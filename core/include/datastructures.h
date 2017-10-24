@@ -150,9 +150,9 @@ struct alibava_run_data_t
 	int runId;
 	TFile* file;
 	TTree* tree;
-	TelescopeData* telescopeData;
-	TelescopeHits* telescopeHits;
-	AlibavaData* alibavaData;
+	TelescopeData** telescopeData;
+	TelescopeHits** telescopeHits;
+	AlibavaData** alibavaData;
 };
 
 }

@@ -25,61 +25,62 @@ void AlibavaAnalysis::init(const po::variables_map& vm)
 {
 	std::cout << "Init system" << std::endl;
 	auto runs = vm["run"].as<std::vector<int>>();
-	_allRunIds = runs;
+	int run = runs[0];
+	_allRunIds.push_back(run);
 	
-	// Loop over all runs
-	for(auto runId : runs) {
-		alibava_run_data_t data {runId, nullptr, nullptr, nullptr};
-		_currentRunId = runId;
-		//TODO remove hard coded padded width
-		_config.setVariable("Run", getPaddedIdString(runId, 6));
-		auto filename = _config.getVariable("testbeam_data");
-		
-		data.file = new TFile(filename.c_str(), "READ");
-		if( !data.file || data.file->IsZombie() ) {
-			std::ostringstream err;
-			err << "Cannot open ROOT file '" << filename 
-			    << "' for run " << runId; 
-			throw std::runtime_error(err.str().c_str());
-		}
-		
-		data.file->GetObject("data", data.tree);
-		if( !data.tree ) {
-			std::ostringstream err;
-			err << "Cannot find data tree in ROOT file '"
-			    << "' for run " << runId;
-			throw std::runtime_error(err.str().c_str());
-		}
-		
-		data.telescopeData = new TelescopeData;
-		//*data.telescopeData = nullptr;
-		data.telescopeHits = new TelescopeHits;
-		//*data.telescopeHits = nullptr;
-		data.tree->SetBranchAddress("telescope", &data.telescopeData);
-		data.tree->SetBranchAddress("telHits", &data.telescopeHits);
-		//assert(*data.telescopeData != nullptr);
-		//assert(*data.telescopeHits != nullptr);
-		
-		data.alibavaData = new AlibavaData;
-		data.tree->SetBranchAddress("alibava", &data.alibavaData);
-		
-		_runData.push_back(data);
-	}
+	std::cout << "Processing run " << run << std::endl;
+	alibava_run_data_t data;
+	data.runId = run;
+	_currentRunId = run;
+	//TODO remove hard coded padded width
+	_config.setVariable("run", getPaddedIdString(run, 6));
 
+	// Read file
+	auto filename = _config.getVariable("testbeam_data");	
+	data.file = new TFile(filename.c_str(), "READ");
+	if( !data.file || data.file->IsZombie() ) {
+		std::ostringstream err;
+		err << "Cannot open ROOT file '" << filename 
+		    << "' for run " << run; 
+		throw std::runtime_error(err.str().c_str());
+	}
+		
+	data.file->GetObject("data", data.tree);
+	if( !data.tree ) {
+		std::ostringstream err;
+		err << "Cannot find data tree in ROOT file '"
+		    << "' for run " << run;
+		throw std::runtime_error(err.str().c_str());
+	}
+		
+	data.tree->Print();
+	data.telescopeData = new TelescopeData*;
+	*data.telescopeData = nullptr;
+	data.telescopeHits = new TelescopeHits*;
+	*data.telescopeHits = nullptr;
+	data.alibavaData = new AlibavaData*;
+	*data.alibavaData = nullptr;
+
+	data.tree->SetBranchAddress("telescope", data.telescopeData);
+	data.tree->SetBranchAddress("telHits", data.telescopeHits);
+	data.tree->SetBranchAddress("alibava", data.alibavaData);
+	assert(*data.telescopeData != nullptr);
+	assert(*data.telescopeHits != nullptr);
+	assert(*data.alibavaData != nullptr);
+
+	_runData = data;
+	       
 }
 
 
 void AlibavaAnalysis::run(const po::variables_map& vm)
 {
+	std::cout << "Start Run" << std::endl;
 	init(vm);
-	_currentRunId = _runData[0].runId;
-	_config.setVariable("Run", getPaddedIdString(_currentRunId, 6));
+	_currentRunId = _runData.runId;
+	_config.setVariable("run", getPaddedIdString(_currentRunId, 6));
 	init();
-	for(const auto& data : _runData) {
-		_currentRunId = data.runId;
-		_config.setVariable("Run", getPaddedIdString(_currentRunId, 6));
-		run(data);
-	}
+	run(_runData);
 	finalize();
 }
 
