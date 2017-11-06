@@ -60,7 +60,7 @@ void GblAlign::run(const core::run_data_t& run)
 {
 	loadPrealignment();
 	_trackConsts.ref_prealign = _refPreAlign;
-	auto trackCandidates = core::TripletTrack::getTracksWithRefDut(_trackConsts, run, _trackHists, &_refPreAlign, &_dutPreAlign);
+	auto trackCandidates = core::TripletTrack::getTracksWithRefDut(_trackConsts, run, &_trackHists, &_refPreAlign, &_dutPreAlign);
 	std::cout << " * new extrapolated ref prealignment:\n" << _refPreAlign << std::endl;
 	std::cout << " * dut prealignment:\n" << _dutPreAlign << std::endl;
 	std::ofstream fout(getFilename("_all_tracks.csv"));

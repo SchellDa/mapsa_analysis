@@ -29,11 +29,12 @@ void AlibavaAnalysis::init(const po::variables_map& vm)
 	_allRunIds.push_back(run);
 	
 	std::cout << "Processing run " << run << std::endl;
-	alibava_run_data_t data;
+	run_data_t data;
 	data.runId = run;
 	_currentRunId = run;
 	//TODO remove hard coded padded width
-	_config.setVariable("run", getPaddedIdString(run, 6));
+	_config.setVariable("run", 
+			    getPaddedIdString(run, _config.get<int>("id_padding")));
 
 	// Read file
 	auto filename = _config.getVariable("testbeam_data");	

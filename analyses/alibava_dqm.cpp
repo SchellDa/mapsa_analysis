@@ -22,7 +22,7 @@ void AlibavaDQM::init()
 			       FEI4_N_Y, 0, FEI4_N_Y);
 }
 
-void AlibavaDQM::run(const core::alibava_run_data_t& run)
+void AlibavaDQM::run(const core::run_data_t& run)
 {
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) 
 	{		

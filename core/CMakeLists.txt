@@ -35,6 +35,7 @@ set(SOURCE ${SOURCE}
 
 add_definitions("-Wall")
 add_definitions("--std=c++11")
+add_definitions("-O3")
 if(CMAKE_COMPILER_IS_GNUCC)
 	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
 		add_definitions("-DNO_IOSTREAM_MOVE")

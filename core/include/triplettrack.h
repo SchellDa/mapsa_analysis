@@ -138,10 +138,10 @@ public:
 	                                                 histograms_t* hist);
 	static std::vector<core::TripletTrack> getTracksWithRef(constants_t consts,
 	                                                 const core::run_data_t& run,
-	                                                 histograms_t hist, Eigen::Vector3d* new_ref_prealign);
+	                                                 histograms_t* hist, Eigen::Vector3d* new_ref_prealign);
 	static std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> getTracksWithRefDut(constants_t consts,
 	                                                 const core::run_data_t& run,
-	                                                 histograms_t hist,
+	                                                 histograms_t* hist,
 							 Eigen::Vector3d* new_ref_prealign,
 							 Eigen::Vector3d* new_dut_prealign,
 							 bool useDut=true);

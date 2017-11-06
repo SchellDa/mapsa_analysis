@@ -17,7 +17,7 @@ public:
 	virtual void init() = 0;
 
 	virtual void run(const po::variables_map& vm);
-	virtual void run(const alibava_run_data_t& run) = 0;
+	virtual void run(const run_data_t& run) = 0;
 
 	virtual void finalize() = 0;
 
@@ -25,7 +25,7 @@ public:
 					      const po::variables_map& vm);
   
 private:
-	alibava_run_data_t _runData;
+	run_data_t _runData;
 };
 
 }

@@ -142,7 +142,9 @@ struct run_data_t
 	TTree* tree;
 	TelescopeData** telescopeData;
 	TelescopeHits** telescopeHits;
+	AlibavaData** alibavaData;
 	std::vector<mpa_data_t> mpaData;
+
 };
 
 struct alibava_run_data_t

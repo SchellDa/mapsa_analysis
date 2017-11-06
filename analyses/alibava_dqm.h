@@ -17,7 +17,7 @@ public:
 	virtual ~AlibavaDQM();
 	
 	virtual void init();
-	virtual void run(const core::alibava_run_data_t& run);
+	virtual void run(const core::run_data_t& run);
 	virtual void finalize();
 
 private:

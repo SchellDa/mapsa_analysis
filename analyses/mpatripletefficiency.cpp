@@ -105,7 +105,7 @@ void MpaTripletEfficiency::run(const core::run_data_t& run)
 	_currentDutResZ = new TH1F("dut_res_z", "", 200, -10, -10);
 	std::cout << "Find tracks in datafile" << std::endl;
 	auto hists = core::TripletTrack::genDebugHistograms();
-	auto tracks = core::TripletTrack::getTracksWithRefDut(_trackConsts, run, hists, nullptr, nullptr, false);
+	auto tracks = core::TripletTrack::getTracksWithRefDut(_trackConsts, run, &hists, nullptr, nullptr, false);
 	size_t trackIdx = 0;
 	transform.setOffset(_dutAlignOffset);
 	transform.setRotation(_trackConsts.dut_rotation);
