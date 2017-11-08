@@ -46,7 +46,7 @@ std::vector<core::TripletTrack> TripletTrack::getTracks(constants_t consts,
 	std::vector<core::TripletTrack> candidates;
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) {
 		
-		if(evt%1000 == 0) {
+		if(evt%10000 == 0) {
 			std::cout << "Processing event:" << std::setw(9)
 				  << evt << std::endl;
 		}
@@ -117,8 +117,8 @@ std::vector<core::TripletTrack> TripletTrack::getTracksWithRef(constants_t const
 	//assert(hist->down_angle_x);
 	std::vector<core::TripletTrack> candidates;
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) {
-		if(evt%1000 == 0) {
-			std::cout << "Processing event:\t" << std::setw(9)
+		if(evt%10000 == 0) {
+			std::cout << "Processing event:" << std::setw(9)
 				  << evt << std::endl;
 		}
 		run.tree->GetEntry(evt);
