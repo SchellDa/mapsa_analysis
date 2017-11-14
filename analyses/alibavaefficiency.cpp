@@ -1,7 +1,10 @@
 #include "alibavaefficiency.h"
+#include "functions.h"
 #include "triplet.h"
 #include <sstream>
 #include <iomanip>
+
+#include "TF1.h"
 
 REGISTER_ANALYSIS_TYPE(AlibavaEfficiency, "Perform alibava test beam analysis")
 
@@ -16,8 +19,9 @@ AlibavaEfficiency::~AlibavaEfficiency()
 void AlibavaEfficiency::init()
 {
 	std::ostringstream oss;
-	oss << _config.get<std::string>("output_dir") << "/run" << std::setfill('0') 
-	    << std::setw(6) << _currentRunId << ".root";
+	oss << _config.get<std::string>("output_dir") << "/run" 
+	    << std::setfill('0') << std::setw(_config.get<int>("id_padding")) 
+	    << _currentRunId << ".root";
 	// mpa_id_padding seems to be hard coded 
 	//_file = new TFile(getRootFilename().c_str(), "RECREATE");
 	_file = new TFile(oss.str().c_str(), "RECREATE");
@@ -48,6 +52,9 @@ void AlibavaEfficiency::init()
 	_dutHitsInTime = new TH2F("dut_hits_intime", "Track hits with DUT hits", 
 				  _histoBin, _histoMin, _histoMax, 
 				  _histoBin, _histoMin, _histoMax);
+
+	_dutResX = new TH1D("dut_res_x", "DUT residual in x", 100, -5, 5);
+	_dutResY = new TH1D("dut_res_y", "DUT residual in y", 100, -5, 5);
 	
 	// Track cuts
 	_trackConsts.angle_cut = _config.get<double>("angle_cut");
@@ -95,7 +102,7 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 		for(; trackIdx < tracks.size() && tracks[trackIdx].getEventNo() < evt; ++trackIdx) {}
 		for(; trackIdx < tracks.size() && tracks[trackIdx].getEventNo() == evt; ++trackIdx) {
 			auto track = tracks[trackIdx];
-			auto hit = track.upstream().extrapolate(370);
+			auto hit = track.upstream().extrapolate(_config.get<double>("dut_z"));
 			_dutTracks->Fill(hit[0], hit[1]);			
 
 			// Very simple efficiency calculation
@@ -111,8 +118,13 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 				if(ali->center.GetNoElements() != 0) {
 					_dutHitsInTime->Fill(hit[0], hit[1]);
 				}
-			}
-			
+				
+				for(size_t iCluster=0; iCluster < ali->center.GetNoElements(); ++iCluster)
+				{
+					_dutResX->Fill(posX(ali->center[iCluster])-hit[0]); 
+					_dutResY->Fill(posX(ali->center[iCluster])-hit[1]); 
+				}
+			}			
 		}
 	}
 
@@ -123,16 +135,22 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 	_dutEffY = _dutEff->ProjectionY("efficiency_profileY", 
 					_projMin*_stepSize, _projMax*_stepSize);
 
+	// 1D projection
 	auto _dutEffInTime = (TH2F*)_dutHitsInTime->Clone("efficiency_intime");
 	_dutEffInTime->Divide(_dutTracksInTime);
 	_dutEffXInTime = _dutEffInTime->ProjectionX("efficiency_intime_profileX",
-						    std::abs(_histoMin - _projMin)*_stepSize, std::abs(_histoMin - _projMax)*_stepSize);
+						    std::abs(_histoMin - _projMin)*_stepSize, 
+						    std::abs(_histoMin - _projMax)*_stepSize);
 	_dutEffYInTime = _dutEffInTime->ProjectionY("efficiency_intime_profileY", 
-						    std::abs(_histoMin - _projMin)*_stepSize, std::abs(_histoMin - _projMax)*_stepSize);     
+						    std::abs(_histoMin - _projMin)*_stepSize, 
+						    std::abs(_histoMin - _projMax)*_stepSize);     
+	//Inefficiency projection
 	_dutIneffXInTime = _dutEffInTime->ProjectionX("Inefficiency_intime_profileX", 
-						      std::abs(_histoMin - _projMin)*_stepSize, std::abs(_histoMin - _projMax)*_stepSize);
+						      std::abs(_histoMin - _projMin)*_stepSize, 
+						      std::abs(_histoMin - _projMax)*_stepSize);
 	_dutIneffYInTime = _dutEffInTime->ProjectionY("Inefficiency_intime_profileY", 
-						      std::abs(_histoMin - _projMin)*_stepSize, std::abs(_histoMin - _projMax)*_stepSize);
+						      std::abs(_histoMin - _projMin)*_stepSize, 
+						      std::abs(_histoMin - _projMax)*_stepSize);
 
 }
 
@@ -140,16 +158,31 @@ void AlibavaEfficiency::finalize()
 {
 	// Normalize
 	for(size_t iBin=0; iBin<_histoBin; iBin++) {
-		_dutEffX->SetBinContent(iBin, _dutEffX->GetBinContent(iBin)/((_projMax-_projMin)*_stepSize));
-		_dutEffY->SetBinContent(iBin, _dutEffY->GetBinContent(iBin)/((_projMax-_projMin)*_stepSize));
-		_dutEffXInTime->SetBinContent(iBin, _dutEffXInTime->GetBinContent(iBin)/((_projMax-_projMin)*_stepSize));
-		_dutEffYInTime->SetBinContent(iBin, _dutEffYInTime->GetBinContent(iBin)/((_projMax-_projMin)*_stepSize));
+		_dutEffX->SetBinContent(iBin, _dutEffX->GetBinContent(iBin)/(static_cast<int>((_projMax-_projMin)*_stepSize+1)+1));
+		_dutEffY->SetBinContent(iBin, _dutEffY->GetBinContent(iBin)/(static_cast<int>((_projMax-_projMin)*_stepSize+1)+1));
+		_dutEffXInTime->SetBinContent(iBin, _dutEffXInTime->GetBinContent(iBin)/(static_cast<int>((_projMax-_projMin)*_stepSize)+1));
+		_dutEffYInTime->SetBinContent(iBin, _dutEffYInTime->GetBinContent(iBin)/(static_cast<int>((_projMax-_projMin)*_stepSize)+1));
 		_dutIneffXInTime->SetBinContent(iBin, 1.-_dutEffXInTime->GetBinContent(iBin));
 		_dutIneffYInTime->SetBinContent(iBin, 1.-_dutEffYInTime->GetBinContent(iBin));
 	}
+
+	TF1 *fitFunc = new TF1("scurve", core::scurve, 
+			       _config.get<double>("fit_min"), 
+			       _config.get<double>("fit_max"), 
+			       3);
+	fitFunc->SetParameters(0.7, -0.55, 0.05);
+	_dutIneffYInTime->Fit("scurve", "R"); 
 
 	if(_file) {
 		_file->Write();
 		_file->Close();
 	}
+}
+
+double AlibavaEfficiency::posX(int channel, bool swap) 
+{
+	if (channel < ALIBAVA_N/2.)
+		return (channel-ALIBAVA_N/4.+0.5) * (ALIBAVA_PITCH/1000.);
+	else
+		return (0.5-3*ALIBAVA_N/4.+channel) * (ALIBAVA_PITCH/1000.);
 }

@@ -13,6 +13,8 @@
 #define FEI4_N_X 80
 #define FEI4_N_Y 336
 #define ALIBAVA_N 256
+#define ALIBAVA_PITCH 90
+#define ALIBAVA_STRIP_L 4000
 
 class AlibavaEfficiency : public core::AlibavaAnalysis
 {
@@ -35,6 +37,8 @@ private:
 	TH2F* _dutEffInTime;
 	TProfile* _dutProfileX;
 	TProfile* _dutProfileY;
+	TH1D* _dutResX;
+	TH1D* _dutResY;
 	TH1D* _dutEffX;
 	TH1D* _dutEffY;
 	TH1D* _dutEffXInTime;
@@ -49,6 +53,8 @@ private:
 	int _projMin;
 	int _projMax;
 	double _stepSize;
+
+	double posX(int channel, bool swap=false);
 };
 
 #endif//ALIBAVA_EFFICIENCY_H

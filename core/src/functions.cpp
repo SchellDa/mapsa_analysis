@@ -5,7 +5,7 @@
 namespace core
 {
 
-double general_plateau_functions(double* xx, double* par)
+double general_plateau_function(double* xx, double* par)
 {
 	auto x = xx[0];
 	auto& x_0 = par[0];
@@ -70,6 +70,11 @@ double gauss1d(double* xx, double* par)
 double gauss1d_offset(double* xx, double* par)
 {
 	return par[0]/TMath::Sqrt(2.0*M_PI * par[1]*par[1]) * TMath::Exp(-TMath::Power(xx[0] - par[2], 2) / (par[1]*par[1])) + par[3];
+}
+
+double scurve(double* xx, double* par)
+{
+	return par[0] + 0.5*(1+TMath::Erf( (xx[0]-par[1])/(sqrt(2)*par[2])) );
 }
 
 }// namespace core

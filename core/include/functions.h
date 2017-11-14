@@ -60,6 +60,13 @@ double gauss1d(double* xx, double* par);
  */
 double gauss1d_offset(double* xx, double* par);
 
+/** \brief S-Curve
+ *
+ * \param xx[0] Independent variable
+ * \param par[0] Constant
+ */
+
+double scurve(double* xx, double* par);
 }
 
 #endif

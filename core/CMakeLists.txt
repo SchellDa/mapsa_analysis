@@ -30,6 +30,8 @@ set(SOURCE ${SOURCE}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/triplettrack.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/mpahitgenerator.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/alibavaanalysis.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/alibavahitgenerator.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/transform.cpp
 	${CMAKE_BINARY_DIR}/root_dict.cpp
 )
 

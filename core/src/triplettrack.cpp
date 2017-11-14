@@ -4,6 +4,8 @@
 #include <iostream>
 #include "aligner.h"
 #include <chrono>
+#include "transform.h"
+#include "alibavahitgenerator.h"
 
 using namespace core;
 
@@ -256,6 +258,9 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	transform.setOffset(consts.dut_offset);
 	transform.setRotation(consts.dut_rotation);
 	int numMpa = 0;
+	Transform trans;
+	trans.setOffset(consts.dut_offset);
+	trans.setRotation(consts.dut_rotation);
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) {
 		run.tree->GetEntry(evt);
 		auto downstream = core::Triplet::findTriplets(run, consts.angle_cut, consts.downstream_residual_cut, {3, 4, 5});
@@ -296,10 +301,15 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 		std::vector<std::pair<core::Triplet, Eigen::Vector3d>> fullUpstream;
 		if(useDut) {
 			std::vector<int> clusterSize;
-			auto mpaHits = MpaHitGenerator::getCounterClusters(run, transform, &clusterSize, nullptr);
-			for(const auto& hit: mpaHits) {
+			// TODO: Generalize DUT Hits -> use alibava hits for now
+			// auto mpaHits = MpaHitGenerator::getCounterClusters(run, transform, &clusterSize, nullptr);
+			auto hits = AlibavaHitGenerator::getHits(run);
+			//for(const auto& hit: mpaHits) {
+			for(const auto& hit: hits) {
 				for(const auto& triplet: upstream) {
-					auto plane_hit = transform.mpaPlaneTrackIntersect(triplet);
+					// NECESSARY FOR MPA
+                                        //auto plane_hit = transform.mpaPlaneTrackIntersect(triplet); 
+					auto plane_hit = trans.planeTripletIntersect(triplet);
 					Eigen::Vector3d res = plane_hit - hit;
 					// Eigen::Vector3d plane_local_hit = transform.getInverseRotationMatrix()*(res);
 					// double resx = plane_local_hit(0);
