@@ -1,6 +1,7 @@
 #include "alibavaefficiency.h"
 #include "triplet.h"
 #include <sstream>
+#include <iomanip>
 
 REGISTER_ANALYSIS_TYPE(AlibavaEfficiency, "Perform alibava test beam analysis")
 
@@ -15,34 +16,39 @@ AlibavaEfficiency::~AlibavaEfficiency()
 void AlibavaEfficiency::init()
 {
 	std::ostringstream oss;
-	oss << "run" << _currentRunId << ".root";
+	oss << _config.get<std::string>("output_dir") << "/run" << std::setfill('0') 
+	    << std::setw(6) << _currentRunId << ".root";
 	// mpa_id_padding seems to be hard coded 
 	//_file = new TFile(getRootFilename().c_str(), "RECREATE");
 	_file = new TFile(oss.str().c_str(), "RECREATE");
 	
+	_histoBin = _config.get<int>("histo_binning");
+	_histoMin = _config.get<int>("histo_min");
+	_histoMax = _config.get<int>("histo_max");
+	_stepSize = _histoBin/(_histoMax - _histoMin);
+
+	_projMin = _config.get<int>("proj_min");
+	_projMax = _config.get<int>("proj_max");
+
 	_refAliCorX = new TH2F("ref_ali_cor_x", "REF <-> Alibava Correlation X",
 			       ALIBAVA_N, 0, ALIBAVA_N,
 			       FEI4_N_X, 0, FEI4_N_X);
 	_refAliCorY = new TH2F("ref_ali_cor_y", "REF <-> Alibava Correlation Y",
 			       ALIBAVA_N, 0, ALIBAVA_N,
 			       FEI4_N_Y, 0, FEI4_N_Y);
-
 	_dutTracks = new TH2F("dut_tracks", "Track hits at z(DUT)", 
-			   400, -5, 5, 
-			   400, -5, 5);
+			      _histoBin, _histoMin, _histoMax, 
+			      _histoBin, _histoMin, _histoMax);
 	_dutHits = new TH2F("dut_hits", "Tracks hits with DUT hits", 
-			   400, -5, 5, 
-			   400, -5, 5);
-
+			    _histoBin, _histoMin, _histoMax, 
+			    _histoBin, _histoMin, _histoMax);
 	_dutTracksInTime = new TH2F("dut_tracks_intime", "Track hits at z(DUT)", 
-			   400, -5, 5, 
-			   400, -5, 5);
-
+				    _histoBin, _histoMin, _histoMax, 
+				    _histoBin, _histoMin, _histoMax);
 	_dutHitsInTime = new TH2F("dut_hits_intime", "Track hits with DUT hits", 
-			   400, -5, 5, 
-			   400, -5, 5);
-
-
+				  _histoBin, _histoMin, _histoMax, 
+				  _histoBin, _histoMin, _histoMax);
+	
 	// Track cuts
 	_trackConsts.angle_cut = _config.get<double>("angle_cut");
 	_trackConsts.upstream_residual_cut = _config.get<double>("upstream_residual_cut");
@@ -112,16 +118,36 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 
 	auto _dutEff = (TH2F*)_dutHits->Clone("efficiency");
 	_dutEff->Divide(_dutTracks);
-	auto _dutEffX = _dutEff->ProfileX("efficiency_profile");
+	_dutEffX = _dutEff->ProjectionX("efficiency_profileX", 
+					_projMin*_stepSize, _projMax*_stepSize);
+	_dutEffY = _dutEff->ProjectionY("efficiency_profileY", 
+					_projMin*_stepSize, _projMax*_stepSize);
 
 	auto _dutEffInTime = (TH2F*)_dutHitsInTime->Clone("efficiency_intime");
 	_dutEffInTime->Divide(_dutTracksInTime);
-	auto _dutEffXInTime = _dutEffInTime->ProfileX("efficiency_intime_profile");
+	_dutEffXInTime = _dutEffInTime->ProjectionX("efficiency_intime_profileX",
+						    std::abs(_histoMin - _projMin)*_stepSize, std::abs(_histoMin - _projMax)*_stepSize);
+	_dutEffYInTime = _dutEffInTime->ProjectionY("efficiency_intime_profileY", 
+						    std::abs(_histoMin - _projMin)*_stepSize, std::abs(_histoMin - _projMax)*_stepSize);     
+	_dutIneffXInTime = _dutEffInTime->ProjectionX("Inefficiency_intime_profileX", 
+						      std::abs(_histoMin - _projMin)*_stepSize, std::abs(_histoMin - _projMax)*_stepSize);
+	_dutIneffYInTime = _dutEffInTime->ProjectionY("Inefficiency_intime_profileY", 
+						      std::abs(_histoMin - _projMin)*_stepSize, std::abs(_histoMin - _projMax)*_stepSize);
 
 }
 
 void AlibavaEfficiency::finalize()
 {
+	// Normalize
+	for(size_t iBin=0; iBin<_histoBin; iBin++) {
+		_dutEffX->SetBinContent(iBin, _dutEffX->GetBinContent(iBin)/((_projMax-_projMin)*_stepSize));
+		_dutEffY->SetBinContent(iBin, _dutEffY->GetBinContent(iBin)/((_projMax-_projMin)*_stepSize));
+		_dutEffXInTime->SetBinContent(iBin, _dutEffXInTime->GetBinContent(iBin)/((_projMax-_projMin)*_stepSize));
+		_dutEffYInTime->SetBinContent(iBin, _dutEffYInTime->GetBinContent(iBin)/((_projMax-_projMin)*_stepSize));
+		_dutIneffXInTime->SetBinContent(iBin, 1.-_dutEffXInTime->GetBinContent(iBin));
+		_dutIneffYInTime->SetBinContent(iBin, 1.-_dutEffYInTime->GetBinContent(iBin));
+	}
+
 	if(_file) {
 		_file->Write();
 		_file->Close();
