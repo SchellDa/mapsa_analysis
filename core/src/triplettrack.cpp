@@ -262,22 +262,26 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	trans.setOffset(consts.dut_offset);
 	trans.setRotation(consts.dut_rotation);
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) {
+		if(evt%10000 == 0) {
+			std::cout << "Processing event:" << std::setw(9)
+				  << evt << std::endl;
+		}
 		run.tree->GetEntry(evt);
 		auto downstream = core::Triplet::findTriplets(run, consts.angle_cut, consts.downstream_residual_cut, {3, 4, 5});
 		// debug histograms
 		for(const auto& triplet: downstream) {
-			hist->down_angle_x->Fill(std::abs(triplet.getdx() / triplet.getdz()));
-			hist->down_angle_y->Fill(std::abs(triplet.getdy() / triplet.getdz()));
-			hist->down_res_x->Fill(std::abs(triplet.getdx(1)));
-			hist->down_res_y->Fill(std::abs(triplet.getdy(1)));
+			hist->down_angle_x->Fill(triplet.getdx() / triplet.getdz());
+			hist->down_angle_y->Fill(triplet.getdy() / triplet.getdz());
+			hist->down_res_x->Fill(triplet.getdx(1));
+			hist->down_res_y->Fill(triplet.getdy(1));
 		}
 		auto upstream = core::Triplet::findTriplets(run, consts.angle_cut, consts.upstream_residual_cut, {0, 1, 2});
 		// debug histograms
 		for(const auto& triplet: upstream) {
-			hist->up_angle_x->Fill(std::abs(triplet.getdx() / triplet.getdz()));
-			hist->up_angle_y->Fill(std::abs(triplet.getdy() / triplet.getdz()));
-			hist->up_res_x->Fill(std::abs(triplet.getdx(1)));
-			hist->up_res_y->Fill(std::abs(triplet.getdy(1)));
+			hist->up_angle_x->Fill(triplet.getdx() / triplet.getdz());
+			hist->up_angle_y->Fill(triplet.getdy() / triplet.getdz());
+			hist->up_res_x->Fill(triplet.getdx(1));
+			hist->up_res_y->Fill(triplet.getdy(1));
 		}
 		// cut downstream triplets on their residual to ref hit
 		auto refData = (*run.telescopeHits)->ref;
@@ -342,12 +346,12 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 				core::TripletTrack t(evt, up, down, ref);
 				auto resx = t.xresidualat(consts.dut_offset(2));
 				auto resy = t.yresidualat(consts.dut_offset(2));
-				auto kinkx = std::abs(t.kinkx());
-				auto kinky = std::abs(t.kinky());
+				auto kinkx = t.kinkx();
+				auto kinky = t.kinky();
 				if(std::abs(resx) > consts.six_residual_cut || std::abs(resy) > consts.six_residual_cut) {
 					continue;
 				}
-				if(kinkx > consts.six_kink_cut || kinky > consts.six_kink_cut) {
+				if(std::abs(kinkx) > consts.six_kink_cut || std::abs(kinky) > consts.six_kink_cut) {
 					continue;
 				}
 				hist->track_kink_x->Fill(kinkx);
@@ -386,21 +390,29 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	}
 	// find new prealignment (more exact)
 	Eigen::Vector3d refPreAlign(consts.ref_prealign);
+	auto result = hist->ref_down_res_x->Fit("gaus", "FSMR", "");
+	refPreAlign(0) += result->Parameter(1);
+	result = hist->ref_down_res_y->Fit("gaus", "FSMR", "");
+	refPreAlign(1) += result->Parameter(1);
 	if(new_ref_prealign) {
-		auto result = hist->ref_down_res_x->Fit("gaus", "FSMR", "");
-		refPreAlign(0) += result->Parameter(1);
-		result = hist->ref_down_res_y->Fit("gaus", "FSMR", "");
-		refPreAlign(1) += result->Parameter(1);
 		*new_ref_prealign = refPreAlign;
 	}
 	// find DUT prealignment
+	
 	Eigen::Vector3d dutPreAlign(consts.dut_prealign);
+	
+	//dutPreAlign = fitDutPrealignment(hist->dut_up_res_x, hist->dut_up_res_y, transform, consts.dut_plateau_x);
+	auto dutResult = hist->dut_up_res_x->Fit("gaus", "FSMR", "");
+	dutPreAlign(0) += dutResult->Parameter(1);
+	//result = hist->ref_down_res_y->Fit("gaus", "FSMR", "");
+	//refPreAlign(1) += result->Parameter(1);
 	if(new_dut_prealign) {
-		dutPreAlign = fitDutPrealignment(hist->dut_up_res_x, hist->dut_up_res_y, transform, consts.dut_plateau_x);
 		*new_dut_prealign = dutPreAlign;
 	}
+	
 	std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> accepted;
-	transform.setOffset(consts.dut_offset + dutPreAlign);
+	//transform.setOffset(consts.dut_offset + dutPreAlign);
+	trans.setOffset(consts.dut_offset + dutPreAlign);
 	for(auto pair: candidates) {
 		TripletTrack track = pair.first;
 		Eigen::Vector3d dut = pair.second + dutPreAlign; // activated DUT pixel in global coords
@@ -408,14 +420,16 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 		auto track_y = track.yresidualat(consts.dut_offset(2));
 		auto ref_x = track.xrefresidual(refPreAlign);
 		auto ref_y = track.yrefresidual(refPreAlign);
-		Eigen::Vector3d plane_hit = transform.mpaPlaneTrackIntersect(track.upstream());
+		//Eigen::Vector3d plane_hit = transform.mpaPlaneTrackIntersect(track.upstream());
+		Eigen::Vector3d plane_hit = trans.planeTripletIntersect(track.upstream());
 		Eigen::Vector3d dut_res = plane_hit - dut;
 		if(std::abs(ref_x) > consts.ref_residual_cut || std::abs(ref_y) > consts.ref_residual_cut) {
 			continue;
 		}
 		if(useDut && (std::abs(dut_res(0)) > consts.dut_residual_cut_x
 				|| std::abs(dut_res(1)) > consts.dut_residual_cut_y)) {
-			continue;
+			//continue;
+			
 		}
 		hist->candidate_res_track_x->Fill(track_x);
 		hist->candidate_res_track_y->Fill(track_y);

@@ -88,8 +88,11 @@ void AlibavaEfficiency::init()
 void AlibavaEfficiency::run(const core::run_data_t& run)
 {
 	auto hists = core::TripletTrack::genDebugHistograms();
-	auto tracks = core::TripletTrack::getTracksWithRef(_trackConsts, run, 
-							   &hists, nullptr);
+	//auto tracks = core::TripletTrack::getTracksWithRef(_trackConsts, run, 
+	//						   &hists, nullptr);
+	auto tracks = core::TripletTrack::getTracksWithRefDut(_trackConsts, run,
+							     &hists, nullptr,
+							     nullptr, true);
 
 	size_t trackIdx = 0;
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) 
@@ -99,9 +102,9 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 		run.tree->GetEntry(evt);		
 		auto ali  = (*run.alibavaData);
 		
-		for(; trackIdx < tracks.size() && tracks[trackIdx].getEventNo() < evt; ++trackIdx) {}
-		for(; trackIdx < tracks.size() && tracks[trackIdx].getEventNo() == evt; ++trackIdx) {
-			auto track = tracks[trackIdx];
+		for(; trackIdx < tracks.size() && tracks[trackIdx].first.getEventNo() < evt; ++trackIdx) {}
+		for(; trackIdx < tracks.size() && tracks[trackIdx].first.getEventNo() == evt; ++trackIdx) {
+			auto track = tracks[trackIdx].first;
 			auto hit = track.upstream().extrapolate(_config.get<double>("dut_z"));
 			_dutTracks->Fill(hit[0], hit[1]);			
 

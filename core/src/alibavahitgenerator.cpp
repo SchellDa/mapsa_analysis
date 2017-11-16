@@ -11,7 +11,7 @@ std::vector<Eigen::Vector2d> AlibavaHitGenerator::getLocalHits(run_data_t run)
 		auto channel = ali->center[iCluster];
 		double x;
 		if (channel < ALIBAVA_N/2.)
-			x = (channel-ALIBAVA_N/4.+0.5) * (ALIBAVA_PITCH/1000.);
+			x = (ALIBAVA_N/4.-0.5-channel) * (ALIBAVA_PITCH/1000.);
 		else
 			x = (0.5-3*ALIBAVA_N/4.+channel) * (ALIBAVA_PITCH/1000.);
 		Eigen::Vector2d localHit(x, 0.0);
