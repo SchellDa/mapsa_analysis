@@ -6,7 +6,7 @@
 
 #define ALIBAVA_N 256
 #define ALIBAVA_PITCH 90
-#define ALIBAVA_STRIP_L 4000
+#define ALIBAVA_STRIP_L 15000
 
 namespace core {
 
@@ -17,7 +17,7 @@ public:
 	//virtual AlibavaHitGenerator::~AlibavaHitGenerator(){};
 	
 	static std::vector<Eigen::Vector2d> getLocalHits(run_data_t run);
-	static std::vector<Eigen::Vector3d> getHits(run_data_t run);
+	static std::vector<Eigen::Vector3d> getHits(run_data_t run, double z=0.);
 	
 };
 }//core

@@ -65,8 +65,18 @@ double gauss1d_offset(double* xx, double* par);
  * \param xx[0] Independent variable
  * \param par[0] Constant
  */
-
 double scurve(double* xx, double* par);
+
+/** \brief 1D Gauss Function with Offset
+ *
+ * \param xx[0] Independent variable
+ * \param par[0] Constant
+ * \param par[1] Slope of straight line
+ * \param par[2] Gauss norm
+ * \param par[3] Mean
+ * \param par[4] Sigma
+ */
+double gauss_straight_line(double* xx, double* par);
 }
 
 #endif

@@ -258,3 +258,62 @@ Eigen::Vector2d Aligner::alignGaussian(TH1D* cor, const double& nrms, const doub
 		result->Parameter(2)
 	};
 }
+
+Eigen::Vector2d Aligner::alignStraightLineGaussian(TH1D* cor, double min, double max, const bool& quiet)
+{
+	auto straightlinegaus = new TF1("straightlinegaus", gauss_straight_line, min, max, 5);
+	straightlinegaus->SetParameter(0, 0);
+	straightlinegaus->SetParameter(1, 1);
+	straightlinegaus->SetParameter(2, -1);
+	straightlinegaus->SetParameter(3, 0);
+	straightlinegaus->SetParameter(4, 1);
+
+	auto result = cor->Fit(straightlinegaus, quiet?"RMSq+":"RMS+", "", min, max);
+	if(result.Get() == nullptr) {
+		return {0, 10000.0};
+	}
+	return {
+		result->Parameter(3),
+		result->Parameter(4)
+	};
+}
+
+double Aligner::alignByDip(TH1D* hist)
+{
+	auto max = hist->GetMaximum();
+	auto stepSize = max/10.;
+	auto step = stepSize;
+	std::vector<double> trans;
+	std::cout << "Maximum: " << max << std::endl;
+	do {	
+		std::cout << "Step: " << step;
+		trans = findTransition(hist, step);
+		step += stepSize;
+		std::cout << " - Transitions: " << trans.size() << std::endl;
+	} while(trans.size() != 4 && step < max);
+	
+	if(trans.size() < 4) { 
+		std::cout << "Couldn't find any dip!" << std::endl;
+		return 0;
+	}else {
+		for(const auto& iTrans : trans) {
+			std::cout << iTrans << std::endl;
+		}
+		return (trans[2]-trans[1])/2. ;
+	}
+}
+
+std::vector<double> Aligner::findTransition(TH1D* hist, double val)
+{
+	std::vector<double> transitions;
+	bool below = (hist->GetBinContent(0)<val) ? true : false;
+	for(size_t iBin=1; iBin < hist->GetNbinsX(); ++iBin)
+	{
+		auto bc = hist->GetBinContent(iBin);
+		if ( (below && bc>val) || (!below && bc<val) ) {
+			transitions.emplace_back(hist->GetBinCenter(iBin));
+			below = !below;
+		}
+	}
+	return transitions;
+}

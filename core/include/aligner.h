@@ -80,6 +80,11 @@ public:
 
 	static Eigen::Vector2d alignPlateau(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean=false);
 	static Eigen::Vector2d alignGaussian(TH1D* cor, const double& nrms, const double& binratio, const bool& quiet, const bool& fixedMean=false);
+	static Eigen::Vector2d alignStraightLineGaussian(TH1D* cor, double min, double max, const bool& quiet=false);
+
+	static double alignByDip(TH1D* hist);
+	static std::vector<double> findTransition(TH1D* hist, double val);
+
 private:
 	static bool rebinIfNeccessary(TH1D* cor, const double& nrms, const double& binratio);
 	double _nsigma;

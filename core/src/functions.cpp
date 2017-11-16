@@ -77,4 +77,10 @@ double scurve(double* xx, double* par)
 	return par[0] + 0.5*(1+TMath::Erf( (xx[0]-par[1])/(sqrt(2)*par[2])) );
 }
 
+double gauss_straight_line(double* xx, double* par) 
+{
+	auto x = xx[0];
+	return par[0] + par[1]*x + par[2]*TMath::Exp(-0.5*TMath::Power((x-par[3])/par[4], 2));
+}
+
 }// namespace core

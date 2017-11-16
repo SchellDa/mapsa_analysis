@@ -309,8 +309,11 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 			// auto mpaHits = MpaHitGenerator::getCounterClusters(run, transform, &clusterSize, nullptr);
 			auto hits = AlibavaHitGenerator::getHits(run);
 			//for(const auto& hit: mpaHits) {
-			for(const auto& hit: hits) {
-				for(const auto& triplet: upstream) {
+			for(const auto& triplet: upstream) { // Add 'empty' hit
+				if( hits.empty() ) {
+					fullUpstream.push_back({triplet, Eigen::Vector3d(-100, -100, -1)});
+				}
+				for(const auto& hit: hits) { 
 					// NECESSARY FOR MPA
                                         //auto plane_hit = transform.mpaPlaneTrackIntersect(triplet); 
 					auto plane_hit = trans.planeTripletIntersect(triplet);
@@ -323,9 +326,10 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 					//double resx = triplet.getdx(plane_local_hit(2));
 					//double resy = triplet.getdy(plane_local_hit(2));
 					hist->dut_up_res_x->Fill(resx);
-					hist->dut_up_res_y->Fill(resy);
+					hist->dut_up_res_y->Fill(resy);					
 					fullUpstream.push_back({triplet, hit});
 				}
+				
 			}
 			for(auto size: clusterSize) {
 				hist->dut_cluster_size->Fill(size);
@@ -397,14 +401,14 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	if(new_ref_prealign) {
 		*new_ref_prealign = refPreAlign;
 	}
-	// find DUT prealignment
-	
+
+	// find DUT prealignment	
 	Eigen::Vector3d dutPreAlign(consts.dut_prealign);
-	
 	//dutPreAlign = fitDutPrealignment(hist->dut_up_res_x, hist->dut_up_res_y, transform, consts.dut_plateau_x);
 	auto dutResult = hist->dut_up_res_x->Fit("gaus", "FSMR", "");
 	dutPreAlign(0) += dutResult->Parameter(1);
-	//result = hist->ref_down_res_y->Fit("gaus", "FSMR", "");
+	dutPreAlign(1) = Aligner::alignByDip(hist->dut_up_res_y);
+	//dutPreAlign(1) = hist->dut_up_res_y->Fit("gauss_straight_line", "FSMR", "");
 	//refPreAlign(1) += result->Parameter(1);
 	if(new_dut_prealign) {
 		*new_dut_prealign = dutPreAlign;
@@ -426,17 +430,20 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 		if(std::abs(ref_x) > consts.ref_residual_cut || std::abs(ref_y) > consts.ref_residual_cut) {
 			continue;
 		}
+
 		if(useDut && (std::abs(dut_res(0)) > consts.dut_residual_cut_x
 				|| std::abs(dut_res(1)) > consts.dut_residual_cut_y)) {
-			//continue;
-			
+			pair.second = Eigen::Vector3d(-1, -1, -1);				
+		} else {
+			pair.second = plane_hit;
+			hist->candidate_res_dut_x->Fill(dut_res(0));
+			hist->candidate_res_dut_y->Fill(dut_res(1));
 		}
+
 		hist->candidate_res_track_x->Fill(track_x);
 		hist->candidate_res_track_y->Fill(track_y);
 		hist->candidate_res_ref_x->Fill(ref_x);
 		hist->candidate_res_ref_y->Fill(ref_y);
-		hist->candidate_res_dut_x->Fill(dut_res(0));
-		hist->candidate_res_dut_y->Fill(dut_res(1));
 		accepted.push_back(pair);
 	}
 	return accepted;

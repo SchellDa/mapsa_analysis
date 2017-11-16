@@ -22,8 +22,6 @@ void AlibavaEfficiency::init()
 	oss << _config.get<std::string>("output_dir") << "/run" 
 	    << std::setfill('0') << std::setw(_config.get<int>("id_padding")) 
 	    << _currentRunId << ".root";
-	// mpa_id_padding seems to be hard coded 
-	//_file = new TFile(getRootFilename().c_str(), "RECREATE");
 	_file = new TFile(oss.str().c_str(), "RECREATE");
 	
 	_histoBin = _config.get<int>("histo_binning");
@@ -53,8 +51,8 @@ void AlibavaEfficiency::init()
 				  _histoBin, _histoMin, _histoMax, 
 				  _histoBin, _histoMin, _histoMax);
 
-	_dutResX = new TH1D("dut_res_x", "DUT residual in x", 100, -5, 5);
-	_dutResY = new TH1D("dut_res_y", "DUT residual in y", 100, -5, 5);
+	_dutResX = new TH1D("dut_res_x", "DUT residual in x", 500, -5, 5);
+	_dutResY = new TH1D("dut_res_y", "DUT residual in y", 500, -5, 5);
 	
 	// Track cuts
 	_trackConsts.angle_cut = _config.get<double>("angle_cut");
@@ -91,8 +89,8 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 	//auto tracks = core::TripletTrack::getTracksWithRef(_trackConsts, run, 
 	//						   &hists, nullptr);
 	auto tracks = core::TripletTrack::getTracksWithRefDut(_trackConsts, run,
-							     &hists, nullptr,
-							     nullptr, true);
+							      &hists, nullptr,
+							      nullptr, true);
 
 	size_t trackIdx = 0;
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) 
@@ -105,28 +103,44 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 		for(; trackIdx < tracks.size() && tracks[trackIdx].first.getEventNo() < evt; ++trackIdx) {}
 		for(; trackIdx < tracks.size() && tracks[trackIdx].first.getEventNo() == evt; ++trackIdx) {
 			auto track = tracks[trackIdx].first;
+			auto dut = tracks[trackIdx].second;
 			auto hit = track.upstream().extrapolate(_config.get<double>("dut_z"));
 			_dutTracks->Fill(hit[0], hit[1]);			
 
+			/*
 			// Very simple efficiency calculation
 			// Just check if there is ANY hit in the DUT
 			if(ali->center.GetNoElements() != 0) {
+				_dutHits->Fill(hit[0], hit[1]);			
+			}
+			*/
+			
+			if(dut(2) != -1.) {
 				_dutHits->Fill(hit[0], hit[1]);			
 			}
 			
 			// Check timing (30 - 70)
 			if(ali->time[0] >= 30 && ali->time[0] <= 70) {
 				_dutTracksInTime->Fill(hit[0], hit[1]);
-				
+				/*
 				if(ali->center.GetNoElements() != 0) {
 					_dutHitsInTime->Fill(hit[0], hit[1]);
 				}
+				*/
 				
+				if(dut(2) != -1.) {
+					_dutHitsInTime->Fill(hit[0], hit[1]);			
+					_dutResX->Fill(dut(0)-hit[0]); 
+					_dutResY->Fill(dut(1)-hit[1]); 
+
+				}
+				/*			    
 				for(size_t iCluster=0; iCluster < ali->center.GetNoElements(); ++iCluster)
 				{
 					_dutResX->Fill(posX(ali->center[iCluster])-hit[0]); 
-					_dutResY->Fill(posX(ali->center[iCluster])-hit[1]); 
+					_dutResY->Fill(posX(ali->center[iCluster])-hit[1]); 					
 				}
+				*/
 			}			
 		}
 	}
