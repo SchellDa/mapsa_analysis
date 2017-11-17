@@ -19,6 +19,6 @@ add_library(AnalysisClasses SHARED test.cpp efficiency_track.cpp data_skip.cpp
 				   refprealign.cpp gblalign.cpp 
 				   mpatripletefficiency.cpp mpa_cluster_test.cpp
 				   alibava_dqm.cpp alibavaefficiency.cpp
-				   ) # mpa_cmaes_align.cpp 
+				   alibavaalign.cpp) # mpa_cmaes_align.cpp 
 add_executable(analyses main.cpp)
 target_link_libraries(analyses AnalysisClasses)

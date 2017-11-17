@@ -1,6 +1,7 @@
 #include "alibavaefficiency.h"
 #include "functions.h"
 #include "triplet.h"
+#include "aligner.h"
 #include <sstream>
 #include <iomanip>
 
@@ -168,6 +169,17 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 	_dutIneffYInTime = _dutEffInTime->ProjectionY("Inefficiency_intime_profileY", 
 						      std::abs(_histoMin - _projMin)*_stepSize, 
 						      std::abs(_histoMin - _projMax)*_stepSize);
+
+	// 50% efficiency corresponds to FWHM
+	std::cout << "Number of bins: " << _dutEffYInTime->GetNbinsX() << std::endl;
+	std::cout << "Maximum: " << _dutEffYInTime->GetMaximum()<< std::endl;
+	
+	auto transitions = core::Aligner::findTransition(_dutEffYInTime, 0.5);
+	std::cout << "N transitions: " << transitions.size() << std::endl;
+	for(const auto& trans : transitions) 
+	{
+		std::cout << "Trans: " << trans << std::endl;
+	}
 
 }
 

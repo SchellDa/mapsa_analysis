@@ -112,6 +112,7 @@ public:
 		TH1F* plane_local_y;
 		TH1F* plane_local_z;
 		TH1F* gbl_chi2_dist;
+		std::vector<TH1F*> z_scan;
 	};
 
 	struct constants_t {

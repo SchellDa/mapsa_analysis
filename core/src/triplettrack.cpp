@@ -405,14 +405,48 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	// find DUT prealignment	
 	Eigen::Vector3d dutPreAlign(consts.dut_prealign);
 	//dutPreAlign = fitDutPrealignment(hist->dut_up_res_x, hist->dut_up_res_y, transform, consts.dut_plateau_x);
+	//refPreAlign(1) += result->Parameter(1);
 	auto dutResult = hist->dut_up_res_x->Fit("gaus", "FSMR", "");
 	dutPreAlign(0) += dutResult->Parameter(1);
 	dutPreAlign(1) += Aligner::alignByDip(hist->dut_up_res_y);
-	//refPreAlign(1) += result->Parameter(1);
+	// z Align
+	std::vector<std::pair<double, double>> z_res;
+	for(auto iz = -20; iz<20; iz+=1) 
+	{
+		dutPreAlign(2) = iz;
+		trans.setOffset(consts.dut_offset + dutPreAlign); // z = 370 + preAlign
+		std::ostringstream hXName, hYName;
+		hXName << "dut_res_x_z" << iz;
+		hYName << "dut_res_x_z" << iz;
+		auto dutResX = new TH1F(hXName.str().c_str(), "DUT residual in x", 500, -5, 5);
+		auto dutResY = new TH1F(hXName.str().c_str(), "DUT residual in y", 500, -5, 5);
+		for(auto pair : candidates) {
+			TripletTrack track = pair.first;
+			Eigen::Vector3d dut = pair.second + dutPreAlign;
+			Eigen::Vector3d plane_hit = trans.planeTripletIntersect(track.upstream());
+			Eigen::Vector3d dut_res = plane_hit - dut;
+			dutResX->Fill(dut_res(0));
+			dutResY->Fill(dut_res(1));
+		}
+		auto result = dutResX->Fit("gaus", "FSMR", "");
+		z_res.emplace_back(std::make_pair(iz, result->Parameter(2)));		
+		hist->z_scan.emplace_back(dutResX);
+	}
+
+	double minRes = 10000;
+	for(const auto& pair : z_res) 
+	{
+		std::cout << (consts.dut_offset(2)+pair.first) << " - " << pair.second << std::endl;
+		if(pair.second < minRes) {
+			minRes = pair.second;
+			dutPreAlign(2) = pair.first;
+		}		
+	}
+
 	if(new_dut_prealign) {
 		*new_dut_prealign = dutPreAlign;
 	}
-	
+	std::cout << "z correction: " << dutPreAlign(2) << std::endl;	
 	std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> accepted;
 	//transform.setOffset(consts.dut_offset + dutPreAlign);
 	trans.setOffset(consts.dut_offset + dutPreAlign);
