@@ -280,27 +280,50 @@ Eigen::Vector2d Aligner::alignStraightLineGaussian(TH1D* cor, double min, double
 
 double Aligner::alignByDip(TH1D* hist)
 {
-	auto max = hist->GetMaximum();
-	auto stepSize = max/10.;
-	auto step = stepSize;
-	std::vector<double> trans;
-	std::cout << "Maximum: " << max << std::endl;
-	do {	
-		std::cout << "Step: " << step;
-		trans = findTransition(hist, step);
-		step += stepSize;
-		std::cout << " - Transitions: " << trans.size() << std::endl;
-	} while(trans.size() != 4 && step < max);
+
+	double borderThr = 2;
+	double rippleThr = 0.2;
+	double distThr = 1;
+	double xMin, xMax;
 	
-	if(trans.size() < 4) { 
-		std::cout << "Couldn't find any dip!" << std::endl;
-		return 0;
-	}else {
-		for(const auto& iTrans : trans) {
-			std::cout << iTrans << std::endl;
+	auto max = hist->GetMaximum();
+	auto stepSize = max/20.;
+	std::vector<double> trans;
+	double candidate = 0;
+
+	for(auto step=stepSize; step<max; step+=stepSize)
+	{
+		trans = findTransition(hist, step);
+	
+		if(trans.size() == 2) {
+			xMin = trans[0];
+			xMax = trans[1];
 		}
-		return (trans[2]-trans[1])/2. ;
+		
+		if(trans.size() >= 4) 
+		{
+			for(size_t iTrans=1; iTrans<trans.size(); ++iTrans) 
+			{
+				// exclude border region
+				if( trans[iTrans] < (xMin+borderThr) ||
+				    trans[iTrans] > (xMax-borderThr) )
+					continue;
+
+				// exclude ripples and huge distances
+				if((trans[iTrans] - trans[iTrans-1]) < rippleThr ||
+				   (trans[iTrans] - trans[iTrans-1]) > distThr )
+					continue;
+				
+				candidate = (trans[iTrans]+trans[iTrans-1])/2.;
+				std::cout << "Found dip between: " 
+					  << trans[iTrans-1] << " and " 
+					  << trans[iTrans] << std::endl;
+			}
+		}
+		if(candidate)
+			break;
 	}
+	return candidate;
 }
 
 std::vector<double> Aligner::findTransition(TH1D* hist, double val)
@@ -317,3 +340,10 @@ std::vector<double> Aligner::findTransition(TH1D* hist, double val)
 	}
 	return transitions;
 }
+/*
+double Aligner::findDip(std::vector<double> trans, double ripplThr, 
+			double borderThr)
+{
+	
+}
+*/

@@ -182,13 +182,15 @@ void AlibavaEfficiency::finalize()
 		_dutIneffXInTime->SetBinContent(iBin, 1.-_dutEffXInTime->GetBinContent(iBin));
 		_dutIneffYInTime->SetBinContent(iBin, 1.-_dutEffYInTime->GetBinContent(iBin));
 	}
+	
+	// Set range
+	_dutEffX->GetYaxis()->SetRangeUser(0, 1.05);
+	_dutEffY->GetYaxis()->SetRangeUser(0, 1.05);
+	_dutEffXInTime->GetYaxis()->SetRangeUser(0, 1.05);
+	_dutEffYInTime->GetYaxis()->SetRangeUser(0, 1.05);
+	_dutIneffXInTime->GetYaxis()->SetRangeUser(0, 1.05);
+	_dutIneffYInTime->GetYaxis()->SetRangeUser(0, 1.05);
 
-	TF1 *fitFunc = new TF1("scurve", core::scurve, 
-			       _config.get<double>("fit_min"), 
-			       _config.get<double>("fit_max"), 
-			       3);
-	fitFunc->SetParameters(0.7, -0.55, 0.05);
-	_dutIneffYInTime->Fit("scurve", "R"); 
 
 	if(_file) {
 		_file->Write();

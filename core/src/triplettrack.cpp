@@ -407,8 +407,7 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	//dutPreAlign = fitDutPrealignment(hist->dut_up_res_x, hist->dut_up_res_y, transform, consts.dut_plateau_x);
 	auto dutResult = hist->dut_up_res_x->Fit("gaus", "FSMR", "");
 	dutPreAlign(0) += dutResult->Parameter(1);
-	dutPreAlign(1) = Aligner::alignByDip(hist->dut_up_res_y);
-	//dutPreAlign(1) = hist->dut_up_res_y->Fit("gauss_straight_line", "FSMR", "");
+	dutPreAlign(1) += Aligner::alignByDip(hist->dut_up_res_y);
 	//refPreAlign(1) += result->Parameter(1);
 	if(new_dut_prealign) {
 		*new_dut_prealign = dutPreAlign;
@@ -435,7 +434,7 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 				|| std::abs(dut_res(1)) > consts.dut_residual_cut_y)) {
 			pair.second = Eigen::Vector3d(-1, -1, -1);				
 		} else {
-			pair.second = plane_hit;
+			pair.second = dut;
 			hist->candidate_res_dut_x->Fill(dut_res(0));
 			hist->candidate_res_dut_y->Fill(dut_res(1));
 		}
@@ -444,7 +443,7 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 		hist->candidate_res_track_y->Fill(track_y);
 		hist->candidate_res_ref_x->Fill(ref_x);
 		hist->candidate_res_ref_y->Fill(ref_y);
-		accepted.push_back(pair);
+		accepted.emplace_back(pair);
 	}
 	return accepted;
 }
