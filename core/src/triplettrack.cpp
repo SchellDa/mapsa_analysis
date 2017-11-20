@@ -436,13 +436,12 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	double minRes = 10000;
 	for(const auto& pair : z_res) 
 	{
-		std::cout << (consts.dut_offset(2)+pair.first) << " - " << pair.second << std::endl;
+		//std::cout << (consts.dut_offset(2)+pair.first) << " - " << pair.second << std::endl;
 		if(pair.second < minRes) {
 			minRes = pair.second;
 			dutPreAlign(2) = pair.first;
 		}		
 	}
-
 	if(new_dut_prealign) {
 		*new_dut_prealign = dutPreAlign;
 	}
@@ -450,6 +449,7 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 	std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> accepted;
 	//transform.setOffset(consts.dut_offset + dutPreAlign);
 	trans.setOffset(consts.dut_offset + dutPreAlign);
+
 	for(auto pair: candidates) {
 		TripletTrack track = pair.first;
 		Eigen::Vector3d dut = pair.second + dutPreAlign; // activated DUT pixel in global coords

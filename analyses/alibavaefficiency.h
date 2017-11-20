@@ -4,6 +4,9 @@
 #include "alibavaanalysis.h"
 #include "triplettrack.h"
 
+#include <string>
+#include <fstream>
+
 #include "TH2F.h"
 #include "TProfile.h"
 #include "TGraph.h"
@@ -27,9 +30,12 @@ public:
 	virtual void finalize();
 
 private:
+	std::ofstream _csv;
 	TFile* _file;
-	TH2F* _refAliCorX;
-	TH2F* _refAliCorY;
+	
+	//TH2F* _refAliCorX;
+	//TH2F* _refAliCorY;
+	TH1F* _clusterSignal;
 	TH2F* _dutTracks;
 	TH2F* _dutHits;
 	TH2F* _dutTracksInTime;
@@ -47,14 +53,19 @@ private:
 	TH1D* _dutIneffYInTime;
 	core::TripletTrack::constants_t _trackConsts;
 
-	int _histoBin;
-	int _histoMin;
-	int _histoMax;
-	int _projMin;
-	int _projMax;
-	double _stepSize;
-
-	double posX(int channel, bool swap=false);
+	int _histoXBin;
+	int _histoXMin;
+	int _histoXMax;
+	int _histoYBin;
+	int _histoYMin;
+	int _histoYMax;
+	int _projMinX;
+	int _projMaxX;
+	int _projMinY;
+	int _projMaxY;
+	double _stepSizeX;
+	double _stepSizeY;
+	TH1D* projection(TH2F* hist, char axis, int bMin, int bMax, std::string name);
 };
 
 #endif//ALIBAVA_EFFICIENCY_H
