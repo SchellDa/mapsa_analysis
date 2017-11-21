@@ -35,7 +35,7 @@ void AlibavaEfficiency::init()
 	_histoYMax = _config.get<double>("histo_max_y");
 
 	_stepSizeX = _histoXBin/(_histoXMax - _histoXMin);
-	_stepSizeY = _histoXBin/(_histoYMax - _histoYMin);
+	_stepSizeY = _histoYBin/(_histoYMax - _histoYMin);
 
 	_projMinX = _config.get<double>("proj_min_x");
 	_projMaxX = _config.get<double>("proj_max_x");
@@ -185,18 +185,30 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 					      (static_cast<int>((_projMaxX-_projMinX)*_stepSizeX)+1) );		
 	}
 
+	for(size_t iBin=0; iBin<_dutEffXInTime->GetNbinsX(); iBin++) {
+		_dutEffXInTime->SetBinContent(iBin, _dutEffXInTime->GetBinContent(iBin) /
+					      (static_cast<int>((_projMaxY-_projMinY)*_stepSizeY)+1) );		
+	}
+
+
 	//Inefficiency projection
+	/*
 	_dutIneffXInTime = _dutEffInTime->ProjectionX("Inefficiency_intime_profileX", 
 						      std::abs(_histoYMin - _projMinY)*_stepSizeY, 
 						      std::abs(_histoYMin - _projMaxY)*_stepSizeY);
 	_dutIneffYInTime = _dutEffInTime->ProjectionY("Inefficiency_intime_profileY", 
 						      std::abs(_histoXMin - _projMinX)*_stepSizeX, 
 						      std::abs(_histoXMin - _projMaxX)*_stepSizeX);
-
-	// 50% efficiency corresponds to FWHM
+	*/
+	
 	std::vector<std::pair<double, std::vector<double>>> effTrans;
 	for(double eff=0.0; eff<1.0; eff+=0.002) {
-		auto transitions = core::Aligner::findTransition(_dutEffYInTime, eff);
+		std::vector<double> transitions;
+		if(_dutFlip)
+			transitions = core::Aligner::findTransition(_dutEffXInTime, eff);
+		else
+			transitions = core::Aligner::findTransition(_dutEffYInTime, eff);
+
 		if(transitions.size() == 2) {
 			effTrans.emplace_back(std::make_pair(eff, transitions));
 		}
@@ -220,13 +232,13 @@ void AlibavaEfficiency::finalize()
 	// Normalize
 	for(size_t iBin=0; iBin<_histoXBin; iBin++) {
 		_dutEffX->SetBinContent(iBin, _dutEffX->GetBinContent(iBin)/(static_cast<int>((_projMaxY-_projMinY)*_stepSizeY+1)+1));
-		_dutEffXInTime->SetBinContent(iBin, _dutEffXInTime->GetBinContent(iBin)/(static_cast<int>((_projMaxY-_projMinY)*_stepSizeY)+1));
-		_dutIneffXInTime->SetBinContent(iBin, 1.-_dutEffXInTime->GetBinContent(iBin));
+		//_dutEffXInTime->SetBinContent(iBin, _dutEffXInTime->GetBinContent(iBin)/(static_cast<int>((_projMaxY-_projMinY)*_stepSizeY)+1));
+		//_dutIneffXInTime->SetBinContent(iBin, 1.-_dutEffXInTime->GetBinContent(iBin));
 	}
 	for(size_t iBin=0; iBin<_histoYBin; iBin++) {
 		_dutEffY->SetBinContent(iBin, _dutEffY->GetBinContent(iBin)/(static_cast<int>((_projMaxX-_projMinX)*_stepSizeX+1)+1));
 		//_dutEffYInTime->SetBinContent(iBin, _dutEffYInTime->GetBinContent(iBin)/(static_cast<int>((_projMax-_projMin)*_stepSize)+1));
-		_dutIneffYInTime->SetBinContent(iBin, 1.-_dutEffYInTime->GetBinContent(iBin));
+		//_dutIneffYInTime->SetBinContent(iBin, 1.-_dutEffYInTime->GetBinContent(iBin));
 	}
 
 	
@@ -235,8 +247,8 @@ void AlibavaEfficiency::finalize()
 	_dutEffY->GetYaxis()->SetRangeUser(0, 1.05);
 	_dutEffXInTime->GetYaxis()->SetRangeUser(0, 1.05);
 	_dutEffYInTime->GetYaxis()->SetRangeUser(0, 1.05);
-	_dutIneffXInTime->GetYaxis()->SetRangeUser(0, 1.05);
-	_dutIneffYInTime->GetYaxis()->SetRangeUser(0, 1.05);
+	//_dutIneffXInTime->GetYaxis()->SetRangeUser(0, 1.05);
+	//_dutIneffYInTime->GetYaxis()->SetRangeUser(0, 1.05);
 
 
 	if(_file) {

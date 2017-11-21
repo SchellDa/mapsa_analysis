@@ -49,8 +49,10 @@ private:
 	TH1D* _dutEffY;
 	TH1D* _dutEffXInTime;
 	TH1D* _dutEffYInTime;
+	/*
 	TH1D* _dutIneffXInTime;
 	TH1D* _dutIneffYInTime;
+	*/
 	core::TripletTrack::constants_t _trackConsts;
 
 	bool _dutFlip;

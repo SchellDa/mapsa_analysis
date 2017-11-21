@@ -340,10 +340,3 @@ std::vector<double> Aligner::findTransition(TH1D* hist, double val)
 	}
 	return transitions;
 }
-/*
-double Aligner::findDip(std::vector<double> trans, double ripplThr, 
-			double borderThr)
-{
-	
-}
-*/

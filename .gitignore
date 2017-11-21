@@ -3,6 +3,7 @@ build
 *.swp
 docs/html/
 docs/latex/
+*#
 *~
 config_*
 *.o
