@@ -16,8 +16,8 @@ public:
 	//AlibavaHitGenerator::AlibavaHitGenerator(){}
 	//virtual AlibavaHitGenerator::~AlibavaHitGenerator(){};
 	
-	static std::vector<Eigen::Vector2d> getLocalHits(run_data_t run);
-	static std::vector<Eigen::Vector3d> getHits(run_data_t run, double z=0.);
+	static std::vector<Eigen::Vector2d> getLocalHits(run_data_t run, bool flipDut=false);
+	static std::vector<Eigen::Vector3d> getHits(run_data_t run, double z=0., bool flipDut=false);
 	
 };
 }//core

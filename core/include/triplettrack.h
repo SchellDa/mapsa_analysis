@@ -145,7 +145,7 @@ public:
 	                                                 histograms_t* hist,
 							 Eigen::Vector3d* new_ref_prealign,
 							 Eigen::Vector3d* new_dut_prealign,
-							 bool useDut=true);
+							 bool useDut=true, bool flipDut=false);
 
 private:
 	static Eigen::Vector3d fitDutPrealignment(TH1D* x, TH1D* y, const MpaTransform& transform, bool plateau_x=false);

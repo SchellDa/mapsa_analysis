@@ -67,6 +67,8 @@ void AlibavaEfficiency::init()
 	_dutResX = new TH1D("dut_res_x", "DUT residual in x", 200, -1, 1);
 	_dutResY = new TH1D("dut_res_y", "DUT residual in y", 200, -1, 1);
 	
+	_dutFlip = _config.get<bool>("dut_flip");
+
 	// Track cuts
 	_trackConsts.angle_cut = _config.get<double>("angle_cut");
 	_trackConsts.upstream_residual_cut = _config.get<double>("upstream_residual_cut");
@@ -103,7 +105,8 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 	//						   &hists, nullptr);
 	auto tracks = core::TripletTrack::getTracksWithRefDut(_trackConsts, run,
 							      &hists, nullptr,
-							      nullptr, true);
+							      nullptr, true,
+							      _dutFlip);
 
 	size_t trackIdx = 0;
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) 
@@ -129,7 +132,7 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 			*/
 			
 			if(dut(2) != -1.) {
-				_dutHits->Fill(hit[0], hit[1]);			
+				_dutHits->Fill(hit[0], hit[1]);	
 			}
 			
 			// Check timing (30 - 70)

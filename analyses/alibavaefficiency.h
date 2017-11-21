@@ -53,6 +53,7 @@ private:
 	TH1D* _dutIneffYInTime;
 	core::TripletTrack::constants_t _trackConsts;
 
+	bool _dutFlip;
 	int _histoXBin;
 	int _histoXMin;
 	int _histoXMax;

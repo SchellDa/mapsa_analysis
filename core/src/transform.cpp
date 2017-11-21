@@ -1,4 +1,5 @@
 #include "transform.h"
+#include <iostream>
 
 using namespace core;
 
@@ -39,7 +40,7 @@ Eigen::Vector3d Transform::transform(const Eigen::Vector3d& hit)
 }
 
 Eigen::Vector3d Transform::planeTripletIntersect(const Triplet& triplet)
-{
+{	
 	Eigen::ParametrizedLine<double, 3> line(triplet[0],
 						triplet[1] - triplet[0]);
 	auto t = line.intersectionParameter(_plane);
