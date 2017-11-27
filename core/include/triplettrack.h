@@ -6,6 +6,8 @@
 #include <TH1F.h>
 #include <iostream>
 
+#include "datastructures.h"
+
 namespace core
 {
 
@@ -143,9 +145,16 @@ public:
 	static std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> getTracksWithRefDut(constants_t consts,
 	                                                 const core::run_data_t& run,
 	                                                 histograms_t* hist,
-							 Eigen::Vector3d* new_ref_prealign,
-							 Eigen::Vector3d* new_dut_prealign,
-							 bool useDut=true, bool flipDut=false);
+   												     Eigen::Vector3d* new_ref_prealign,
+													 Eigen::Vector3d* new_dut_prealign,
+													 bool useDut=true, bool flipDut=false);
+	static std::vector<std::tuple<core::TripletTrack, Eigen::Vector3d, AlibavaData>> getTracksWithAlibava(constants_t consts,
+													      const core::run_data_t& run,
+													      histograms_t* hist,
+   												     Eigen::Vector3d* new_ref_prealign,
+													 Eigen::Vector3d* new_dut_prealign,
+													 bool useDut=true, bool flipDut=false);
+
 
 private:
 	static Eigen::Vector3d fitDutPrealignment(TH1D* x, TH1D* y, const MpaTransform& transform, bool plateau_x=false);

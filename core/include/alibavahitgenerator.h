@@ -17,7 +17,10 @@ public:
 	//virtual AlibavaHitGenerator::~AlibavaHitGenerator(){};
 	
 	static std::vector<Eigen::Vector2d> getLocalHits(run_data_t run, bool flipDut=false);
-	static std::vector<Eigen::Vector3d> getHits(run_data_t run, double z=0., bool flipDut=false);
+	static std::vector<Eigen::Vector3d> getHits(run_data_t run, double z=0.0, bool flipDut=false);
+	static std::vector<std::pair<Eigen::Vector3d, AlibavaData>> getHitsWithData(run_data_t run, double z=0.0, bool flipDut=false);
+	
+	static Eigen::Vector2d transform(int channel, bool flip=false);
 	
 };
 }//core

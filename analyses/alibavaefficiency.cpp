@@ -5,7 +5,6 @@
 #include <sstream>
 #include <iomanip>
 
-
 #include "TF1.h"
 
 REGISTER_ANALYSIS_TYPE(AlibavaEfficiency, "Perform alibava test beam analysis")
@@ -42,14 +41,12 @@ void AlibavaEfficiency::init()
 	_projMinY = _config.get<double>("proj_min_y");
 	_projMaxY = _config.get<double>("proj_max_y");
 
-	/*
-	_refAliCorX = new TH2F("ref_ali_cor_x", "REF <-> Alibava Correlation X",
-			       ALIBAVA_N, 0, ALIBAVA_N,
-			       FEI4_N_X, 0, FEI4_N_X);
-	_refAliCorY = new TH2F("ref_ali_cor_y", "REF <-> Alibava Correlation Y",
-			       ALIBAVA_N, 0, ALIBAVA_N,
-			       FEI4_N_Y, 0, FEI4_N_Y);
-	*/
+	_corX = new TH2F("ref_ali_cor_x", "REF <-> Alibava Correlation X",
+			       100, -5, 5, 
+			       100, -5, 5);
+	_corY = new TH2F("ref_ali_cor_y", "REF <-> Alibava Correlation Y",
+			       100, -5, 5, 
+			       100, -5, 5);
 	_dutTracks = new TH2F("dut_tracks", "Track hits at z(DUT)", 
 			      _histoXBin, _histoXMin, _histoXMax, 
 			      _histoYBin, _histoYMin, _histoYMax);
@@ -63,10 +60,15 @@ void AlibavaEfficiency::init()
 				  _histoXBin, _histoXMin, _histoXMax, 
 				  _histoYBin, _histoYMin, _histoYMax);
 	_clusterSignal = new TH1F("cluster_signal", "Cluster signal", 
-				  7000, 0, 700);
+				  500, 0, 500);
+	_clusterSignalCut = new TH1F("cluster_signal_cut", "Cluster signal (cutted)", 
+				  500, 0, 500);
+	_dutTiming = new TH1F("timing", "Timing", 25, 0, 100);
 	_dutResX = new TH1D("dut_res_x", "DUT residual in x", 200, -1, 1);
 	_dutResY = new TH1D("dut_res_y", "DUT residual in y", 200, -1, 1);
-	
+	_tracksPerEvent = new TH1D("tracks_per_event", "Tracks per event", 5e6, 0, 5e6);
+	_dutHitsPerEvent = new TH1D("dut_hits_per_event", "DUT hits per event", 5e6, 0, 5e6);
+
 	_dutFlip = _config.get<bool>("dut_flip");
 
 	// Track cuts
@@ -103,63 +105,77 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 	auto hists = core::TripletTrack::genDebugHistograms();
 	//auto tracks = core::TripletTrack::getTracksWithRef(_trackConsts, run, 
 	//						   &hists, nullptr);
+	/*
 	auto tracks = core::TripletTrack::getTracksWithRefDut(_trackConsts, run,
 							      &hists, nullptr,
 							      nullptr, true,
 							      _dutFlip);
-
+	*/
+	auto tracks = core::TripletTrack::getTracksWithAlibava(_trackConsts, run,
+							      &hists, nullptr,
+							      nullptr, true,
+							      _dutFlip);
 	size_t trackIdx = 0;
 	for(size_t evt = 0; evt < run.tree->GetEntries(); ++evt) 
-	{						
+	{			
+		if(evt%10000 == 0) 
+			std::cout << evt << std::endl;
 		// Assigning planes before loading the event
 		// leads to a shift of the datastreams (pointer problem?)
 		run.tree->GetEntry(evt);		
 		auto ali  = (*run.alibavaData);
-		
-		for(; trackIdx < tracks.size() && tracks[trackIdx].first.getEventNo() < evt; ++trackIdx) {}
-		for(; trackIdx < tracks.size() && tracks[trackIdx].first.getEventNo() == evt; ++trackIdx) {
-			auto track = tracks[trackIdx].first;
-			auto dut = tracks[trackIdx].second;
-			auto hit = track.upstream().extrapolate(_config.get<double>("dut_z"));
-			_dutTracks->Fill(hit[0], hit[1]);			
 
-			/*
-			// Very simple efficiency calculation
-			// Just check if there is ANY hit in the DUT
-			if(ali->center.GetNoElements() != 0) {
-				_dutHits->Fill(hit[0], hit[1]);			
-			}
-			*/
+		// All cluster signals
+		for(size_t iCluster=0; iCluster < ali->clusterSignal.GetNoElements(); ++iCluster) {
+			_clusterSignal->Fill(std::abs(ali->clusterSignal[iCluster]));
+		}
+
+		
+		// Limit analysis
+		//if(evt < 1e6) 
+		//	continue;
+		if(evt > 1.5e6)
+			break;
+		
+                for(; trackIdx < tracks.size() && std::get<0>(tracks[trackIdx]).getEventNo() < evt; ++trackIdx) {}
+		for(; trackIdx < tracks.size() && std::get<0>(tracks[trackIdx]).getEventNo() == evt; ++trackIdx) {
+
+			_tracksPerEvent->Fill(evt);
 			
+			auto track = std::get<0>(tracks[trackIdx]);
+			auto dut = std::get<1>(tracks[trackIdx]);	
+			auto alibava = std::get<2>(tracks[trackIdx]);
+
+			// Extrapolate all tracks to DUT position 
+			auto hit = track.upstream().extrapolate(_config.get<double>("dut_z"));			
+			_dutTracks->Fill(hit[0], hit[1]);			
+			
+			// z = -1 corresponds to empty hit -> inefficiency
 			if(dut(2) != -1.) {
 				_dutHits->Fill(hit[0], hit[1]);	
+				_dutHitsPerEvent->Fill(evt);
+				_dutTiming->Fill(alibava.time[0]);
+				_corX->Fill(dut(0), hit[0]);
+				_corY->Fill(dut(1), hit[1]);
 			}
 			
 			// Check timing (30 - 70)
 			if(ali->time[0] >= 30 && ali->time[0] <= 70) {
-				_dutTracksInTime->Fill(hit[0], hit[1]);
-				/*
-				if(ali->center.GetNoElements() != 0) {
-					_dutHitsInTime->Fill(hit[0], hit[1]);
-				}
-				*/
-				
-				
-				for(size_t cluster=0; cluster<ali->clusterSignal.GetNoElements(); ++cluster) 
-				{
-					_clusterSignal->Fill(std::abs(ali->clusterSignal[cluster]));
-				}
-				
+				_dutTracksInTime->Fill(hit[0], hit[1]);				
 				if(dut(2) != -1.) {
+					auto resX = dut(0)-hit[0];
+					auto resY = dut(1)-hit[1];
+					_dutResX->Fill(resX); 
+					_dutResY->Fill(resY);
 					_dutHitsInTime->Fill(hit[0], hit[1]);			
-					_dutResX->Fill(dut(0)-hit[0]); 
-					_dutResY->Fill(dut(1)-hit[1]); 
-
+					_clusterSignalCut->Fill(std::abs(alibava.clusterSignal[0]));
 				}
-			}			
-		}
+			}							
+		}		
 	}
 
+	std::cout << "Done with Event loop" << std::endl;
+	
 	auto _dutEff = (TH2F*)_dutHits->Clone("efficiency");
 	_dutEff->Divide(_dutTracks);
 	_dutEffX = _dutEff->ProjectionX("efficiency_profileX", 
@@ -173,6 +189,7 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 	// 1D projection
 	auto _dutEffInTime = (TH2F*)_dutHitsInTime->Clone("efficiency_intime");
 	_dutEffInTime->Divide(_dutTracksInTime);
+	std::cout << "Done with Dividing" << std::endl;
 	_dutEffXInTime = _dutEffInTime->ProjectionX("efficiency_intime_profileX",
 						    std::abs(_histoYMin - _projMinY)*_stepSizeY, 
 						    std::abs(_histoYMin - _projMaxY)*_stepSizeY);
@@ -180,6 +197,9 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 	_dutEffYInTime = _dutEffInTime->ProjectionY("efficiency_intime_profileY", 
 						    std::abs(_histoXMin - _projMinX)*_stepSizeX, 
 						    std::abs(_histoXMin - _projMaxX)*_stepSizeX);     
+
+	std::cout << "Done with 1D projection" << std::endl;
+
 	for(size_t iBin=0; iBin<_dutEffYInTime->GetNbinsX(); iBin++) {
 		_dutEffYInTime->SetBinContent(iBin, _dutEffYInTime->GetBinContent(iBin) /
 					      (static_cast<int>((_projMaxX-_projMinX)*_stepSizeX)+1) );		
@@ -189,17 +209,6 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 		_dutEffXInTime->SetBinContent(iBin, _dutEffXInTime->GetBinContent(iBin) /
 					      (static_cast<int>((_projMaxY-_projMinY)*_stepSizeY)+1) );		
 	}
-
-
-	//Inefficiency projection
-	/*
-	_dutIneffXInTime = _dutEffInTime->ProjectionX("Inefficiency_intime_profileX", 
-						      std::abs(_histoYMin - _projMinY)*_stepSizeY, 
-						      std::abs(_histoYMin - _projMaxY)*_stepSizeY);
-	_dutIneffYInTime = _dutEffInTime->ProjectionY("Inefficiency_intime_profileY", 
-						      std::abs(_histoXMin - _projMinX)*_stepSizeX, 
-						      std::abs(_histoXMin - _projMaxX)*_stepSizeX);
-	*/
 	
 	std::vector<std::pair<double, std::vector<double>>> effTrans;
 	for(double eff=0.0; eff<1.0; eff+=0.002) {
@@ -213,6 +222,9 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 			effTrans.emplace_back(std::make_pair(eff, transitions));
 		}
 	}
+
+	std::cout << "Done with transition scan" << std::endl;
+	
 	for(const auto& eff : effTrans) 
 	{
 		std::cout << "Eff: " << eff.first << " ";

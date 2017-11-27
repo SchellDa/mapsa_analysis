@@ -33,18 +33,22 @@ private:
 	std::ofstream _csv;
 	TFile* _file;
 	
-	//TH2F* _refAliCorX;
-	//TH2F* _refAliCorY;
+	TH2F* _corX;
+	TH2F* _corY;
 	TH1F* _clusterSignal;
+	TH1F* _clusterSignalCut;
 	TH2F* _dutTracks;
 	TH2F* _dutHits;
 	TH2F* _dutTracksInTime;
 	TH2F* _dutHitsInTime;
 	TH2F* _dutEffInTime;
+	TH1F* _dutTiming;
 	TProfile* _dutProfileX;
 	TProfile* _dutProfileY;
 	TH1D* _dutResX;
 	TH1D* _dutResY;
+	TH1D* _dutHitsPerEvent;
+	TH1D* _tracksPerEvent;
 	TH1D* _dutEffX;
 	TH1D* _dutEffY;
 	TH1D* _dutEffXInTime;
@@ -69,6 +73,10 @@ private:
 	double _stepSizeX;
 	double _stepSizeY;
 	TH1D* projection(TH2F* hist, char axis, int bMin, int bMax, std::string name);
+	void correlateAlibavaToReference(AlibavaData aliData, 
+					 TelescopePlaneClusters planeData, 
+					 TH2F* corX, TH2F* corY);
+
 };
 
 #endif//ALIBAVA_EFFICIENCY_H
