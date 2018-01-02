@@ -51,6 +51,7 @@ Eigen::Vector2d AlibavaHitGenerator::transform(int channel, bool flip)
 			//x = ALIBAVA_STRIP_L/(2*1000.);
 			x = 0.0;
 		} else {
+			// channel+1 for HPK 3e14
 			y = (0.5-3*ALIBAVA_N/4.+channel+1) * (ALIBAVA_PITCH/1000.);
 			//x = -ALIBAVA_STRIP_L/(2*1000.);
 			x = 0.0;

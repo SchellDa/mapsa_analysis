@@ -622,11 +622,13 @@ std::vector<std::tuple<core::TripletTrack, Eigen::Vector3d, AlibavaData>> Triple
 	Eigen::Vector3d dutPreAlign(consts.dut_prealign);
 	if(flipDut) {
 		auto dutResult = hist->dut_up_res_y->Fit("gaus", "FSMR", "");
-		dutPreAlign(1) += dutResult->Parameter(1);
+		//dutPreAlign(1) += dutResult->Parameter(1);
+		dutPreAlign(1) += 0.0;
 		dutPreAlign(0) += Aligner::alignByDip(hist->dut_up_res_x);
 	} else {
 		auto dutResult = hist->dut_up_res_x->Fit("gaus", "FSMR", "");
-		dutPreAlign(0) += dutResult->Parameter(1);
+		//dutPreAlign(0) += dutResult->Parameter(1);
+		dutPreAlign(0) += 0.0;
 		dutPreAlign(1) += Aligner::alignByDip(hist->dut_up_res_y);
 	}
 	// z Align

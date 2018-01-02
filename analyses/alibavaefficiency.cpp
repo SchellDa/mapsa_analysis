@@ -41,12 +41,20 @@ void AlibavaEfficiency::init()
 	_projMinY = _config.get<double>("proj_min_y");
 	_projMaxY = _config.get<double>("proj_max_y");
 
+        /*
 	_corX = new TH2F("ref_ali_cor_x", "REF <-> Alibava Correlation X",
 			       100, -5, 5, 
 			       100, -5, 5);
 	_corY = new TH2F("ref_ali_cor_y", "REF <-> Alibava Correlation Y",
 			       100, -5, 5, 
 			       100, -5, 5);
+	*/
+	_corX = new TH2F("ref_ali_cor_x", "REF <-> Alibava Correlation X",
+			       ALIBAVA_N, 0, ALIBAVA_N, 
+			       200, -10., 10.);
+	_corY = new TH2F("ref_ali_cor_y", "REF <-> Alibava Correlation Y",
+			       ALIBAVA_N, 0, ALIBAVA_N, 
+			       200, -10., 10.);
 	_dutTracks = new TH2F("dut_tracks", "Track hits at z(DUT)", 
 			      _histoXBin, _histoXMin, _histoXMax, 
 			      _histoYBin, _histoYMin, _histoYMax);
@@ -68,6 +76,27 @@ void AlibavaEfficiency::init()
 	_dutResY = new TH1D("dut_res_y", "DUT residual in y", 200, -1, 1);
 	_tracksPerEvent = new TH1D("tracks_per_event", "Tracks per event", 5e6, 0, 5e6);
 	_dutHitsPerEvent = new TH1D("dut_hits_per_event", "DUT hits per event", 5e6, 0, 5e6);
+
+	_resXvsX = new TH2F("ref_x_vs_x", "Residual in x vs. position in x",
+			       100, -5, 5, 
+			       100, -1, 1);
+	_resXvsY = new TH2F("ref_x_vs_y", "Residual in x vs. position in y",
+			       100, -5, 5, 
+			       100, -1, 1);
+	_resYvsX = new TH2F("ref_y_vs_x", "Residual in y vs. position in x",
+			       100, -5, 5, 
+			       100, -1, 1);
+	_resYvsY = new TH2F("ref_y_vs_y", "Residual in y vs. position in y",
+			       100, -5, 5, 
+			       100, -1, 1);
+
+	_sigvsX = new TH2F("sig_vs_x", "Signal vs. position in y",
+			       100, -5, 5, 
+			       100, 0, 500);
+	_sigvsY = new TH2F("sig_vs_y", "Signal vs. position in y",
+			       100, -5, 5, 
+			       100, 0, 500);
+
 
 	_dutFlip = _config.get<bool>("dut_flip");
 
@@ -155,8 +184,8 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 				_dutHits->Fill(hit[0], hit[1]);	
 				_dutHitsPerEvent->Fill(evt);
 				_dutTiming->Fill(alibava.time[0]);
-				_corX->Fill(dut(0), hit[0]);
-				_corY->Fill(dut(1), hit[1]);
+				_corX->Fill(alibava.center[0], hit[0]);
+				_corY->Fill(alibava.center[0], hit[1]);
 			}
 			
 			// Check timing (30 - 70)
@@ -169,6 +198,14 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 					_dutResY->Fill(resY);
 					_dutHitsInTime->Fill(hit[0], hit[1]);			
 					_clusterSignalCut->Fill(std::abs(alibava.clusterSignal[0]));
+					
+					_resXvsX->Fill(hit[0], resX);
+					_resXvsY->Fill(hit[1], resX);
+					_resYvsX->Fill(hit[0], resY);
+					_resYvsY->Fill(hit[1], resY);
+
+					_sigvsX->Fill(hit[0], std::abs(alibava.clusterSignal[0]));
+					_sigvsY->Fill(hit[1], std::abs(alibava.clusterSignal[0]));
 				}
 			}							
 		}		
