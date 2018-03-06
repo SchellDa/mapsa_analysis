@@ -57,6 +57,8 @@ private:
 	TH1D* _dutIneffXInTime;
 	TH1D* _dutIneffYInTime;
 	*/
+	TH2F* _lowSignalHits;
+	
 	TH2F* _resXvsX;
 	TH2F* _resXvsY;
 	TH2F* _resYvsX;
@@ -64,6 +66,7 @@ private:
 
 	TH2F* _sigvsX;
 	TH2F* _sigvsY;
+	TH2F* _sigvsTime;
 
 	core::TripletTrack::constants_t _trackConsts;
 

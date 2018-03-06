@@ -67,13 +67,18 @@ void AlibavaEfficiency::init()
 	_dutHitsInTime = new TH2F("dut_hits_intime", "Track hits with DUT hits", 
 				  _histoXBin, _histoXMin, _histoXMax, 
 				  _histoYBin, _histoYMin, _histoYMax);
+
+	_lowSignalHits = new TH2F("low_signal_dut_hits_intime", "Track hits with low signal DUT hits", 
+				  _histoXBin, _histoXMin, _histoXMax, 
+				  _histoYBin, _histoYMin, _histoYMax);
+
 	_clusterSignal = new TH1F("cluster_signal", "Cluster signal", 
 				  500, 0, 500);
 	_clusterSignalCut = new TH1F("cluster_signal_cut", "Cluster signal (cutted)", 
 				  500, 0, 500);
 	_dutTiming = new TH1F("timing", "Timing", 25, 0, 100);
-	_dutResX = new TH1D("dut_res_x", "DUT residual in x", 200, -1, 1);
-	_dutResY = new TH1D("dut_res_y", "DUT residual in y", 200, -1, 1);
+	_dutResX = new TH1D("dut_res_x", "DUT residual in x", 500, -1, 1);
+	_dutResY = new TH1D("dut_res_y", "DUT residual in y", 500, -1, 1);
 	_tracksPerEvent = new TH1D("tracks_per_event", "Tracks per event", 5e6, 0, 5e6);
 	_dutHitsPerEvent = new TH1D("dut_hits_per_event", "DUT hits per event", 5e6, 0, 5e6);
 
@@ -91,13 +96,15 @@ void AlibavaEfficiency::init()
 			       100, -1, 1);
 
 	_sigvsX = new TH2F("sig_vs_x", "Signal vs. position in y",
-			       100, -5, 5, 
+			       1000, -2, 2, 
 			       100, 0, 500);
 	_sigvsY = new TH2F("sig_vs_y", "Signal vs. position in y",
-			       100, -5, 5, 
+			       1000, -2, 2, 
 			       100, 0, 500);
 
-
+	_sigvsTime = new TH2F("sig_vs_Time", "Signal vs. Time",
+			       100, 0, 100, 
+			       1000, 0, 500);
 	_dutFlip = _config.get<bool>("dut_flip");
 
 	// Track cuts
@@ -161,10 +168,8 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 
 		
 		// Limit analysis
-		//if(evt < 1e6) 
-		//	continue;
-		if(evt > 1.5e6)
-			break;
+		// if(evt > 1.5e6)
+		//	break;
 		
                 for(; trackIdx < tracks.size() && std::get<0>(tracks[trackIdx]).getEventNo() < evt; ++trackIdx) {}
 		for(; trackIdx < tracks.size() && std::get<0>(tracks[trackIdx]).getEventNo() == evt; ++trackIdx) {
@@ -184,12 +189,13 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 				_dutHits->Fill(hit[0], hit[1]);	
 				_dutHitsPerEvent->Fill(evt);
 				_dutTiming->Fill(alibava.time[0]);
+				_sigvsTime->Fill(alibava.time[0], std::abs(alibava.clusterSignal[0]));
 				_corX->Fill(alibava.center[0], hit[0]);
 				_corY->Fill(alibava.center[0], hit[1]);
 			}
 			
-			// Check timing (30 - 70)
-			if(ali->time[0] >= 30 && ali->time[0] <= 70) {
+			// Check timing (30 - 60)
+			if(ali->time[0] >= _config.get<double>("t_min") && ali->time[0] <= _config.get<double>("t_max")) {
 				_dutTracksInTime->Fill(hit[0], hit[1]);				
 				if(dut(2) != -1.) {
 					auto resX = dut(0)-hit[0];
@@ -197,6 +203,9 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 					_dutResX->Fill(resX); 
 					_dutResY->Fill(resY);
 					_dutHitsInTime->Fill(hit[0], hit[1]);			
+					if(std::abs(alibava.clusterSignal[0]) < _config.get<double>("low_signal_cut")) {
+						_lowSignalHits->Fill(hit[0], hit[1]);
+					}
 					_clusterSignalCut->Fill(std::abs(alibava.clusterSignal[0]));
 					
 					_resXvsX->Fill(hit[0], resX);
@@ -226,7 +235,6 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 	// 1D projection
 	auto _dutEffInTime = (TH2F*)_dutHitsInTime->Clone("efficiency_intime");
 	_dutEffInTime->Divide(_dutTracksInTime);
-	std::cout << "Done with Dividing" << std::endl;
 	_dutEffXInTime = _dutEffInTime->ProjectionX("efficiency_intime_profileX",
 						    std::abs(_histoYMin - _projMinY)*_stepSizeY, 
 						    std::abs(_histoYMin - _projMaxY)*_stepSizeY);
@@ -235,18 +243,18 @@ void AlibavaEfficiency::run(const core::run_data_t& run)
 						    std::abs(_histoXMin - _projMinX)*_stepSizeX, 
 						    std::abs(_histoXMin - _projMaxX)*_stepSizeX);     
 
-	std::cout << "Done with 1D projection" << std::endl;
+	// Normalize histogram
+	for(size_t iBin=0; iBin<_dutEffXInTime->GetNbinsX(); iBin++) {
+		_dutEffXInTime->SetBinContent(iBin, _dutEffXInTime->GetBinContent(iBin) /
+					      (static_cast<int>((_projMaxY-_projMinY)*_stepSizeY)+1) );		
+	}
 
 	for(size_t iBin=0; iBin<_dutEffYInTime->GetNbinsX(); iBin++) {
 		_dutEffYInTime->SetBinContent(iBin, _dutEffYInTime->GetBinContent(iBin) /
 					      (static_cast<int>((_projMaxX-_projMinX)*_stepSizeX)+1) );		
 	}
-
-	for(size_t iBin=0; iBin<_dutEffXInTime->GetNbinsX(); iBin++) {
-		_dutEffXInTime->SetBinContent(iBin, _dutEffXInTime->GetBinContent(iBin) /
-					      (static_cast<int>((_projMaxY-_projMinY)*_stepSizeY)+1) );		
-	}
 	
+	// Scan center bias region 
 	std::vector<std::pair<double, std::vector<double>>> effTrans;
 	for(double eff=0.0; eff<1.0; eff+=0.002) {
 		std::vector<double> transitions;
@@ -299,6 +307,9 @@ void AlibavaEfficiency::finalize()
 	//_dutIneffXInTime->GetYaxis()->SetRangeUser(0, 1.05);
 	//_dutIneffYInTime->GetYaxis()->SetRangeUser(0, 1.05);
 
+
+
+	//_dutHitsInTime.Fit();
 
 	if(_file) {
 		_file->Write();

@@ -249,8 +249,8 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
                                                                   const core::run_data_t& run,
                                                                   histograms_t* hist,
                                                                   Eigen::Vector3d* new_ref_prealign,
-																  Eigen::Vector3d* new_dut_prealign,
-																  bool useDut, bool flipDut)
+								  Eigen::Vector3d* new_dut_prealign,
+								  bool useDut, bool flipDut)
 {
 	assert(hist->down_angle_x);
 	std::cout << "Flip DUT: " << flipDut << std::endl;
@@ -424,18 +424,22 @@ std::vector<std::pair<core::TripletTrack, Eigen::Vector3d>> TripletTrack::getTra
 			dutResX->Fill(dut_res(0));
 			dutResY->Fill(dut_res(1));
 		}
-		if(flipDut)
-			auto result = dutResY->Fit("gaus", "FSMR", "");
-		else
-			auto result = dutResX->Fit("gaus", "FSMR", "");
-		z_res.emplace_back(std::make_pair(iz, result->Parameter(2)));		
-		hist->z_scan.emplace_back(dutResX);
+		if(flipDut) {
+			auto fitResult = dutResY->Fit("gaus", "FSMR", "");
+			float sigma = fitResult->Parameter(2);
+			z_res.push_back(std::make_pair(iz, sigma));		
+		} else {
+			auto fitResult = dutResX->Fit("gaus", "FSMR", "");
+			float sigma = fitResult->Parameter(2);
+			z_res.push_back(std::make_pair(iz, sigma));		
+		}
+		hist->z_scan.push_back(dutResX);
 	}
 
 	double minRes = 10000;
 	for(const auto& pair : z_res) 
 	{
-		//std::cout << (consts.dut_offset(2)+pair.first) << " - " << pair.second << std::endl;
+		std::cout << (consts.dut_offset(2)+pair.first) << " - " << pair.second << std::endl;
 		if(pair.second < minRes) {
 			minRes = pair.second;
 			dutPreAlign(2) = pair.first;
@@ -496,6 +500,7 @@ std::vector<std::tuple<core::TripletTrack, Eigen::Vector3d, AlibavaData>> Triple
 	std::cout << "Flip DUT: " << flipDut << std::endl;
 	std::cout << "DUT prealignment" << consts.dut_offset << std::endl;
 	std::vector<std::tuple<core::TripletTrack, Eigen::Vector3d, AlibavaData>> candidates;
+	std::cout << "Got candidates" << std::endl;
 	Transform trans;
 	trans.setRotation(consts.dut_rotation);
 	trans.setOffset(consts.dut_offset);
@@ -549,7 +554,7 @@ std::vector<std::tuple<core::TripletTrack, Eigen::Vector3d, AlibavaData>> Triple
 					fullUpstream.emplace_back(std::make_tuple(triplet, Eigen::Vector3d(-100, -100, -1), emptyData));
 				}
 				for(const auto& hit: hits) { 
-					auto plane_hit = trans.planeTripletIntersect(triplet);
+					auto plane_hit = trans.planeTripletIntersect(triplet); // Extrapolites to z(DUT) (no x and y)
 					Eigen::Vector3d res = plane_hit - hit.first - consts.dut_offset; // prealignment
 					double resx = res(0);
 					double resy = res(1);
@@ -573,7 +578,7 @@ std::vector<std::tuple<core::TripletTrack, Eigen::Vector3d, AlibavaData>> Triple
 			auto ref = pair.second;
 			for(const auto uptuple: fullUpstream) {
 				auto up = std::get<0>(uptuple);
-				Eigen::Vector3d dut = std::get<1>(uptuple);
+				Eigen::Vector3d dut = std::get<1>(uptuple); // not aligned
 				AlibavaData ali = std::get<2>(uptuple);
 				core::TripletTrack t(evt, up, down, ref);
 				auto resx = t.xresidualat(consts.dut_offset(2));
@@ -594,6 +599,7 @@ std::vector<std::tuple<core::TripletTrack, Eigen::Vector3d, AlibavaData>> Triple
 				++numNewCandidates;
 			}
 		}
+		// z positions of all planes
 		for(const auto& pair: fullDownstream) {
 			const auto& hit = pair.first;
 			const auto& ref = pair.second;
@@ -619,19 +625,24 @@ std::vector<std::tuple<core::TripletTrack, Eigen::Vector3d, AlibavaData>> Triple
 	}
 
 	// find DUT prealignment	
-	Eigen::Vector3d dutPreAlign(consts.dut_prealign);
+	Eigen::Vector3d dutPreAlign(consts.dut_offset);
 	if(flipDut) {
 		auto dutResult = hist->dut_up_res_y->Fit("gaus", "FSMR", "");
-		//dutPreAlign(1) += dutResult->Parameter(1);
-		dutPreAlign(1) += 0.0;
-		dutPreAlign(0) += Aligner::alignByDip(hist->dut_up_res_x);
+		dutPreAlign(1) -= dutResult->Parameter(1);
+		std::cout << "Mean: " << dutResult->Parameter(1) << " : " 
+			  << dutPreAlign(1) << std::endl;
+		//dutPreAlign(1) += 0.0;
+		dutPreAlign(0) -= Aligner::alignByDip(hist->dut_up_res_x);
 	} else {
 		auto dutResult = hist->dut_up_res_x->Fit("gaus", "FSMR", "");
-		//dutPreAlign(0) += dutResult->Parameter(1);
-		dutPreAlign(0) += 0.0;
-		dutPreAlign(1) += Aligner::alignByDip(hist->dut_up_res_y);
+		dutPreAlign(0) -= dutResult->Parameter(1);
+		std::cout << "Mean: " << dutResult->Parameter(0) << " : " 
+			  << dutPreAlign(0) << std::endl;
+		//dutPreAlign(0) += 0.0;
+		dutPreAlign(1) -= Aligner::alignByDip(hist->dut_up_res_y);
 	}
 	// z Align
+	std::cout << "Start z scan" << std::endl;
 	std::vector<std::pair<double, double>> z_res;
 	for(auto iz = -20; iz<20; iz+=1) 
 	{
@@ -661,6 +672,7 @@ std::vector<std::tuple<core::TripletTrack, Eigen::Vector3d, AlibavaData>> Triple
 	double minRes = 10000;
 	for(const auto& pair : z_res) 
 	{
+		std::cout << pair.first << " : " << pair.second << std::endl;
 		if(pair.second < minRes) {
 			minRes = pair.second;
 			dutPreAlign(2) = pair.first;
